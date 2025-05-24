@@ -65,7 +65,9 @@ const translations = {
         selectedUsers: 'Usuarios seleccionados',
         searchUsers: 'Buscar usuarios',
         cancel: 'Cancelar',
-        errorCreateGroup: 'Error al crear el grupo'
+        errorCreateGroup: 'Error al crear el grupo',
+        errorMinUsers: 'Se necesitan al menos 2 participantes para crear un grupo',
+        groupCreated: 'Grupo creado exitosamente'
     },
     en: {
         // Authentication
@@ -132,7 +134,9 @@ const translations = {
         selectedUsers: 'Selected users',
         searchUsers: 'Search users',
         cancel: 'Cancel',
-        errorCreateGroup: 'Error creating group'
+        errorCreateGroup: 'Error creating group',
+        errorMinUsers: 'At least 2 participants are needed to create a group',
+        groupCreated: 'Group successfully created'
     },
     it: {
         // Autenticazione
@@ -199,7 +203,9 @@ const translations = {
         selectedUsers: 'Utenti selezionati',
         searchUsers: 'Cerca utenti',
         cancel: 'Annulla',
-        errorCreateGroup: 'Errore durante la creazione del gruppo'
+        errorCreateGroup: 'Errore durante la creazione del gruppo',
+        errorMinUsers: 'Sono necessari almeno 2 partecipanti per creare un gruppo',
+        groupCreated: 'Gruppo creato con successo'
     }
 };
 
