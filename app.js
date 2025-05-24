@@ -1028,21 +1028,8 @@ async function openChat(chatId) {
             messagesList.innerHTML = '';
         }
 
-        // Mostrar la sección de chat
-        const chatContainer = document.querySelector('.chat-container');
-        const sidebar = document.querySelector('.sidebar');
-        
-        if (chatContainer) {
-            chatContainer.classList.remove('hidden');
-            if (window.innerWidth <= 768) {
-                chatContainer.style.display = 'block';
-                if (sidebar) {
-                    sidebar.style.display = 'none';
-                }
-            }
-        }
-
-        adjustMobileLayout();
+        // Cambiar a la vista del chat
+        toggleChatList(false);
 
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
@@ -1177,42 +1164,83 @@ async function handleLogout() {
 // Evento para el botón de cerrar sesión
 logoutBtn.addEventListener('click', handleLogout);
 
-// Evento para el botón de volver en móvil
-backButton.addEventListener('click', () => {
-    const chatContainer = document.querySelector('.chat-container');
-    if (chatContainer) {
-        chatContainer.style.display = 'none';
+// Evento para el botón de volver
+document.addEventListener('DOMContentLoaded', () => {
+    const backButton = document.getElementById('backToChats');
+    if (backButton) {
+        backButton.addEventListener('click', () => {
+            console.log('Botón volver clickeado');
+            toggleChatList(true);
+        });
+        
+        // Inicialmente ocultar el botón
+        backButton.style.display = 'none';
     }
-    toggleChatList(true);
-    adjustMobileLayout();
 });
 
-// Modificar la función toggleChatList para incluir los ajustes móviles
+// Función para manejar la navegación entre vistas
 function toggleChatList(show) {
     const sidebar = document.querySelector('.sidebar');
     const chatContainer = document.querySelector('.chat-container');
+    const backButton = document.getElementById('backToChats');
+    
+    console.log('Alternando vista de chat, mostrar lista:', show);
     
     if (show) {
+        // Mostrar lista de chats
         if (sidebar) {
             sidebar.classList.remove('hidden');
-            if (window.innerWidth <= 768) {
-                sidebar.style.display = 'block';
-                if (chatContainer) {
-                    chatContainer.style.display = 'none';
-                }
-            }
+            sidebar.style.display = 'block';
         }
+        if (chatContainer) {
+            chatContainer.classList.add('hidden');
+            chatContainer.style.display = 'none';
+        }
+        // Limpiar el chat actual
+        if (messagesList) {
+            messagesList.innerHTML = '';
+        }
+        if (currentChatInfo) {
+            currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+        }
+        // Cancelar suscripción a mensajes si existe
+        if (unsubscribeMessages) {
+            unsubscribeMessages();
+            unsubscribeMessages = null;
+        }
+        currentChat = null;
     } else {
+        // Mostrar chat
         if (sidebar) {
             sidebar.classList.add('hidden');
-            if (window.innerWidth <= 768) {
-                sidebar.style.display = 'none';
-                if (chatContainer) {
-                    chatContainer.style.display = 'block';
-                }
-            }
+            sidebar.style.display = 'none';
+        }
+        if (chatContainer) {
+            chatContainer.classList.remove('hidden');
+            chatContainer.style.display = 'block';
         }
     }
-    
+
+    // Asegurar que el botón de retorno sea visible solo cuando se muestra el chat en móvil
+    if (backButton) {
+        if (window.innerWidth <= 768 && !show) {
+            backButton.style.display = 'block';
+        } else {
+            backButton.style.display = 'none';
+        }
+    }
+
     adjustMobileLayout();
-} 
+}
+
+// Asegurarse de que el botón de retorno se muestre/oculte correctamente al cambiar el tamaño de la ventana
+window.addEventListener('resize', () => {
+    const backButton = document.getElementById('backToChats');
+    if (backButton) {
+        if (window.innerWidth <= 768 && document.querySelector('.chat-container')?.style.display !== 'none') {
+            backButton.style.display = 'block';
+        } else {
+            backButton.style.display = 'none';
+        }
+    }
+}); 
