@@ -56,7 +56,16 @@ const translations = {
         newNotification: 'Nueva notificación',
         notificationPermission: 'Permitir notificaciones',
         notificationsEnabled: 'Notificaciones activadas',
-        notificationsDisabled: 'Notificaciones desactivadas'
+        notificationsDisabled: 'Notificaciones desactivadas',
+        
+        // Grupos
+        createNewGroup: 'Crear nuevo grupo',
+        createGroup: 'Crear grupo',
+        groupNamePlaceholder: 'Nombre del grupo',
+        selectedUsers: 'Usuarios seleccionados',
+        searchUsers: 'Buscar usuarios',
+        cancel: 'Cancelar',
+        errorCreateGroup: 'Error al crear el grupo'
     },
     en: {
         // Authentication
@@ -114,7 +123,16 @@ const translations = {
         newNotification: 'New notification',
         notificationPermission: 'Allow notifications',
         notificationsEnabled: 'Notifications enabled',
-        notificationsDisabled: 'Notifications disabled'
+        notificationsDisabled: 'Notifications disabled',
+        
+        // Groups
+        createNewGroup: 'Create new group',
+        createGroup: 'Create group',
+        groupNamePlaceholder: 'Group name',
+        selectedUsers: 'Selected users',
+        searchUsers: 'Search users',
+        cancel: 'Cancel',
+        errorCreateGroup: 'Error creating group'
     },
     it: {
         // Autenticazione
@@ -172,7 +190,16 @@ const translations = {
         newNotification: 'Nuova notifica',
         notificationPermission: 'Abilita notifiche',
         notificationsEnabled: 'Notifiche abilitate',
-        notificationsDisabled: 'Notifiche disabilitate'
+        notificationsDisabled: 'Notifiche disabilitate',
+        
+        // Gruppi
+        createNewGroup: 'Crea nuovo gruppo',
+        createGroup: 'Crea gruppo',
+        groupNamePlaceholder: 'Nome del gruppo',
+        selectedUsers: 'Utenti selezionati',
+        searchUsers: 'Cerca utenti',
+        cancel: 'Annulla',
+        errorCreateGroup: 'Errore durante la creazione del gruppo'
     }
 };
 
