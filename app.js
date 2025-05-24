@@ -1281,28 +1281,56 @@ window.addEventListener('resize', () => {
     }
 });
 
+// Función para actualizar la lista de usuarios seleccionados
+function updateSelectedUsersList(selectedUsersList, createGroupBtn) {
+    selectedUsersList.innerHTML = Array.from(selectedUsers).map(user => `
+        <div class="selected-user-item">
+            <span>${user.email}</span>
+            <span class="remove-user" data-userid="${user.id}">×</span>
+        </div>
+    `).join('');
+
+    // Eventos para remover usuarios
+    selectedUsersList.querySelectorAll('.remove-user').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const userId = e.target.dataset.userid;
+            selectedUsers.delete(Array.from(selectedUsers).find(u => u.id === userId));
+            updateSelectedUsersList(selectedUsersList, createGroupBtn);
+        });
+    });
+
+    // Actualizar estado del botón
+    if (createGroupBtn) {
+        const groupNameInput = document.getElementById('groupName');
+        createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput?.value.trim();
+    }
+}
+
 // Función para mostrar el modal de creación de grupo
 function showGroupCreationModal() {
+    // Limpiar usuarios seleccionados anteriormente
+    selectedUsers.clear();
+
     const modalHtml = `
         <div id="groupModal" class="modal">
             <div class="modal-content">
-                <h2 data-translate="createGroup">${getTranslation('createGroup', userLanguage)}</h2>
+                <h2>${getTranslation('createGroup', userLanguage) || 'Crear Grupo'}</h2>
                 <div class="group-form">
-                    <input type="text" id="groupName" placeholder="${getTranslation('groupNamePlaceholder', userLanguage)}" />
+                    <input type="text" id="groupName" placeholder="${getTranslation('groupNamePlaceholder', userLanguage) || 'Nombre del grupo'}" />
                     <div class="selected-users">
-                        <h3 data-translate="selectedUsers">${getTranslation('selectedUsers', userLanguage)}</h3>
+                        <h3>${getTranslation('selectedUsers', userLanguage) || 'Usuarios seleccionados'}</h3>
                         <div id="selectedUsersList"></div>
                     </div>
                     <div class="user-search">
-                        <input type="text" id="groupUserSearch" placeholder="${getTranslation('searchUsers', userLanguage)}" />
+                        <input type="text" id="groupUserSearch" placeholder="${getTranslation('searchUsers', userLanguage) || 'Buscar usuarios'}" />
                         <div id="userSearchResults"></div>
                     </div>
                     <div class="modal-buttons">
-                        <button id="createGroupBtn" disabled data-translate="createGroup">
-                            ${getTranslation('createGroup', userLanguage)}
+                        <button id="createGroupBtn" disabled>
+                            ${getTranslation('createGroup', userLanguage) || 'Crear Grupo'}
                         </button>
-                        <button id="cancelGroupBtn" data-translate="cancel">
-                            ${getTranslation('cancel', userLanguage)}
+                        <button id="cancelGroupBtn">
+                            ${getTranslation('cancel', userLanguage) || 'Cancelar'}
                         </button>
                     </div>
                 </div>
@@ -1431,40 +1459,16 @@ function showGroupCreationModal() {
 
         try {
             const users = await searchUsersForGroup(searchTerm);
-            displayUserSearchResults(users, userSearchResults);
+            displayUserSearchResults(users, userSearchResults, selectedUsersList, createGroupBtn);
         } catch (error) {
             console.error('Error al buscar usuarios:', error);
         }
     }, 300));
 
-    // Actualizar botón de crear grupo
-    function updateCreateButton() {
-        createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput.value.trim();
-    }
-
-    // Mostrar usuarios seleccionados
-    function updateSelectedUsersList() {
-        selectedUsersList.innerHTML = Array.from(selectedUsers).map(user => `
-            <div class="selected-user-item">
-                <span>${user.email}</span>
-                <span class="remove-user" data-userid="${user.id}">×</span>
-            </div>
-        `).join('');
-
-        // Eventos para remover usuarios
-        selectedUsersList.querySelectorAll('.remove-user').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const userId = e.target.dataset.userid;
-                selectedUsers.delete(Array.from(selectedUsers).find(u => u.id === userId));
-                updateSelectedUsersList();
-                updateCreateButton();
-            });
-        });
-
-        updateCreateButton();
-    }
-
-    groupNameInput.addEventListener('input', updateCreateButton);
+    // Actualizar botón cuando cambia el nombre del grupo
+    groupNameInput.addEventListener('input', () => {
+        updateSelectedUsersList(selectedUsersList, createGroupBtn);
+    });
 
     // Crear grupo
     createGroupBtn.addEventListener('click', async () => {
@@ -1482,8 +1486,12 @@ function showGroupCreationModal() {
 
     // Cancelar
     cancelGroupBtn.addEventListener('click', () => {
+        selectedUsers.clear();
         modal.remove();
     });
+
+    // Inicializar la lista de usuarios seleccionados
+    updateSelectedUsersList(selectedUsersList, createGroupBtn);
 }
 
 // Función para buscar usuarios para el grupo
@@ -1516,8 +1524,8 @@ async function searchUsersForGroup(searchTerm) {
     }
 }
 
-// Función para mostrar resultados de búsqueda de usuarios
-function displayUserSearchResults(users, container) {
+// Función para mostrar resultados de búsqueda de usuarios para el grupo
+function displayUserSearchResults(users, container, selectedUsersList, createGroupBtn) {
     container.innerHTML = users.map(user => `
         <div class="user-item" data-userid="${user.id}" data-email="${user.email}">
             ${user.email}
@@ -1534,7 +1542,7 @@ function displayUserSearchResults(users, container) {
                 email: userEmail
             });
             
-            updateSelectedUsersList();
+            updateSelectedUsersList(selectedUsersList, createGroupBtn);
             item.remove();
         });
     });
