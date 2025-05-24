@@ -376,30 +376,43 @@ async function searchUsers(searchTerm) {
     }
 
     try {
+        console.log('Iniciando búsqueda con término:', searchTerm);
         const db = window.db;
         const usersRef = collection(db, 'users');
         const currentUserUid = auth.currentUser.uid;
+        console.log('Usuario actual:', currentUserUid);
         
         // Buscar por email
-        const emailQuery = query(usersRef, 
-            where('email', '>=', searchTerm.toLowerCase()),
-            where('email', '<=', searchTerm.toLowerCase() + '\uf8ff')
-        );
-
+        const emailQuery = query(usersRef);  // Primero obtengamos todos los usuarios para debug
+        
+        console.log('Ejecutando consulta...');
         const emailResults = await getDocs(emailQuery);
+        console.log('Total de documentos encontrados:', emailResults.size);
+        
         const users = new Set();
 
         emailResults.forEach(doc => {
             const userData = doc.data();
-            if (userData.uid !== currentUserUid && userData.email) {
-                console.log('Usuario encontrado:', userData); // Para debugging
+            console.log('Documento encontrado:', {
+                id: doc.id,
+                email: userData.email,
+                searchTerm: searchTerm.toLowerCase()
+            });
+            
+            // Verificar si el email incluye el término de búsqueda
+            if (userData.uid !== currentUserUid && 
+                userData.email && 
+                userData.email.toLowerCase().includes(searchTerm.toLowerCase())) {
+                console.log('Usuario coincide con la búsqueda:', userData);
                 users.add({ id: userData.uid, ...userData });
             }
         });
 
-        displaySearchResults(Array.from(users));
+        const resultsArray = Array.from(users);
+        console.log('Resultados finales:', resultsArray);
+        displaySearchResults(resultsArray);
     } catch (error) {
-        console.error('Error al buscar usuarios:', error);
+        console.error('Error detallado al buscar usuarios:', error);
         showError('errorSearch');
     }
 }
