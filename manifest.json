@@ -1,0 +1,30 @@
+{
+    "name": "TraduChat",
+    "short_name": "TraduChat",
+    "description": "Chat multilingüe con traducción automática",
+    "start_url": "./",
+    "display": "standalone",
+    "background_color": "#f6faf7",
+    "theme_color": "#00b451",
+    "icons": [
+        {
+            "src": "icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "orientation": "portrait",
+    "categories": ["social", "communication"],
+    "prefer_related_applications": false,
+    "lang": "es",
+    "dir": "ltr",
+    "scope": "./",
+    "shortcuts": [
+        {
+            "name": "Nuevo Chat",
+            "url": "/?action=new",
+            "description": "Iniciar un nuevo chat"
+        }
+    ]
+} 
