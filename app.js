@@ -548,10 +548,13 @@ async function setupRealtimeChats() {
     }
 
     try {
+        console.log('Intentando configurar consulta de chats...');
         const chatsRef = collection(db, 'chats');
-        const q = query(chatsRef, 
-            where('participants', 'array-contains', currentUser.uid),
-            orderBy('lastMessageTime', 'desc')
+        
+        // Primero, intentamos obtener los chats sin ordenar
+        const q = query(
+            chatsRef,
+            where('participants', 'array-contains', currentUser.uid)
         );
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
@@ -563,55 +566,72 @@ async function setupRealtimeChats() {
                 return;
             }
 
-            for (const change of snapshot.docChanges()) {
-                const chatData = change.doc.data();
-                const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
-                
-                // Obtener información del otro usuario
-                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                if (!otherUserDoc.exists()) continue;
-
-                const otherUserData = otherUserDoc.data();
-                const chatElement = document.createElement('div');
-                chatElement.className = 'chat-item';
-                
-                // Formatear la hora del último mensaje
-                const lastMessageTime = chatData.lastMessageTime ? 
-                    new Date(chatData.lastMessageTime.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-                chatElement.innerHTML = `
-                    <div class="chat-info">
-                        <div class="chat-name">${otherUserData.email}</div>
-                        <div class="last-message-container">
-                            <div class="last-message">${chatData.lastMessage || ''}</div>
-                            <div class="last-message-time">${lastMessageTime}</div>
-                        </div>
-                    </div>
-                `;
-
-                // Si es un chat nuevo o actualizado, añadir clase para animación
-                if (change.type === 'added' || change.type === 'modified') {
-                    chatElement.classList.add('chat-updated');
-                    setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
-                }
-
-                chatElement.addEventListener('click', () => {
-                    console.log('Abriendo chat:', change.doc.id);
-                    openChat(change.doc.id);
+            // Obtener todos los chats y ordenarlos manualmente
+            const chats = [];
+            for (const doc of snapshot.docs) {
+                const chatData = doc.data();
+                chats.push({
+                    id: doc.id,
+                    ...chatData,
+                    lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
                 });
+            }
 
-                // Si es un chat nuevo, notificar al usuario
-                if (change.type === 'added' && chatData.lastMessageTime) {
-                    notifyNewChat(otherUserData.email);
+            // Ordenar chats por lastMessageTime
+            chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+
+            for (const chat of chats) {
+                try {
+                    const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+                    if (!otherUserId) continue;
+
+                    // Obtener información del otro usuario
+                    const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                    if (!otherUserDoc.exists()) continue;
+
+                    const otherUserData = otherUserDoc.data();
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    
+                    // Formatear la hora del último mensaje
+                    const lastMessageTime = chat.lastMessageTime ? 
+                        chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    chatElement.innerHTML = `
+                        <div class="chat-info">
+                            <div class="chat-name">${otherUserData.email}</div>
+                            <div class="last-message-container">
+                                <div class="last-message">${chat.lastMessage || ''}</div>
+                                <div class="last-message-time">${lastMessageTime}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    // Si es un chat nuevo o actualizado, añadir clase para animación
+                    if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
+                        chatElement.classList.add('chat-updated');
+                        setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
+                    }
+
+                    chatElement.addEventListener('click', () => {
+                        console.log('Abriendo chat:', chat.id);
+                        openChat(chat.id);
+                    });
+
+                    chatList.appendChild(chatElement);
+                } catch (error) {
+                    console.error('Error al procesar chat individual:', error);
                 }
-
-                chatList.appendChild(chatElement);
             }
         }, (error) => {
             console.error('Error en escucha de chats:', error);
+            // Mostrar mensaje de error al usuario
+            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
         });
+
     } catch (error) {
         console.error('Error al configurar escucha de chats:', error);
+        chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
     }
 }
 
