@@ -989,14 +989,73 @@ async function displayMessage(messageData) {
         console.error('Error al formatear timestamp:', error);
         timeString = '';
     }
+
+    // Obtener el tipo de chat actual
+    const db = window.db;
+    const chatDoc = await getDoc(doc(db, 'chats', currentChat));
+    const chatData = chatDoc.exists() ? chatDoc.data() : null;
+    const isGroupChat = chatData && chatData.type === 'group';
     
+    // Si es un chat grupal, mostrar el email del remitente
+    let senderEmail = '';
+    if (isGroupChat && !isSentByMe) {
+        try {
+            const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+            if (senderDoc.exists()) {
+                senderEmail = senderDoc.data().email;
+            }
+        } catch (error) {
+            console.error('Error al obtener información del remitente:', error);
+        }
+    }
+
     messageElement.innerHTML = `
+        ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
         <span class="message-flag">${flag}</span>
         <span class="message-text">${messageText}</span>
         <span class="message-time">${timeString}</span>
     `;
+
+    // Añadir estilos para el remitente si no existen
+    if (!document.querySelector('#message-sender-styles')) {
+        const style = document.createElement('style');
+        style.id = 'message-sender-styles';
+        style.textContent = `
+            .message-sender {
+                display: block;
+                font-size: 0.8em;
+                color: #666;
+                margin-bottom: 2px;
+                font-weight: bold;
+            }
+            .message.sent .message-sender {
+                display: none;
+            }
+            .message.received {
+                margin-top: 8px;
+            }
+            .message.received + .message.received {
+                margin-top: 2px;
+            }
+            .message.received + .message.received .message-sender {
+                display: none;
+            }
+        `;
+        document.head.appendChild(style);
+    }
     
     if (messagesList) {
+        // Verificar si el mensaje anterior es del mismo remitente
+        const previousMessage = messagesList.lastElementChild;
+        if (previousMessage && 
+            previousMessage.classList.contains('message') && 
+            previousMessage.getAttribute('data-sender-id') === messageData.senderId) {
+            messageElement.querySelector('.message-sender')?.remove();
+        }
+
+        // Guardar el ID del remitente para comparaciones futuras
+        messageElement.setAttribute('data-sender-id', messageData.senderId);
+        
         messagesList.appendChild(messageElement);
         messagesList.scrollTop = messagesList.scrollHeight;
     } else {
