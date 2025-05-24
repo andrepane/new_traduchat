@@ -72,6 +72,10 @@ let typingTimeouts = {};
 let lastSender = null;
 let unsubscribeChats = null;
 
+// Variables para grupos
+let selectedUsers = new Set();
+let isGroupCreationMode = false;
+
 // Función para generar un código aleatorio de 6 dígitos
 function generateVerificationCode() {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -1004,53 +1008,60 @@ async function openChat(chatId) {
         const chatData = chatDoc.data();
         console.log('Datos del chat:', chatData);
         
-        // Obtener información del otro participante
-        const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
-        if (!otherUserId) {
-            console.error('No se encontró el otro participante');
-            return;
-        }
-
-        const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-        if (!otherUserDoc.exists()) {
-            console.error('Usuario no encontrado:', otherUserId);
-            return;
-        }
-
-        const otherUserData = otherUserDoc.data();
-        console.log('Datos del otro usuario:', otherUserData);
-
-        // Actualizar la interfaz
-        if (currentChatInfo) {
-            currentChatInfo.textContent = otherUserData.email;
-        }
-        if (messagesList) {
-            messagesList.innerHTML = '';
-        }
-
-        // Cambiar a la vista del chat
-        toggleChatList(false);
-
-        // Suscribirse a nuevos mensajes
-        const messagesRef = collection(db, 'chats', chatId, 'messages');
-        const q = query(messagesRef, orderBy('timestamp', 'asc'));
-        
-        unsubscribeMessages = onSnapshot(q, (snapshot) => {
-            snapshot.docChanges().forEach(change => {
-                if (change.type === 'added') {
-                    const messageData = change.doc.data();
-                    console.log('Nuevo mensaje recibido:', messageData);
-                    displayMessage(messageData);
-                }
-            });
-            
-            // Scroll al último mensaje
-            if (messagesList) {
-                messagesList.scrollTop = messagesList.scrollHeight;
+        if (chatData.type === 'group') {
+            // Es un chat grupal
+            if (currentChatInfo) {
+                currentChatInfo.textContent = chatData.name;
             }
-        }, (error) => {
-            console.error('Error en la suscripción a mensajes:', error);
-        });
+        } else {
+            // Es un chat individual (código existente)
+            const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
+            if (!otherUserId) {
+                console.error('No se encontró el otro participante');
+                return;
+            }
+
+            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+            if (!otherUserDoc.exists()) {
+                console.error('Usuario no encontrado:', otherUserId);
+                return;
+            }
+
+            const otherUserData = otherUserDoc.data();
+            console.log('Datos del otro usuario:', otherUserData);
+
+            // Actualizar la interfaz
+            if (currentChatInfo) {
+                currentChatInfo.textContent = otherUserData.email;
+            }
+            if (messagesList) {
+                messagesList.innerHTML = '';
+            }
+
+            // Cambiar a la vista del chat
+            toggleChatList(false);
+
+            // Suscribirse a nuevos mensajes
+            const messagesRef = collection(db, 'chats', chatId, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'asc'));
+            
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                snapshot.docChanges().forEach(change => {
+                    if (change.type === 'added') {
+                        const messageData = change.doc.data();
+                        console.log('Nuevo mensaje recibido:', messageData);
+                        displayMessage(messageData);
+                    }
+                });
+                
+                // Scroll al último mensaje
+                if (messagesList) {
+                    messagesList.scrollTop = messagesList.scrollHeight;
+                }
+            }, (error) => {
+                console.error('Error en la suscripción a mensajes:', error);
+            });
+        }
     } catch (error) {
         console.error('Error al abrir chat:', error);
         showError('errorOpenChat');
@@ -1243,4 +1254,341 @@ window.addEventListener('resize', () => {
             backButton.style.display = 'none';
         }
     }
-}); 
+});
+
+// Función para mostrar el modal de creación de grupo
+function showGroupCreationModal() {
+    const modalHtml = `
+        <div id="groupModal" class="modal">
+            <div class="modal-content">
+                <h2 data-translate="createGroup">${getTranslation('createGroup', userLanguage)}</h2>
+                <div class="group-form">
+                    <input type="text" id="groupName" placeholder="${getTranslation('groupNamePlaceholder', userLanguage)}" />
+                    <div class="selected-users">
+                        <h3 data-translate="selectedUsers">${getTranslation('selectedUsers', userLanguage)}</h3>
+                        <div id="selectedUsersList"></div>
+                    </div>
+                    <div class="user-search">
+                        <input type="text" id="groupUserSearch" placeholder="${getTranslation('searchUsers', userLanguage)}" />
+                        <div id="userSearchResults"></div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="createGroupBtn" disabled data-translate="createGroup">
+                            ${getTranslation('createGroup', userLanguage)}
+                        </button>
+                        <button id="cancelGroupBtn" data-translate="cancel">
+                            ${getTranslation('cancel', userLanguage)}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Añadir estilos
+    const style = document.createElement('style');
+    style.textContent = `
+        .modal {
+            display: block;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+        .group-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .group-form input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .selected-users {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .user-search {
+            position: relative;
+        }
+        #userSearchResults {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1;
+        }
+        .user-item {
+            padding: 8px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .user-item:hover {
+            background-color: #f5f5f5;
+        }
+        .selected-user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            background-color: #e9ecef;
+            border-radius: 4px;
+            margin: 2px 0;
+        }
+        .remove-user {
+            color: red;
+            cursor: pointer;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .modal-buttons button {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+        }
+        #createGroupBtn {
+            background-color: #007bff;
+            color: white;
+        }
+        #createGroupBtn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #cancelGroupBtn {
+            background-color: #6c757d;
+            color: white;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Eventos del modal
+    const modal = document.getElementById('groupModal');
+    const groupNameInput = document.getElementById('groupName');
+    const userSearchInput = document.getElementById('groupUserSearch');
+    const createGroupBtn = document.getElementById('createGroupBtn');
+    const cancelGroupBtn = document.getElementById('cancelGroupBtn');
+    const selectedUsersList = document.getElementById('selectedUsersList');
+    const userSearchResults = document.getElementById('userSearchResults');
+
+    // Búsqueda de usuarios
+    userSearchInput.addEventListener('input', debounce(async (e) => {
+        const searchTerm = e.target.value.trim();
+        if (searchTerm.length < 2) {
+            userSearchResults.innerHTML = '';
+            return;
+        }
+
+        try {
+            const users = await searchUsersForGroup(searchTerm);
+            displayUserSearchResults(users, userSearchResults);
+        } catch (error) {
+            console.error('Error al buscar usuarios:', error);
+        }
+    }, 300));
+
+    // Actualizar botón de crear grupo
+    function updateCreateButton() {
+        createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput.value.trim();
+    }
+
+    // Mostrar usuarios seleccionados
+    function updateSelectedUsersList() {
+        selectedUsersList.innerHTML = Array.from(selectedUsers).map(user => `
+            <div class="selected-user-item">
+                <span>${user.email}</span>
+                <span class="remove-user" data-userid="${user.id}">×</span>
+            </div>
+        `).join('');
+
+        // Eventos para remover usuarios
+        selectedUsersList.querySelectorAll('.remove-user').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const userId = e.target.dataset.userid;
+                selectedUsers.delete(Array.from(selectedUsers).find(u => u.id === userId));
+                updateSelectedUsersList();
+                updateCreateButton();
+            });
+        });
+
+        updateCreateButton();
+    }
+
+    groupNameInput.addEventListener('input', updateCreateButton);
+
+    // Crear grupo
+    createGroupBtn.addEventListener('click', async () => {
+        const groupName = groupNameInput.value.trim();
+        if (!groupName || selectedUsers.size < 2) return;
+
+        try {
+            await createGroupChat(groupName, Array.from(selectedUsers));
+            modal.remove();
+        } catch (error) {
+            console.error('Error al crear grupo:', error);
+            showError('errorCreateGroup');
+        }
+    });
+
+    // Cancelar
+    cancelGroupBtn.addEventListener('click', () => {
+        modal.remove();
+    });
+}
+
+// Función para buscar usuarios para el grupo
+async function searchUsersForGroup(searchTerm) {
+    const db = window.db;
+    const currentUser = auth.currentUser;
+    
+    try {
+        const usersRef = collection(db, 'users');
+        const snapshot = await getDocs(usersRef);
+        
+        const users = [];
+        snapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.uid !== currentUser.uid && 
+                userData.email.toLowerCase().includes(searchTerm.toLowerCase()) &&
+                !Array.from(selectedUsers).some(u => u.id === userData.uid)) {
+                users.push({
+                    id: userData.uid,
+                    email: userData.email,
+                    phoneNumber: userData.phoneNumber
+                });
+            }
+        });
+        
+        return users;
+    } catch (error) {
+        console.error('Error al buscar usuarios:', error);
+        throw error;
+    }
+}
+
+// Función para mostrar resultados de búsqueda de usuarios
+function displayUserSearchResults(users, container) {
+    container.innerHTML = users.map(user => `
+        <div class="user-item" data-userid="${user.id}" data-email="${user.email}">
+            ${user.email}
+        </div>
+    `).join('');
+
+    container.querySelectorAll('.user-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const userId = item.dataset.userid;
+            const userEmail = item.dataset.email;
+            
+            selectedUsers.add({
+                id: userId,
+                email: userEmail
+            });
+            
+            updateSelectedUsersList();
+            item.remove();
+        });
+    });
+}
+
+// Función para crear un chat grupal
+async function createGroupChat(groupName, participants) {
+    const db = window.db;
+    const currentUser = auth.currentUser;
+    
+    try {
+        // Añadir el usuario actual a los participantes
+        const allParticipants = [
+            currentUser.uid,
+            ...participants.map(p => p.id)
+        ];
+
+        // Crear el documento del grupo
+        const groupChatRef = await addDoc(collection(db, 'chats'), {
+            name: groupName,
+            type: 'group',
+            participants: allParticipants,
+            createdBy: currentUser.uid,
+            createdAt: serverTimestamp(),
+            lastMessage: null,
+            lastMessageTime: null
+        });
+
+        console.log('Grupo creado:', groupChatRef.id);
+        openChat(groupChatRef.id);
+    } catch (error) {
+        console.error('Error al crear grupo:', error);
+        throw error;
+    }
+}
+
+// Modificar la función displaySearchResults para incluir la opción de grupo
+function displaySearchResults(users) {
+    chatList.innerHTML = '';
+    
+    // Añadir botón de crear grupo
+    const createGroupButton = document.createElement('div');
+    createGroupButton.className = 'chat-item create-group';
+    createGroupButton.innerHTML = `
+        <div class="group-button">
+            <i class="fas fa-users"></i>
+            <span data-translate="createNewGroup">${getTranslation('createNewGroup', userLanguage)}</span>
+        </div>
+    `;
+    createGroupButton.addEventListener('click', () => {
+        showGroupCreationModal();
+    });
+    chatList.appendChild(createGroupButton);
+
+    if (users.length === 0) {
+        chatList.innerHTML += `<div class="chat-item" data-translate="noUsersFound">${getTranslation('noUsersFound', userLanguage)}</div>`;
+        return;
+    }
+
+    // Mostrar usuarios encontrados
+    users.forEach(user => {
+        const userElement = document.createElement('div');
+        userElement.className = 'chat-item';
+        userElement.innerHTML = `
+            <div class="user-info">
+                <div class="user-name">${user.email}</div>
+                <div class="user-phone">${user.phoneNumber || ''}</div>
+            </div>
+            <button class="start-chat-btn" data-userid="${user.id}" data-translate="startChat">
+                ${getTranslation('startChat', userLanguage)}
+            </button>
+        `;
+        
+        const startChatBtn = userElement.querySelector('.start-chat-btn');
+        startChatBtn.addEventListener('click', () => {
+            console.log('Iniciando chat con usuario:', user.id);
+            createChat(user.id);
+        });
+        
+        chatList.appendChild(userElement);
+    });
+} 
