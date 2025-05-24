@@ -555,7 +555,6 @@ async function setupRealtimeChats() {
         console.log('Intentando configurar consulta de chats...');
         const chatsRef = collection(db, 'chats');
         
-        // Primero, intentamos obtener los chats sin ordenar
         const q = query(
             chatsRef,
             where('participants', 'array-contains', currentUser.uid)
@@ -586,24 +585,39 @@ async function setupRealtimeChats() {
 
             for (const chat of chats) {
                 try {
-                    const otherUserId = chat.participants.find(id => id !== currentUser.uid);
-                    if (!otherUserId) continue;
-
-                    // Obtener información del otro usuario
-                    const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                    if (!otherUserDoc.exists()) continue;
-
-                    const otherUserData = otherUserDoc.data();
                     const chatElement = document.createElement('div');
                     chatElement.className = 'chat-item';
-                    
+                    if (chat.type === 'group') {
+                        chatElement.classList.add('group-chat');
+                    }
+                    if (chat.id === currentChat) {
+                        chatElement.classList.add('active');
+                    }
+
+                    let chatName = '';
+                    if (chat.type === 'group') {
+                        // Para grupos, usar el nombre del grupo
+                        chatName = chat.name;
+                    } else {
+                        // Para chats individuales, obtener el nombre del otro usuario
+                        const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+                        if (otherUserId) {
+                            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                            if (otherUserDoc.exists()) {
+                                const otherUserData = otherUserDoc.data();
+                                // Extraer el nombre del email (todo antes del @)
+                                chatName = otherUserData.email.split('@')[0];
+                            }
+                        }
+                    }
+
                     // Formatear la hora del último mensaje
                     const lastMessageTime = chat.lastMessageTime ? 
                         chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
                     chatElement.innerHTML = `
                         <div class="chat-info">
-                            <div class="chat-name">${otherUserData.email}</div>
+                            <div class="chat-name">${chatName}</div>
                             <div class="last-message-container">
                                 <div class="last-message">${chat.lastMessage || ''}</div>
                                 <div class="last-message-time">${lastMessageTime}</div>
@@ -619,6 +633,10 @@ async function setupRealtimeChats() {
 
                     chatElement.addEventListener('click', () => {
                         console.log('Abriendo chat:', chat.id);
+                        // Remover clase active de todos los chats
+                        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+                        // Añadir clase active al chat seleccionado
+                        chatElement.classList.add('active');
                         openChat(chat.id);
                     });
 
@@ -629,7 +647,6 @@ async function setupRealtimeChats() {
             }
         }, (error) => {
             console.error('Error en escucha de chats:', error);
-            // Mostrar mensaje de error al usuario
             chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
         });
 
