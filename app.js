@@ -486,13 +486,18 @@ function displaySearchResults(users) {
         userElement.innerHTML = `
             <div class="user-info">
                 <div class="user-name">${user.email}</div>
-                <div class="user-phone">${user.phoneNumber}</div>
+                <div class="user-phone">${user.phoneNumber || ''}</div>
             </div>
-            <button class="start-chat-btn" data-translate="startChat">${getTranslation('startChat', userLanguage)}</button>
+            <button class="start-chat-btn" data-userid="${user.id}" data-translate="startChat">
+                ${getTranslation('startChat', userLanguage)}
+            </button>
         `;
         
         const startChatBtn = userElement.querySelector('.start-chat-btn');
-        startChatBtn.onclick = () => createChat(user.id);
+        startChatBtn.addEventListener('click', () => {
+            console.log('Iniciando chat con usuario:', user.id);
+            createChat(user.id);
+        });
         
         chatList.appendChild(userElement);
     });
@@ -500,10 +505,17 @@ function displaySearchResults(users) {
 
 // Función para crear un nuevo chat
 async function createChat(otherUserId) {
+    console.log('Creando chat con usuario:', otherUserId);
     try {
         const db = window.db;
         const currentUser = auth.currentUser;
 
+        if (!currentUser || !otherUserId) {
+            console.error('Falta información necesaria para crear el chat');
+            return;
+        }
+
+        console.log('Verificando chat existente...');
         // Verificar si ya existe un chat entre estos usuarios
         const chatsRef = collection(db, 'chats');
         const q = query(chatsRef, 
@@ -516,16 +528,18 @@ async function createChat(otherUserId) {
         querySnapshot.forEach(doc => {
             const chatData = doc.data();
             if (chatData.participants.includes(otherUserId)) {
+                console.log('Chat existente encontrado:', doc.id);
                 existingChat = { id: doc.id, ...chatData };
             }
         });
 
         if (existingChat) {
-            // Si el chat ya existe, abrirlo
+            console.log('Abriendo chat existente:', existingChat.id);
             openChat(existingChat.id);
             return;
         }
 
+        console.log('Creando nuevo chat...');
         // Si no existe, crear nuevo chat
         const newChatRef = await addDoc(collection(db, 'chats'), {
             participants: [currentUser.uid, otherUserId],
@@ -534,7 +548,13 @@ async function createChat(otherUserId) {
             lastMessageTime: null
         });
 
+        console.log('Nuevo chat creado:', newChatRef.id);
         openChat(newChatRef.id);
+        
+        // En móvil, ocultar la lista de chats y mostrar el chat
+        if (window.innerWidth <= 768) {
+            toggleChatList(false);
+        }
     } catch (error) {
         console.error('Error al crear chat:', error);
         showError('errorCreateChat');
@@ -576,6 +596,7 @@ function debounce(func, wait) {
 
 // Función para abrir un chat
 async function openChat(chatId) {
+    console.log('Abriendo chat:', chatId);
     // Cancelar la suscripción anterior si existe
     if (unsubscribeMessages) {
         unsubscribeMessages();
@@ -584,18 +605,38 @@ async function openChat(chatId) {
     currentChat = chatId;
     
     try {
+        const db = window.db;
         // Obtener información del chat
         const chatDoc = await getDoc(doc(db, 'chats', chatId));
+        if (!chatDoc.exists()) {
+            console.error('Chat no encontrado:', chatId);
+            return;
+        }
+
         const chatData = chatDoc.data();
+        console.log('Datos del chat:', chatData);
         
         // Obtener información del otro participante
         const otherUserId = chatData.participants.find(id => id !== auth.currentUser.uid);
         const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+        
+        if (!otherUserDoc.exists()) {
+            console.error('Usuario no encontrado:', otherUserId);
+            return;
+        }
+
         const otherUserData = otherUserDoc.data();
+        console.log('Datos del otro usuario:', otherUserData);
 
         // Actualizar la interfaz
         currentChatInfo.textContent = otherUserData.email;
         messagesList.innerHTML = '';
+
+        // Mostrar la sección de chat
+        document.querySelector('.chat-container').classList.remove('hidden');
+        if (window.innerWidth <= 768) {
+            document.querySelector('.sidebar').classList.add('hidden');
+        }
 
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
