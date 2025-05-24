@@ -361,8 +361,18 @@ function adjustMobileLayout() {
     const sidebar = document.querySelector('.sidebar');
     const messagesList = document.querySelector('.messages-list');
     const inputContainer = document.querySelector('.input-container');
+    const mainScreen = document.getElementById('mainScreen');
     
     if (window.innerWidth <= 768) {
+        // Prevenir scroll y zoom indeseado en móviles
+        document.body.style.height = '100vh';
+        document.body.style.overflow = 'hidden';
+        
+        if (mainScreen) {
+            mainScreen.style.height = '100vh';
+            mainScreen.style.overflow = 'hidden';
+        }
+
         // Ajustes específicos para móvil
         if (chatContainer) {
             chatContainer.style.width = '100%';
@@ -371,6 +381,8 @@ function adjustMobileLayout() {
             chatContainer.style.top = '0';
             chatContainer.style.left = '0';
             chatContainer.style.zIndex = '1000';
+            chatContainer.style.display = 'flex';
+            chatContainer.style.flexDirection = 'column';
         }
         
         if (sidebar) {
@@ -383,20 +395,46 @@ function adjustMobileLayout() {
         }
         
         if (messagesList) {
-            messagesList.style.height = 'calc(100vh - 120px)';
-            messagesList.style.paddingBottom = '60px';
+            messagesList.style.flex = '1';
+            messagesList.style.height = 'calc(100vh - 130px)'; // Ajustado para dejar espacio para el input
+            messagesList.style.overflow = 'auto';
+            messagesList.style.paddingBottom = '20px';
+            messagesList.style.WebkitOverflowScrolling = 'touch'; // Para scroll suave en iOS
         }
         
         if (inputContainer) {
             inputContainer.style.position = 'fixed';
             inputContainer.style.bottom = '0';
+            inputContainer.style.left = '0';
             inputContainer.style.width = '100%';
+            inputContainer.style.minHeight = '60px';
             inputContainer.style.padding = '10px';
             inputContainer.style.backgroundColor = '#fff';
             inputContainer.style.borderTop = '1px solid #ddd';
+            inputContainer.style.zIndex = '1001';
+            inputContainer.style.display = 'flex';
+            inputContainer.style.alignItems = 'center';
+            inputContainer.style.justifyContent = 'space-between';
+            
+            // Ajustar el input de mensaje
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.style.flex = '1';
+                messageInput.style.margin = '0 10px';
+                messageInput.style.padding = '8px';
+                messageInput.style.fontSize = '16px'; // Previene zoom en iOS
+            }
         }
     } else {
         // Restablecer estilos para desktop
+        document.body.style.height = '';
+        document.body.style.overflow = '';
+        
+        if (mainScreen) {
+            mainScreen.style.height = '';
+            mainScreen.style.overflow = '';
+        }
+
         if (chatContainer) {
             chatContainer.style.width = '';
             chatContainer.style.height = '';
@@ -404,6 +442,8 @@ function adjustMobileLayout() {
             chatContainer.style.top = '';
             chatContainer.style.left = '';
             chatContainer.style.zIndex = '';
+            chatContainer.style.display = '';
+            chatContainer.style.flexDirection = '';
         }
         
         if (sidebar) {
@@ -416,23 +456,54 @@ function adjustMobileLayout() {
         }
         
         if (messagesList) {
+            messagesList.style.flex = '';
             messagesList.style.height = '';
+            messagesList.style.overflow = '';
             messagesList.style.paddingBottom = '';
+            messagesList.style.WebkitOverflowScrolling = '';
         }
         
         if (inputContainer) {
             inputContainer.style.position = '';
             inputContainer.style.bottom = '';
+            inputContainer.style.left = '';
             inputContainer.style.width = '';
+            inputContainer.style.minHeight = '';
             inputContainer.style.padding = '';
             inputContainer.style.backgroundColor = '';
             inputContainer.style.borderTop = '';
+            inputContainer.style.zIndex = '';
+            inputContainer.style.display = '';
+            inputContainer.style.alignItems = '';
+            inputContainer.style.justifyContent = '';
+            
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.style.flex = '';
+                messageInput.style.margin = '';
+                messageInput.style.padding = '';
+                messageInput.style.fontSize = '';
+            }
         }
     }
 }
 
-// Evento para ajustar el diseño cuando cambia el tamaño de la ventana
-window.addEventListener('resize', adjustMobileLayout);
+// Asegurarse de que el teclado virtual no cause problemas
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) {
+        const messagesList = document.querySelector('.messages-list');
+        if (messagesList) {
+            setTimeout(() => {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }, 100);
+        }
+    }
+});
+
+// Prevenir zoom en inputs en iOS
+document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+});
 
 // Función para mostrar la pantalla principal
 function showMainScreen() {
@@ -628,25 +699,111 @@ function displaySearchResults(users) {
 
     users.forEach(user => {
         const userElement = document.createElement('div');
-        userElement.className = 'chat-item';
-        userElement.innerHTML = `
-            <div class="user-info">
-                <div class="user-name">${user.email}</div>
-                <div class="user-phone">${user.phoneNumber || ''}</div>
-            </div>
-            <button class="start-chat-btn" data-userid="${user.id}" data-translate="startChat">
-                ${getTranslation('startChat', userLanguage)}
-            </button>
-        `;
+        userElement.className = 'chat-item search-result';
+        userElement.style.display = 'flex';
+        userElement.style.justifyContent = 'space-between';
+        userElement.style.alignItems = 'center';
+        userElement.style.padding = '10px 15px';
+        userElement.style.gap = '10px'; // Espacio entre elementos
+
+        // Contenedor para la información del usuario
+        const userInfoContainer = document.createElement('div');
+        userInfoContainer.className = 'user-info';
+        userInfoContainer.style.flex = '1';
+        userInfoContainer.style.minWidth = '0'; // Permite que el texto se ajuste
+        userInfoContainer.style.overflow = 'hidden'; // Previene desbordamiento
+
+        // Email del usuario con ellipsis si es muy largo
+        const userEmail = document.createElement('div');
+        userEmail.className = 'user-name';
+        userEmail.textContent = user.email;
+        userEmail.style.overflow = 'hidden';
+        userEmail.style.textOverflow = 'ellipsis';
+        userEmail.style.whiteSpace = 'nowrap';
+        userEmail.style.marginBottom = '2px';
+        userEmail.style.fontSize = '14px';
+        userEmail.style.fontWeight = '500';
+
+        // Número de teléfono (si existe)
+        const userPhone = document.createElement('div');
+        userPhone.className = 'user-phone';
+        userPhone.textContent = user.phoneNumber || '';
+        userPhone.style.fontSize = '12px';
+        userPhone.style.color = '#666';
+        userPhone.style.overflow = 'hidden';
+        userPhone.style.textOverflow = 'ellipsis';
+        userPhone.style.whiteSpace = 'nowrap';
+
+        userInfoContainer.appendChild(userEmail);
+        userInfoContainer.appendChild(userPhone);
+
+        // Botón de inicio de chat
+        const startChatBtn = document.createElement('button');
+        startChatBtn.className = 'start-chat-btn';
+        startChatBtn.setAttribute('data-userid', user.id);
+        startChatBtn.setAttribute('data-translate', 'startChat');
+        startChatBtn.textContent = getTranslation('startChat', userLanguage);
         
-        const startChatBtn = userElement.querySelector('.start-chat-btn');
+        // Estilos del botón
+        startChatBtn.style.padding = '6px 12px';
+        startChatBtn.style.fontSize = '13px';
+        startChatBtn.style.backgroundColor = '#007bff';
+        startChatBtn.style.color = 'white';
+        startChatBtn.style.border = 'none';
+        startChatBtn.style.borderRadius = '4px';
+        startChatBtn.style.cursor = 'pointer';
+        startChatBtn.style.whiteSpace = 'nowrap';
+        startChatBtn.style.minWidth = 'auto';
+        startChatBtn.style.flexShrink = '0'; // Evita que el botón se encoja
+
+        // Hover effect
+        startChatBtn.addEventListener('mouseover', () => {
+            startChatBtn.style.backgroundColor = '#0056b3';
+        });
+        startChatBtn.addEventListener('mouseout', () => {
+            startChatBtn.style.backgroundColor = '#007bff';
+        });
+
+        // Click effect
+        startChatBtn.addEventListener('mousedown', () => {
+            startChatBtn.style.transform = 'scale(0.98)';
+        });
+        startChatBtn.addEventListener('mouseup', () => {
+            startChatBtn.style.transform = 'scale(1)';
+        });
+
         startChatBtn.addEventListener('click', () => {
             console.log('Iniciando chat con usuario:', user.id);
             createChat(user.id);
         });
+
+        // Agregar elementos al contenedor principal
+        userElement.appendChild(userInfoContainer);
+        userElement.appendChild(startChatBtn);
         
+        // Hover effect para todo el elemento
+        userElement.addEventListener('mouseover', () => {
+            userElement.style.backgroundColor = '#f8f9fa';
+        });
+        userElement.addEventListener('mouseout', () => {
+            userElement.style.backgroundColor = '';
+        });
+
         chatList.appendChild(userElement);
     });
+
+    // Ajustar el diseño para móviles
+    if (window.innerWidth <= 768) {
+        const searchResults = document.querySelectorAll('.search-result');
+        searchResults.forEach(result => {
+            result.style.padding = '12px 10px';
+            const button = result.querySelector('.start-chat-btn');
+            if (button) {
+                button.style.padding = '4px 8px';
+                button.style.fontSize = '12px';
+            }
+        });
+    }
 }
 
 // Función para crear un nuevo chat
