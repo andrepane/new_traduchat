@@ -190,39 +190,60 @@ loginBtn.addEventListener('click', async () => {
     }
 
     const auth = window.auth;
-    if (!auth) {
-        console.error('Auth no está inicializado');
+    const db = window.db;
+    
+    if (!auth || !db) {
+        console.error('Auth o Firestore no están inicializados');
         showError('errorGeneric');
         return;
     }
 
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log('Intentando crear/autenticar usuario...');
+        let userCredential;
+        
+        try {
+            // Intentar crear nuevo usuario
+            userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            console.log('Usuario creado exitosamente');
+        } catch (error) {
+            if (error.code === 'auth/email-already-in-use') {
+                // Si el usuario ya existe, intentar iniciar sesión
+                console.log('Usuario existente, intentando login...');
+                userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Login exitoso');
+            } else {
+                throw error; // Re-lanzar otros errores
+            }
+        }
+
         const user = userCredential.user;
+        console.log('Usuario autenticado:', user.uid);
+
+        // Guardar o actualizar información del usuario
+        try {
+            console.log('Guardando información del usuario en Firestore...');
+            await setDoc(doc(db, 'users', user.uid), {
+                uid: user.uid,
+                email: email.toLowerCase(),
+                phoneNumber: phoneNumber,
+                language: userLanguage,
+                createdAt: serverTimestamp(),
+                lastUpdated: serverTimestamp()
+            }, { merge: true });
+            console.log('Información del usuario guardada exitosamente');
+        } catch (dbError) {
+            console.error('Error al guardar en Firestore:', dbError);
+        }
 
         localStorage.setItem('userPhone', phoneNumber);
         localStorage.setItem('userLanguage', userLanguage);
         
-        const db = window.db;
-        if (db) {
-            try {
-                await setDoc(doc(db, 'users', user.uid), {
-                    uid: user.uid,
-                    email: email.toLowerCase(),
-                    phoneNumber: phoneNumber,
-                    language: userLanguage,
-                    createdAt: serverTimestamp()
-                });
-            } catch (error) {
-                console.error('Error al guardar información del usuario:', error);
-            }
-        }
-
         showMainScreen();
         updateUserInfo(user);
         loadChats();
     } catch (error) {
-        console.error('Error de registro:', error);
+        console.error('Error en el proceso de registro/login:', error);
         
         switch (error.code) {
             case 'auth/weak-password':
@@ -230,19 +251,6 @@ loginBtn.addEventListener('click', async () => {
                 break;
             case 'auth/invalid-email':
                 showError('errorInvalidEmail');
-                break;
-            case 'auth/email-already-in-use':
-                try {
-                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-                    localStorage.setItem('userPhone', phoneNumber);
-                    localStorage.setItem('userLanguage', userLanguage);
-                    showMainScreen();
-                    updateUserInfo(user);
-                    loadChats();
-                } catch (loginError) {
-                    showError('errorEmailInUse');
-                }
                 break;
             case 'auth/network-request-failed':
                 showError('errorNetwork');
