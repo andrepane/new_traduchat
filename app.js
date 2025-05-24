@@ -297,16 +297,43 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(animateTitleWave, 100);
 
     const auth = window.auth;
-    if (!auth) {
-        console.error('Auth no está inicializado');
+    const db = window.db;
+    
+    if (!auth || !db) {
+        console.error('Auth o Firestore no están inicializados');
         hideLoadingScreen();
         return;
     }
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log('Usuario autenticado:', user.email);
             console.log('User ID:', user.uid);
+            
+            // Verificar y crear/actualizar documento del usuario
+            try {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (!userDoc.exists()) {
+                    console.log('Creando documento de usuario...');
+                    const phoneNumber = localStorage.getItem('userPhone') || '';
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        email: user.email.toLowerCase(),
+                        phoneNumber: phoneNumber,
+                        language: userLanguage,
+                        createdAt: serverTimestamp(),
+                        lastUpdated: serverTimestamp()
+                    });
+                    console.log('Documento de usuario creado exitosamente');
+                } else {
+                    console.log('Documento de usuario existe:', userDoc.data());
+                }
+            } catch (error) {
+                console.error('Error al verificar/crear documento de usuario:', error);
+            }
+
             hideLoadingScreen();
             showMainScreen();
             updateUserInfo(user);
@@ -409,28 +436,31 @@ async function searchUsers(searchTerm) {
         const currentUserUid = auth.currentUser.uid;
         console.log('Usuario actual:', currentUserUid);
         
-        // Buscar por email
-        const emailQuery = query(usersRef);  // Primero obtengamos todos los usuarios para debug
+        // Primero, verificar todos los documentos
+        const allUsersQuery = query(usersRef);
+        const snapshot = await getDocs(allUsersQuery);
         
-        console.log('Ejecutando consulta...');
+        console.log('Documentos en la colección users:', snapshot.size);
+        snapshot.forEach(doc => {
+            console.log('Documento encontrado:', doc.id, doc.data());
+        });
+
+        // Ahora hacer la búsqueda específica
+        const emailQuery = query(usersRef, 
+            where('email', '>=', searchTerm.toLowerCase()),
+            where('email', '<=', searchTerm.toLowerCase() + '\uf8ff')
+        );
+
         const emailResults = await getDocs(emailQuery);
-        console.log('Total de documentos encontrados:', emailResults.size);
+        console.log('Resultados de búsqueda:', emailResults.size);
         
         const users = new Set();
 
         emailResults.forEach(doc => {
             const userData = doc.data();
-            console.log('Documento encontrado:', {
-                id: doc.id,
-                email: userData.email,
-                searchTerm: searchTerm.toLowerCase()
-            });
-            
-            // Verificar si el email incluye el término de búsqueda
-            if (userData.uid !== currentUserUid && 
-                userData.email && 
-                userData.email.toLowerCase().includes(searchTerm.toLowerCase())) {
-                console.log('Usuario coincide con la búsqueda:', userData);
+            console.log('Evaluando usuario:', userData);
+            if (userData.uid !== currentUserUid && userData.email) {
+                console.log('Usuario coincide con búsqueda:', userData);
                 users.add({ id: userData.uid, ...userData });
             }
         });
