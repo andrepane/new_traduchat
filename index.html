@@ -13,6 +13,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/svg+xml" href="icon.svg">
     <link rel="apple-touch-icon" href="icon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <!-- Pantalla de carga -->
@@ -77,10 +78,17 @@
                         <option value="it" data-translate="languageIt">Italiano</option>
                     </select>
                 </div>
-                <button id="newChat" class="icon-button" data-translate="newChat">+</button>
-                <button id="logoutBtn" class="icon-button">
-                    <span class="material-icons">logout</span>
-                </button>
+                <div class="header-actions">
+                    <button id="createGroup" class="icon-button" title="Crear grupo" data-translate="createNewGroup">
+                        <i class="fas fa-users"></i>
+                    </button>
+                    <button id="newChat" class="icon-button" title="Nuevo chat" data-translate="newChat">
+                        <i class="fas fa-comment"></i>
+                    </button>
+                    <button id="logoutBtn" class="icon-button" title="Cerrar sesión">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
             </div>
             <div class="search-container">
                 <input type="text" id="searchContacts" data-translate="search" placeholder="Buscar o iniciar nuevo chat" />
