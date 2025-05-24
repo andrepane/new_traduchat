@@ -206,9 +206,9 @@ loginBtn.addEventListener('click', async () => {
         const db = window.db;
         if (db) {
             try {
-                await addDoc(collection(db, 'users'), {
+                await setDoc(doc(db, 'users', user.uid), {
                     uid: user.uid,
-                    email: user.email,
+                    email: email.toLowerCase(),
                     phoneNumber: phoneNumber,
                     language: userLanguage,
                     createdAt: serverTimestamp()
@@ -391,7 +391,8 @@ async function searchUsers(searchTerm) {
 
         emailResults.forEach(doc => {
             const userData = doc.data();
-            if (userData.uid !== currentUserUid) {
+            if (userData.uid !== currentUserUid && userData.email) {
+                console.log('Usuario encontrado:', userData); // Para debugging
                 users.add({ id: userData.uid, ...userData });
             }
         });
