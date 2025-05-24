@@ -18,11 +18,23 @@ import {
     doc,
     orderBy,
     setDoc,
-    updateDoc
+    updateDoc,
+    initializeFirestore,
+    getFirestore
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
+
+// Verificar inicialización de Firebase
+console.log('Verificando inicialización de Firebase...');
+if (!window.db) {
+    console.log('Inicializando Firestore...');
+    window.db = getFirestore();
+}
+if (!window.auth) {
+    console.error('Auth no está inicializado!');
+}
 
 // Referencias a elementos del DOM
 const authScreen = document.getElementById('authScreen');
@@ -199,42 +211,49 @@ loginBtn.addEventListener('click', async () => {
     }
 
     try {
-        console.log('Intentando crear/autenticar usuario...');
+        console.log('Iniciando proceso de registro/login...');
         let userCredential;
         
         try {
-            // Intentar crear nuevo usuario
+            console.log('Intentando crear nuevo usuario:', email);
             userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            console.log('Usuario creado exitosamente');
+            console.log('Usuario creado exitosamente:', userCredential.user.uid);
         } catch (error) {
+            console.log('Error en creación:', error.code);
             if (error.code === 'auth/email-already-in-use') {
-                // Si el usuario ya existe, intentar iniciar sesión
-                console.log('Usuario existente, intentando login...');
+                console.log('Email en uso, intentando login...');
                 userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log('Login exitoso');
+                console.log('Login exitoso:', userCredential.user.uid);
             } else {
-                throw error; // Re-lanzar otros errores
+                throw error;
             }
         }
 
         const user = userCredential.user;
-        console.log('Usuario autenticado:', user.uid);
+        console.log('Guardando datos en Firestore para usuario:', user.uid);
 
-        // Guardar o actualizar información del usuario
-        try {
-            console.log('Guardando información del usuario en Firestore...');
-            await setDoc(doc(db, 'users', user.uid), {
-                uid: user.uid,
-                email: email.toLowerCase(),
-                phoneNumber: phoneNumber,
-                language: userLanguage,
-                createdAt: serverTimestamp(),
-                lastUpdated: serverTimestamp()
-            }, { merge: true });
-            console.log('Información del usuario guardada exitosamente');
-        } catch (dbError) {
-            console.error('Error al guardar en Firestore:', dbError);
+        // Crear el documento del usuario
+        const userDocRef = doc(db, 'users', user.uid);
+        const userData = {
+            uid: user.uid,
+            email: email.toLowerCase(),
+            phoneNumber: phoneNumber,
+            language: userLanguage,
+            lastUpdated: serverTimestamp()
+        };
+
+        // Si es nuevo registro, añadir createdAt
+        if (!userCredential.operationType || userCredential.operationType === 'signIn') {
+            userData.createdAt = serverTimestamp();
         }
+
+        console.log('Datos a guardar:', userData);
+        await setDoc(userDocRef, userData, { merge: true });
+        console.log('Datos guardados exitosamente en Firestore');
+
+        // Verificar que se guardó correctamente
+        const savedDoc = await getDoc(userDocRef);
+        console.log('Documento guardado:', savedDoc.exists(), savedDoc.data());
 
         localStorage.setItem('userPhone', phoneNumber);
         localStorage.setItem('userLanguage', userLanguage);
@@ -243,7 +262,7 @@ loginBtn.addEventListener('click', async () => {
         updateUserInfo(user);
         loadChats();
     } catch (error) {
-        console.error('Error en el proceso de registro/login:', error);
+        console.error('Error completo:', error);
         
         switch (error.code) {
             case 'auth/weak-password':
