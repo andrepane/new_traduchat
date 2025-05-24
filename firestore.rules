@@ -8,7 +8,7 @@ service cloud.firestore {
 
     // Reglas para la colección users
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read, list: if isAuthenticated();
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
