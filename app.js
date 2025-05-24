@@ -378,36 +378,21 @@ async function searchUsers(searchTerm) {
     try {
         const db = window.db;
         const usersRef = collection(db, 'users');
-        
-        // Buscar por email o número de teléfono
-        const emailQuery = query(usersRef, 
-            where('email', '>=', searchTerm),
-            where('email', '<=', searchTerm + '\uf8ff')
-        );
-        
-        const phoneQuery = query(usersRef,
-            where('phoneNumber', '>=', searchTerm),
-            where('phoneNumber', '<=', searchTerm + '\uf8ff')
-        );
-
-        const [emailResults, phoneResults] = await Promise.all([
-            getDocs(emailQuery),
-            getDocs(phoneQuery)
-        ]);
-
         const currentUserUid = auth.currentUser.uid;
+        
+        // Buscar por email
+        const emailQuery = query(usersRef, 
+            where('email', '>=', searchTerm.toLowerCase()),
+            where('email', '<=', searchTerm.toLowerCase() + '\uf8ff')
+        );
+
+        const emailResults = await getDocs(emailQuery);
         const users = new Set();
 
-        // Combinar resultados de email y teléfono
         emailResults.forEach(doc => {
-            if (doc.id !== currentUserUid) {
-                users.add({ id: doc.id, ...doc.data() });
-            }
-        });
-
-        phoneResults.forEach(doc => {
-            if (doc.id !== currentUserUid) {
-                users.add({ id: doc.id, ...doc.data() });
+            const userData = doc.data();
+            if (userData.uid !== currentUserUid) {
+                users.add({ id: userData.uid, ...userData });
             }
         });
 
