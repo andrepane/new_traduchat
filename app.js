@@ -944,6 +944,11 @@ newChatBtn.addEventListener('click', () => {
     searchInput.focus();
 });
 
+// Manejador para el botón de crear grupo
+document.getElementById('createGroup').addEventListener('click', () => {
+    showGroupCreationModal();
+});
+
 // Evento para búsqueda de usuarios
 searchInput.addEventListener('input', debounce(async (e) => {
     const searchTerm = e.target.value.toLowerCase().trim();
@@ -1522,25 +1527,26 @@ function showGroupCreationModal() {
     const modalHtml = `
         <div id="groupModal" class="modal">
             <div class="modal-content">
-                <h2>${getTranslation('createGroup', userLanguage) || 'Crear Grupo'}</h2>
+                <h2>${getTranslation('createGroup', userLanguage)}</h2>
                 <div class="group-form">
-                    <input type="text" id="groupName" placeholder="${getTranslation('groupNamePlaceholder', userLanguage) || 'Nombre del grupo'}" />
+                    <input type="text" id="groupName" placeholder="${getTranslation('groupNamePlaceholder', userLanguage)}" />
                     <div class="selected-users">
-                        <h3>${getTranslation('selectedUsers', userLanguage) || 'Usuarios seleccionados'} 
+                        <h3>
+                            ${getTranslation('selectedUsers', userLanguage)}
                             <span class="users-count">(0/2 mínimo)</span>
                         </h3>
                         <div id="selectedUsersList"></div>
                     </div>
                     <div class="user-search">
-                        <input type="text" id="groupUserSearch" placeholder="${getTranslation('searchUsers', userLanguage) || 'Buscar usuarios'}" />
+                        <input type="text" id="groupUserSearch" placeholder="${getTranslation('searchUsers', userLanguage)}" />
                         <div id="userSearchResults"></div>
                     </div>
                     <div class="modal-buttons">
                         <button id="createGroupBtn" disabled>
-                            ${getTranslation('createGroup', userLanguage) || 'Crear Grupo'}
+                            ${getTranslation('createGroup', userLanguage)}
                         </button>
                         <button id="cancelGroupBtn">
-                            ${getTranslation('cancel', userLanguage) || 'Cancelar'}
+                            ${getTranslation('cancel', userLanguage)}
                         </button>
                     </div>
                 </div>
@@ -1563,7 +1569,7 @@ function showGroupCreationModal() {
     // Actualizar contador de usuarios
     function updateUsersCount() {
         usersCount.textContent = `(${selectedUsers.size}/2 mínimo)`;
-        usersCount.style.color = selectedUsers.size >= 2 ? '#28a745' : '#dc3545';
+        usersCount.style.color = selectedUsers.size >= 2 ? '#10b981' : '#ef4444';
     }
 
     // Búsqueda de usuarios
@@ -1585,24 +1591,25 @@ function showGroupCreationModal() {
 
     // Actualizar botón cuando cambia el nombre del grupo
     groupNameInput.addEventListener('input', () => {
-        updateSelectedUsersList(selectedUsersList, createGroupBtn);
-        updateUsersCount();
+        createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < 2;
     });
 
     // Crear grupo
     createGroupBtn.addEventListener('click', async () => {
         const groupName = groupNameInput.value.trim();
         if (!groupName || selectedUsers.size < 2) {
-            showError(getTranslation('errorMinUsers', userLanguage) || 'Se necesitan al menos 2 participantes para crear un grupo');
+            showError('errorMinUsers');
             return;
         }
 
         try {
             await createGroupChat(groupName, Array.from(selectedUsers));
             modal.remove();
+            // Mostrar mensaje de éxito
+            alert(getTranslation('groupCreated', userLanguage));
         } catch (error) {
             console.error('Error al crear grupo:', error);
-            showError(getTranslation('errorCreateGroup', userLanguage));
+            showError('errorCreateGroup');
         }
     });
 
@@ -1610,6 +1617,14 @@ function showGroupCreationModal() {
     cancelGroupBtn.addEventListener('click', () => {
         selectedUsers.clear();
         modal.remove();
+    });
+
+    // Cerrar modal al hacer clic fuera
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            selectedUsers.clear();
+            modal.remove();
+        }
     });
 
     // Inicializar la lista de usuarios seleccionados
@@ -1649,29 +1664,44 @@ async function searchUsersForGroup(searchTerm) {
 
 // Función para mostrar resultados de búsqueda de usuarios para el grupo
 function displayUserSearchResults(users, container, selectedUsersList, createGroupBtn) {
+    if (users.length === 0) {
+        container.innerHTML = `<div class="user-item no-results">${getTranslation('noUsersFound', userLanguage)}</div>`;
+        return;
+    }
+
     container.innerHTML = users.map(user => `
         <div class="user-item" data-userid="${user.id}" data-email="${user.email}">
-            ${user.email}
+            <i class="fas fa-user"></i>
+            <span>${user.email}</span>
         </div>
     `).join('');
 
     container.querySelectorAll('.user-item').forEach(item => {
+        if (item.classList.contains('no-results')) return;
+        
         item.addEventListener('click', () => {
             const userId = item.dataset.userid;
             const userEmail = item.dataset.email;
             
-            // Verificar si el usuario ya está seleccionado
             if (!Array.from(selectedUsers).some(u => u.id === userId)) {
                 selectedUsers.add({
                     id: userId,
                     email: userEmail
                 });
                 
-                console.log('Usuario añadido al grupo:', userEmail);
-                console.log('Total usuarios seleccionados:', selectedUsers.size);
-                
                 updateSelectedUsersList(selectedUsersList, createGroupBtn);
                 item.remove();
+                
+                // Actualizar estado del botón de crear
+                const groupNameInput = document.getElementById('groupName');
+                createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < 2;
+                
+                // Actualizar contador
+                const usersCount = document.querySelector('.users-count');
+                if (usersCount) {
+                    usersCount.textContent = `(${selectedUsers.size}/2 mínimo)`;
+                    usersCount.style.color = selectedUsers.size >= 2 ? '#10b981' : '#ef4444';
+                }
             }
         });
     });
@@ -1684,7 +1714,7 @@ async function createGroupChat(groupName, participants) {
 
     if (participants.length < 2) {
         console.error('Se necesitan al menos 2 participantes para crear un grupo');
-        showError(getTranslation('errorMinUsers', userLanguage) || 'Se necesitan al menos 2 participantes para crear un grupo');
+        showError('errorMinUsers');
         return;
     }
 
@@ -1730,6 +1760,6 @@ async function createGroupChat(groupName, participants) {
         openChat(groupChatRef.id);
     } catch (error) {
         console.error('Error al crear grupo:', error);
-        showError(getTranslation('errorCreateGroup', userLanguage));
+        showError('errorCreateGroup');
     }
 } 
