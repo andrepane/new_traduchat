@@ -1032,14 +1032,63 @@ async function openChat(chatId) {
 
         const chatData = chatDoc.data();
         console.log('Datos del chat:', chatData);
+
+        // Limpiar mensajes anteriores
+        if (messagesList) {
+            messagesList.innerHTML = '';
+        }
         
         if (chatData.type === 'group') {
             // Es un chat grupal
+            console.log('Abriendo chat grupal:', chatData.name);
+            
+            // Obtener información de todos los participantes
+            const participantsInfo = await Promise.all(
+                chatData.participants.map(async (userId) => {
+                    const userDoc = await getDoc(doc(db, 'users', userId));
+                    return userDoc.exists() ? userDoc.data() : { email: 'Usuario desconocido' };
+                })
+            );
+
+            // Crear elemento para mostrar información del grupo
+            const groupInfoElement = document.createElement('div');
+            groupInfoElement.className = 'group-info';
+            groupInfoElement.innerHTML = `
+                <div class="group-name">${chatData.name}</div>
+                <div class="group-participants">
+                    ${participantsInfo.map(user => user.email).join(', ')}
+                </div>
+            `;
+
+            // Actualizar la interfaz
             if (currentChatInfo) {
-                currentChatInfo.textContent = chatData.name;
+                currentChatInfo.innerHTML = '';
+                currentChatInfo.appendChild(groupInfoElement);
             }
+
+            // Añadir estilos para la información del grupo
+            const style = document.createElement('style');
+            style.textContent = `
+                .group-info {
+                    padding: 10px;
+                    border-bottom: 1px solid #ddd;
+                }
+                .group-name {
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    margin-bottom: 5px;
+                }
+                .group-participants {
+                    font-size: 0.9em;
+                    color: #666;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            `;
+            document.head.appendChild(style);
         } else {
-            // Es un chat individual (código existente)
+            // Es un chat individual
             const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
             if (!otherUserId) {
                 console.error('No se encontró el otro participante');
@@ -1053,44 +1102,87 @@ async function openChat(chatId) {
             }
 
             const otherUserData = otherUserDoc.data();
-            console.log('Datos del otro usuario:', otherUserData);
-
-            // Actualizar la interfaz
             if (currentChatInfo) {
                 currentChatInfo.textContent = otherUserData.email;
             }
-            if (messagesList) {
-                messagesList.innerHTML = '';
-            }
+        }
 
-            // Cambiar a la vista del chat
-            toggleChatList(false);
+        // Cambiar a la vista del chat
+        toggleChatList(false);
 
-            // Suscribirse a nuevos mensajes
-            const messagesRef = collection(db, 'chats', chatId, 'messages');
-            const q = query(messagesRef, orderBy('timestamp', 'asc'));
-            
-            unsubscribeMessages = onSnapshot(q, (snapshot) => {
-                snapshot.docChanges().forEach(change => {
-                    if (change.type === 'added') {
-                        const messageData = change.doc.data();
-                        console.log('Nuevo mensaje recibido:', messageData);
+        // Suscribirse a nuevos mensajes
+        const messagesRef = collection(db, 'chats', chatId, 'messages');
+        const q = query(messagesRef, orderBy('timestamp', 'asc'));
+        
+        unsubscribeMessages = onSnapshot(q, (snapshot) => {
+            snapshot.docChanges().forEach(change => {
+                if (change.type === 'added') {
+                    const messageData = change.doc.data();
+                    console.log('Nuevo mensaje recibido:', messageData);
+                    
+                    // Manejar mensajes de sistema de manera especial
+                    if (messageData.type === 'system') {
+                        displaySystemMessage(messageData);
+                    } else {
                         displayMessage(messageData);
                     }
-                });
-                
-                // Scroll al último mensaje
-                if (messagesList) {
-                    messagesList.scrollTop = messagesList.scrollHeight;
                 }
-            }, (error) => {
-                console.error('Error en la suscripción a mensajes:', error);
             });
-        }
+            
+            // Scroll al último mensaje
+            if (messagesList) {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+        }, (error) => {
+            console.error('Error en la suscripción a mensajes:', error);
+        });
     } catch (error) {
         console.error('Error al abrir chat:', error);
         showError('errorOpenChat');
     }
+}
+
+// Función para mostrar mensajes del sistema
+function displaySystemMessage(messageData) {
+    if (!messagesList) return;
+
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message system-message';
+    messageElement.innerHTML = `
+        <span class="message-text">${messageData.text}</span>
+        <span class="message-time">${
+            messageData.timestamp ? 
+            new Date(messageData.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
+            ''
+        }</span>
+    `;
+
+    // Añadir estilos para mensajes del sistema si no existen
+    if (!document.querySelector('#system-message-styles')) {
+        const style = document.createElement('style');
+        style.id = 'system-message-styles';
+        style.textContent = `
+            .system-message {
+                text-align: center;
+                margin: 10px 0;
+                padding: 5px 10px;
+                background-color: #f8f9fa;
+                border-radius: 15px;
+                font-style: italic;
+                color: #6c757d;
+                font-size: 0.9em;
+            }
+            .system-message .message-time {
+                font-size: 0.8em;
+                margin-left: 5px;
+                color: #adb5bd;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    messagesList.appendChild(messageElement);
+    messagesList.scrollTop = messagesList.scrollHeight;
 }
 
 // Función para enviar mensaje
