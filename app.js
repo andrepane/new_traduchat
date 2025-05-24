@@ -342,6 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
             showAuthScreen();
         }
     });
+
+    adjustMobileLayout();
 });
 
 // Funciones de UI mejoradas
@@ -353,19 +355,86 @@ function hideLoadingScreen() {
     document.querySelector('.loading-screen').style.display = 'none';
 }
 
-function toggleChatList(show) {
-    const sidebar = document.querySelector('.sidebar');
+// Función para ajustar el diseño en móvil
+function adjustMobileLayout() {
     const chatContainer = document.querySelector('.chat-container');
+    const sidebar = document.querySelector('.sidebar');
+    const messagesList = document.querySelector('.messages-list');
+    const inputContainer = document.querySelector('.input-container');
     
-    if (show) {
-        sidebar.classList.remove('hidden');
-        chatContainer.classList.remove('active');
+    if (window.innerWidth <= 768) {
+        // Ajustes específicos para móvil
+        if (chatContainer) {
+            chatContainer.style.width = '100%';
+            chatContainer.style.height = '100vh';
+            chatContainer.style.position = 'fixed';
+            chatContainer.style.top = '0';
+            chatContainer.style.left = '0';
+            chatContainer.style.zIndex = '1000';
+        }
+        
+        if (sidebar) {
+            sidebar.style.width = '100%';
+            sidebar.style.height = '100vh';
+            sidebar.style.position = 'fixed';
+            sidebar.style.top = '0';
+            sidebar.style.left = '0';
+            sidebar.style.zIndex = '1000';
+        }
+        
+        if (messagesList) {
+            messagesList.style.height = 'calc(100vh - 120px)';
+            messagesList.style.paddingBottom = '60px';
+        }
+        
+        if (inputContainer) {
+            inputContainer.style.position = 'fixed';
+            inputContainer.style.bottom = '0';
+            inputContainer.style.width = '100%';
+            inputContainer.style.padding = '10px';
+            inputContainer.style.backgroundColor = '#fff';
+            inputContainer.style.borderTop = '1px solid #ddd';
+        }
     } else {
-        sidebar.classList.add('hidden');
-        chatContainer.classList.add('active');
+        // Restablecer estilos para desktop
+        if (chatContainer) {
+            chatContainer.style.width = '';
+            chatContainer.style.height = '';
+            chatContainer.style.position = '';
+            chatContainer.style.top = '';
+            chatContainer.style.left = '';
+            chatContainer.style.zIndex = '';
+        }
+        
+        if (sidebar) {
+            sidebar.style.width = '';
+            sidebar.style.height = '';
+            sidebar.style.position = '';
+            sidebar.style.top = '';
+            sidebar.style.left = '';
+            sidebar.style.zIndex = '';
+        }
+        
+        if (messagesList) {
+            messagesList.style.height = '';
+            messagesList.style.paddingBottom = '';
+        }
+        
+        if (inputContainer) {
+            inputContainer.style.position = '';
+            inputContainer.style.bottom = '';
+            inputContainer.style.width = '';
+            inputContainer.style.padding = '';
+            inputContainer.style.backgroundColor = '';
+            inputContainer.style.borderTop = '';
+        }
     }
 }
 
+// Evento para ajustar el diseño cuando cambia el tamaño de la ventana
+window.addEventListener('resize', adjustMobileLayout);
+
+// Función para mostrar la pantalla principal
 function showMainScreen() {
     document.getElementById('authScreen').classList.remove('active');
     document.getElementById('mainScreen').classList.add('active');
@@ -788,10 +857,15 @@ async function openChat(chatId) {
         
         if (chatContainer) {
             chatContainer.classList.remove('hidden');
+            if (window.innerWidth <= 768) {
+                chatContainer.style.display = 'block';
+                if (sidebar) {
+                    sidebar.style.display = 'none';
+                }
+            }
         }
-        if (window.innerWidth <= 768 && sidebar) {
-            sidebar.classList.add('hidden');
-        }
+
+        adjustMobileLayout();
 
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
@@ -928,5 +1002,40 @@ logoutBtn.addEventListener('click', handleLogout);
 
 // Evento para el botón de volver en móvil
 backButton.addEventListener('click', () => {
+    const chatContainer = document.querySelector('.chat-container');
+    if (chatContainer) {
+        chatContainer.style.display = 'none';
+    }
     toggleChatList(true);
-}); 
+    adjustMobileLayout();
+});
+
+// Modificar la función toggleChatList para incluir los ajustes móviles
+function toggleChatList(show) {
+    const sidebar = document.querySelector('.sidebar');
+    const chatContainer = document.querySelector('.chat-container');
+    
+    if (show) {
+        if (sidebar) {
+            sidebar.classList.remove('hidden');
+            if (window.innerWidth <= 768) {
+                sidebar.style.display = 'block';
+                if (chatContainer) {
+                    chatContainer.style.display = 'none';
+                }
+            }
+        }
+    } else {
+        if (sidebar) {
+            sidebar.classList.add('hidden');
+            if (window.innerWidth <= 768) {
+                sidebar.style.display = 'none';
+                if (chatContainer) {
+                    chatContainer.style.display = 'block';
+                }
+            }
+        }
+    }
+    
+    adjustMobileLayout();
+} 
