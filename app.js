@@ -671,9 +671,74 @@ function debounce(func, wait) {
     };
 }
 
+// Función para mostrar mensajes
+async function displayMessage(messageData) {
+    console.log('Mostrando mensaje:', messageData);
+    
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        console.error('No hay usuario autenticado al mostrar mensaje');
+        return;
+    }
+
+    const messageElement = document.createElement('div');
+    const isSentByMe = messageData.senderId === currentUser.uid;
+    messageElement.className = `message ${isSentByMe ? 'sent' : 'received'}`;
+    
+    let messageText = messageData.text;
+    if (messageData.language !== userLanguage) {
+        console.log('Traduciendo mensaje al idioma del usuario:', userLanguage);
+        if (messageData.translations && messageData.translations[userLanguage]) {
+            messageText = messageData.translations[userLanguage];
+        } else {
+            try {
+                messageText = await translateText(messageText, userLanguage);
+            } catch (error) {
+                console.error('Error al traducir mensaje:', error);
+                messageText = messageData.text + ' [Error de traducción]';
+            }
+        }
+    }
+    
+    const flag = getFlagEmoji(messageData.language);
+    let timeString = '';
+    
+    try {
+        const timestamp = messageData.timestamp ? 
+            (typeof messageData.timestamp.toDate === 'function' ? 
+                messageData.timestamp.toDate() : 
+                new Date(messageData.timestamp)
+            ) : new Date();
+        timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+        console.error('Error al formatear timestamp:', error);
+        timeString = '';
+    }
+    
+    messageElement.innerHTML = `
+        <span class="message-flag">${flag}</span>
+        <span class="message-text">${messageText}</span>
+        <span class="message-time">${timeString}</span>
+    `;
+    
+    if (messagesList) {
+        messagesList.appendChild(messageElement);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    } else {
+        console.error('Lista de mensajes no encontrada');
+    }
+}
+
 // Función para abrir un chat
 async function openChat(chatId) {
     console.log('Abriendo chat:', chatId);
+    
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        console.error('No hay usuario autenticado al abrir chat');
+        return;
+    }
+
     // Cancelar la suscripción anterior si existe
     if (unsubscribeMessages) {
         unsubscribeMessages();
@@ -694,9 +759,13 @@ async function openChat(chatId) {
         console.log('Datos del chat:', chatData);
         
         // Obtener información del otro participante
-        const otherUserId = chatData.participants.find(id => id !== auth.currentUser.uid);
+        const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
+        if (!otherUserId) {
+            console.error('No se encontró el otro participante');
+            return;
+        }
+
         const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-        
         if (!otherUserDoc.exists()) {
             console.error('Usuario no encontrado:', otherUserId);
             return;
@@ -706,13 +775,22 @@ async function openChat(chatId) {
         console.log('Datos del otro usuario:', otherUserData);
 
         // Actualizar la interfaz
-        currentChatInfo.textContent = otherUserData.email;
-        messagesList.innerHTML = '';
+        if (currentChatInfo) {
+            currentChatInfo.textContent = otherUserData.email;
+        }
+        if (messagesList) {
+            messagesList.innerHTML = '';
+        }
 
         // Mostrar la sección de chat
-        document.querySelector('.chat-container').classList.remove('hidden');
-        if (window.innerWidth <= 768) {
-            document.querySelector('.sidebar').classList.add('hidden');
+        const chatContainer = document.querySelector('.chat-container');
+        const sidebar = document.querySelector('.sidebar');
+        
+        if (chatContainer) {
+            chatContainer.classList.remove('hidden');
+        }
+        if (window.innerWidth <= 768 && sidebar) {
+            sidebar.classList.add('hidden');
         }
 
         // Suscribirse a nuevos mensajes
@@ -722,47 +800,23 @@ async function openChat(chatId) {
         unsubscribeMessages = onSnapshot(q, (snapshot) => {
             snapshot.docChanges().forEach(change => {
                 if (change.type === 'added') {
-                    displayMessage(change.doc.data());
+                    const messageData = change.doc.data();
+                    console.log('Nuevo mensaje recibido:', messageData);
+                    displayMessage(messageData);
                 }
             });
             
             // Scroll al último mensaje
-            messagesList.scrollTop = messagesList.scrollHeight;
+            if (messagesList) {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+        }, (error) => {
+            console.error('Error en la suscripción a mensajes:', error);
         });
     } catch (error) {
         console.error('Error al abrir chat:', error);
         showError('errorOpenChat');
     }
-}
-
-// Función para mostrar mensajes
-async function displayMessage(messageData) {
-    console.log('Mostrando mensaje:', messageData);
-    const messageElement = document.createElement('div');
-    messageElement.className = `message ${messageData.senderId === auth.currentUser.uid ? 'sent' : 'received'}`;
-    
-    let messageText = messageData.text;
-    if (messageData.language !== userLanguage) {
-        console.log('Traduciendo mensaje al idioma del usuario:', userLanguage);
-        if (messageData.translations && messageData.translations[userLanguage]) {
-            messageText = messageData.translations[userLanguage];
-        } else {
-            messageText = await translateText(messageText, userLanguage);
-        }
-    }
-    
-    const flag = getFlagEmoji(messageData.language);
-    const timestamp = messageData.timestamp ? new Date(messageData.timestamp.toDate()) : new Date();
-    const timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
-    messageElement.innerHTML = `
-        <span class="message-flag">${flag}</span>
-        <span class="message-text">${messageText}</span>
-        <span class="message-time">${timeString}</span>
-    `;
-    
-    messagesList.appendChild(messageElement);
-    messagesList.scrollTop = messagesList.scrollHeight;
 }
 
 // Función para enviar mensaje
