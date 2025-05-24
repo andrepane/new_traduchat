@@ -436,37 +436,35 @@ async function searchUsers(searchTerm) {
         const currentUserUid = auth.currentUser.uid;
         console.log('Usuario actual:', currentUserUid);
         
-        // Primero, verificar todos los documentos
+        // Obtener todos los usuarios primero
         const allUsersQuery = query(usersRef);
         const snapshot = await getDocs(allUsersQuery);
         
-        console.log('Documentos en la colección users:', snapshot.size);
-        snapshot.forEach(doc => {
-            console.log('Documento encontrado:', doc.id, doc.data());
-        });
-
-        // Ahora hacer la búsqueda específica
-        const emailQuery = query(usersRef, 
-            where('email', '>=', searchTerm.toLowerCase()),
-            where('email', '<=', searchTerm.toLowerCase() + '\uf8ff')
-        );
-
-        const emailResults = await getDocs(emailQuery);
-        console.log('Resultados de búsqueda:', emailResults.size);
+        console.log('Total de usuarios en la base de datos:', snapshot.size);
         
         const users = new Set();
-
-        emailResults.forEach(doc => {
+        
+        // Buscar coincidencias
+        snapshot.forEach(doc => {
             const userData = doc.data();
-            console.log('Evaluando usuario:', userData);
-            if (userData.uid !== currentUserUid && userData.email) {
-                console.log('Usuario coincide con búsqueda:', userData);
+            console.log('Revisando usuario:', userData.email);
+            
+            if (userData.uid !== currentUserUid && 
+                userData.email && 
+                userData.email.toLowerCase().includes(searchTerm.toLowerCase())) {
+                console.log('¡Coincidencia encontrada!:', userData.email);
                 users.add({ id: userData.uid, ...userData });
             }
         });
 
         const resultsArray = Array.from(users);
-        console.log('Resultados finales:', resultsArray);
+        console.log('Resultados de búsqueda:', resultsArray.length);
+        if (resultsArray.length === 0) {
+            console.log('No se encontraron usuarios que coincidan con:', searchTerm);
+        } else {
+            console.log('Usuarios encontrados:', resultsArray.map(u => u.email));
+        }
+        
         displaySearchResults(resultsArray);
     } catch (error) {
         console.error('Error detallado al buscar usuarios:', error);
