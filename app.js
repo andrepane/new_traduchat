@@ -1206,6 +1206,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (backButton) {
         backButton.addEventListener('click', () => {
             console.log('Botón volver clickeado');
+            // Prevenir múltiples clics
+            backButton.disabled = true;
+            setTimeout(() => backButton.disabled = false, 500);
+            
             toggleChatList(true);
         });
         
@@ -1216,11 +1220,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para manejar la navegación entre vistas
 function toggleChatList(show) {
+    console.log('Alternando vista de chat, mostrar lista:', show);
+    
     const sidebar = document.querySelector('.sidebar');
     const chatContainer = document.querySelector('.chat-container');
     const backButton = document.getElementById('backToChats');
-    
-    console.log('Alternando vista de chat, mostrar lista:', show);
     
     if (show) {
         // Mostrar lista de chats
@@ -1232,19 +1236,24 @@ function toggleChatList(show) {
             chatContainer.classList.add('hidden');
             chatContainer.style.display = 'none';
         }
-        // Limpiar el chat actual
+        
+        // Cancelar suscripción a mensajes si existe
+        if (unsubscribeMessages) {
+            unsubscribeMessages();
+            unsubscribeMessages = null;
+        }
+
+        // Restablecer estado del chat actual
+        currentChat = null;
         if (messagesList) {
             messagesList.innerHTML = '';
         }
         if (currentChatInfo) {
             currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
         }
-        // Cancelar suscripción a mensajes si existe
-        if (unsubscribeMessages) {
-            unsubscribeMessages();
-            unsubscribeMessages = null;
-        }
-        currentChat = null;
+
+        // Recargar la lista de chats
+        setupRealtimeChats();
     } else {
         // Mostrar chat
         if (sidebar) {
@@ -1257,13 +1266,9 @@ function toggleChatList(show) {
         }
     }
 
-    // Asegurar que el botón de retorno sea visible solo cuando se muestra el chat en móvil
+    // Manejar visibilidad del botón de retorno
     if (backButton) {
-        if (window.innerWidth <= 768 && !show) {
-            backButton.style.display = 'block';
-        } else {
-            backButton.style.display = 'none';
-        }
+        backButton.style.display = window.innerWidth <= 768 && !show ? 'block' : 'none';
     }
 
     adjustMobileLayout();
@@ -1318,7 +1323,9 @@ function showGroupCreationModal() {
                 <div class="group-form">
                     <input type="text" id="groupName" placeholder="${getTranslation('groupNamePlaceholder', userLanguage) || 'Nombre del grupo'}" />
                     <div class="selected-users">
-                        <h3>${getTranslation('selectedUsers', userLanguage) || 'Usuarios seleccionados'}</h3>
+                        <h3>${getTranslation('selectedUsers', userLanguage) || 'Usuarios seleccionados'} 
+                            <span class="users-count">(0/2 mínimo)</span>
+                        </h3>
                         <div id="selectedUsersList"></div>
                     </div>
                     <div class="user-search">
@@ -1340,106 +1347,6 @@ function showGroupCreationModal() {
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-    // Añadir estilos
-    const style = document.createElement('style');
-    style.textContent = `
-        .modal {
-            display: block;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        .modal-content {
-            background-color: white;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 8px;
-            width: 80%;
-            max-width: 500px;
-        }
-        .group-form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .group-form input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .selected-users {
-            border: 1px solid #ddd;
-            padding: 10px;
-            border-radius: 4px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-        .user-search {
-            position: relative;
-        }
-        #userSearchResults {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1;
-        }
-        .user-item {
-            padding: 8px;
-            cursor: pointer;
-            border-bottom: 1px solid #eee;
-        }
-        .user-item:hover {
-            background-color: #f5f5f5;
-        }
-        .selected-user-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px;
-            background-color: #e9ecef;
-            border-radius: 4px;
-            margin: 2px 0;
-        }
-        .remove-user {
-            color: red;
-            cursor: pointer;
-        }
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-        }
-        .modal-buttons button {
-            padding: 8px 16px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-        }
-        #createGroupBtn {
-            background-color: #007bff;
-            color: white;
-        }
-        #createGroupBtn:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        #cancelGroupBtn {
-            background-color: #6c757d;
-            color: white;
-        }
-    `;
-    document.head.appendChild(style);
-
     // Eventos del modal
     const modal = document.getElementById('groupModal');
     const groupNameInput = document.getElementById('groupName');
@@ -1448,6 +1355,13 @@ function showGroupCreationModal() {
     const cancelGroupBtn = document.getElementById('cancelGroupBtn');
     const selectedUsersList = document.getElementById('selectedUsersList');
     const userSearchResults = document.getElementById('userSearchResults');
+    const usersCount = modal.querySelector('.users-count');
+
+    // Actualizar contador de usuarios
+    function updateUsersCount() {
+        usersCount.textContent = `(${selectedUsers.size}/2 mínimo)`;
+        usersCount.style.color = selectedUsers.size >= 2 ? '#28a745' : '#dc3545';
+    }
 
     // Búsqueda de usuarios
     userSearchInput.addEventListener('input', debounce(async (e) => {
@@ -1462,25 +1376,30 @@ function showGroupCreationModal() {
             displayUserSearchResults(users, userSearchResults, selectedUsersList, createGroupBtn);
         } catch (error) {
             console.error('Error al buscar usuarios:', error);
+            userSearchResults.innerHTML = `<div class="error-message">${getTranslation('errorSearch', userLanguage)}</div>`;
         }
     }, 300));
 
     // Actualizar botón cuando cambia el nombre del grupo
     groupNameInput.addEventListener('input', () => {
         updateSelectedUsersList(selectedUsersList, createGroupBtn);
+        updateUsersCount();
     });
 
     // Crear grupo
     createGroupBtn.addEventListener('click', async () => {
         const groupName = groupNameInput.value.trim();
-        if (!groupName || selectedUsers.size < 2) return;
+        if (!groupName || selectedUsers.size < 2) {
+            showError(getTranslation('errorMinUsers', userLanguage) || 'Se necesitan al menos 2 participantes para crear un grupo');
+            return;
+        }
 
         try {
             await createGroupChat(groupName, Array.from(selectedUsers));
             modal.remove();
         } catch (error) {
             console.error('Error al crear grupo:', error);
-            showError('errorCreateGroup');
+            showError(getTranslation('errorCreateGroup', userLanguage));
         }
     });
 
@@ -1492,6 +1411,7 @@ function showGroupCreationModal() {
 
     // Inicializar la lista de usuarios seleccionados
     updateSelectedUsersList(selectedUsersList, createGroupBtn);
+    updateUsersCount();
 }
 
 // Función para buscar usuarios para el grupo
@@ -1537,28 +1457,50 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
             const userId = item.dataset.userid;
             const userEmail = item.dataset.email;
             
-            selectedUsers.add({
-                id: userId,
-                email: userEmail
-            });
-            
-            updateSelectedUsersList(selectedUsersList, createGroupBtn);
-            item.remove();
+            // Verificar si el usuario ya está seleccionado
+            if (!Array.from(selectedUsers).some(u => u.id === userId)) {
+                selectedUsers.add({
+                    id: userId,
+                    email: userEmail
+                });
+                
+                console.log('Usuario añadido al grupo:', userEmail);
+                console.log('Total usuarios seleccionados:', selectedUsers.size);
+                
+                updateSelectedUsersList(selectedUsersList, createGroupBtn);
+                item.remove();
+            }
         });
     });
 }
 
 // Función para crear un chat grupal
 async function createGroupChat(groupName, participants) {
+    console.log('Intentando crear grupo:', groupName);
+    console.log('Participantes:', participants);
+
+    if (participants.length < 2) {
+        console.error('Se necesitan al menos 2 participantes para crear un grupo');
+        showError(getTranslation('errorMinUsers', userLanguage) || 'Se necesitan al menos 2 participantes para crear un grupo');
+        return;
+    }
+
     const db = window.db;
     const currentUser = auth.currentUser;
     
+    if (!currentUser) {
+        console.error('No hay usuario autenticado');
+        return;
+    }
+
     try {
         // Añadir el usuario actual a los participantes
         const allParticipants = [
             currentUser.uid,
             ...participants.map(p => p.id)
         ];
+
+        console.log('Todos los participantes:', allParticipants);
 
         // Crear el documento del grupo
         const groupChatRef = await addDoc(collection(db, 'chats'), {
@@ -1571,10 +1513,20 @@ async function createGroupChat(groupName, participants) {
             lastMessageTime: null
         });
 
-        console.log('Grupo creado:', groupChatRef.id);
+        console.log('Grupo creado exitosamente:', groupChatRef.id);
+
+        // Crear mensaje de sistema inicial
+        await addDoc(collection(db, 'chats', groupChatRef.id, 'messages'), {
+            text: `Grupo "${groupName}" creado por ${currentUser.email}`,
+            type: 'system',
+            timestamp: serverTimestamp(),
+            senderId: 'system'
+        });
+
+        // Abrir el chat recién creado
         openChat(groupChatRef.id);
     } catch (error) {
         console.error('Error al crear grupo:', error);
-        throw error;
+        showError(getTranslation('errorCreateGroup', userLanguage));
     }
 } 
