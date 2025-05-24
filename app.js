@@ -1288,10 +1288,45 @@ async function sendMessage(text) {
         // Limpiar el input
         messageInput.value = '';
         
-        // Traducir y guardar traducciones
-        console.log('Traduciendo mensaje...');
-        const otherLanguages = AVAILABLE_LANGUAGES.filter(lang => lang !== userLanguage);
-        for (const targetLang of otherLanguages) {
+        // Obtener información del chat
+        const chatDoc = await getDoc(chatRef);
+        const chatData = chatDoc.data();
+        const isGroupChat = chatData.type === 'group';
+        
+        // Determinar los idiomas necesarios para traducción
+        let targetLanguages = new Set();
+        
+        if (isGroupChat) {
+            // Para grupos, obtener los idiomas únicos de todos los participantes
+            const participantsData = await Promise.all(
+                chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
+            );
+            
+            participantsData.forEach(participantDoc => {
+                if (participantDoc.exists()) {
+                    const participantLang = participantDoc.data().language || 'en';
+                    if (participantLang !== userLanguage) {
+                        targetLanguages.add(participantLang);
+                    }
+                }
+            });
+        } else {
+            // Para chats individuales, solo traducir al idioma del otro usuario
+            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
+            if (otherUserId) {
+                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                if (otherUserDoc.exists()) {
+                    const otherUserLang = otherUserDoc.data().language || 'en';
+                    if (otherUserLang !== userLanguage) {
+                        targetLanguages.add(otherUserLang);
+                    }
+                }
+            }
+        }
+        
+        // Realizar las traducciones necesarias
+        console.log('Traduciendo mensaje a idiomas:', Array.from(targetLanguages));
+        for (const targetLang of targetLanguages) {
             try {
                 const translation = await translateText(text, targetLang);
                 await updateDoc(doc(messagesRef, docRef.id), {
