@@ -82,18 +82,20 @@ body {
   transform: translateX(0);
   transition: transform 0.3s ease;
   z-index: 20;
+  border-right: 1px solid #dee2e6;
+  background-color: white;
+  width: 300px;
 }
 
 /* Header del sidebar */
 .user-header {
   height: var(--header-height);
-  padding: 0 1rem;
-  background: var(--color-bg-alt);
-  border-bottom: 1.5px solid var(--color-border);
+  padding: 12px 15px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  backdrop-filter: blur(10px);
+  justify-content: space-between;
 }
 
 .user-info {
@@ -124,23 +126,97 @@ body {
 
 /* Lista de chats */
 .chat-list {
-  flex: 1;
   overflow-y: auto;
-  background: var(--color-bg);
+  height: calc(100% - 120px);
+  background-color: #f8f9fa;
 }
 
 .chat-item {
-  padding: 1rem;
-  border-bottom: 1.5px solid var(--color-border);
   display: flex;
   align-items: center;
-  gap: 1rem;
+  padding: 8px 15px;
+  border-bottom: 1px solid #e9ecef;
   cursor: pointer;
-  transition: var(--transition);
+  transition: background-color 0.2s ease;
+  min-height: 50px;
 }
 
 .chat-item:hover {
-  background: var(--color-user-left);
+  background-color: #e9ecef;
+}
+
+.chat-info {
+  flex: 1;
+  min-width: 0;
+  margin-right: 10px;
+}
+
+.chat-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #212529;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.last-message-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.last-message {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 70%;
+}
+
+.last-message-time {
+  font-size: 0.75rem;
+  color: #adb5bd;
+  white-space: nowrap;
+}
+
+/* Estilos para chats grupales */
+.chat-item.group-chat .chat-name::before {
+  content: "👥";
+  margin-right: 5px;
+}
+
+/* Estilos para chat activo */
+.chat-item.active {
+  background-color: #e3e6f0;
+}
+
+/* Estilos para la animación de nuevo mensaje */
+.chat-updated {
+  animation: highlightChat 2s ease;
+}
+
+@keyframes highlightChat {
+  0% { background-color: #d4edda; }
+  100% { background-color: transparent; }
+}
+
+/* Ajustes para móvil */
+@media (max-width: 768px) {
+  .chat-item {
+    padding: 6px 12px;
+    min-height: 45px;
+  }
+
+  .chat-name {
+    font-size: 0.9rem;
+  }
+
+  .last-message-container {
+    font-size: 0.75rem;
+  }
 }
 
 /* Contenedor del chat activo */
@@ -973,4 +1049,33 @@ html {
 
 #newChat {
     font-weight: bold;
+}
+
+/* Mejoras en la barra lateral */
+.sidebar {
+    border-right: 1px solid #dee2e6;
+    background-color: white;
+    height: 100%;
+    width: 300px;
+}
+
+.search-container {
+    padding: 8px;
+    background-color: white;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.search-container input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    background-color: #f8f9fa;
+}
+
+.search-container input:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
 } 
