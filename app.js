@@ -3,7 +3,8 @@ import {
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     onAuthStateChanged,
-    signOut
+    signOut,
+    signInWithPhoneNumber
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 import {
@@ -190,7 +191,41 @@ languageSelectMain.addEventListener('change', (e) => {
     translateInterface(userLanguage);
 });
 
-// Función de login/registro
+// Función para iniciar la autenticación por teléfono
+async function startPhoneAuth(phoneNumber) {
+    try {
+        const appVerifier = window.recaptchaVerifier;
+        const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+        window.confirmationResult = confirmationResult;
+        // Mostrar el campo para ingresar el código
+        document.getElementById('verificationCodeSection').style.display = 'block';
+        alert(getTranslation('codeSent', userLanguage));
+    } catch (error) {
+        console.error('Error al enviar el código:', error);
+        alert(getTranslation('errorSendingCode', userLanguage));
+    }
+}
+
+// Función para verificar el código
+async function verifyPhoneCode(code) {
+    try {
+        const result = await window.confirmationResult.confirm(code);
+        // El usuario está autenticado
+        currentUser = result.user;
+        // Guardar el número de teléfono en Firestore
+        await setDoc(doc(db, 'users', currentUser.uid), {
+            phoneNumber: currentUser.phoneNumber,
+            email: currentUser.email
+        }, { merge: true });
+        
+        showMainScreen();
+    } catch (error) {
+        console.error('Error al verificar el código:', error);
+        alert(getTranslation('errorVerifyingCode', userLanguage));
+    }
+}
+
+// Actualizar el manejador del botón de login
 loginBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
@@ -201,88 +236,27 @@ loginBtn.addEventListener('click', async () => {
         return;
     }
 
-    if (password.length < 6) {
-        showError('errorPassword');
-        return;
-    }
-
-    const auth = window.auth;
-    const db = window.db;
-    
-    if (!auth || !db) {
-        console.error('Auth o Firestore no están inicializados');
-        showError('errorGeneric');
-        return;
-    }
-
     try {
-        console.log('Iniciando proceso de registro/login...');
-        let userCredential;
+        // Primero autenticar con email/password
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        currentUser = userCredential.user;
         
-        try {
-            console.log('Intentando crear nuevo usuario:', email);
-            userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            console.log('Usuario creado exitosamente:', userCredential.user.uid);
-        } catch (error) {
-            console.log('Error en creación:', error.code);
-            if (error.code === 'auth/email-already-in-use') {
-                console.log('Email en uso, intentando login...');
-                userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log('Login exitoso:', userCredential.user.uid);
-            } else {
-                throw error;
-            }
-        }
-
-        const user = userCredential.user;
-        console.log('Guardando datos en Firestore para usuario:', user.uid);
-
-        // Crear el documento del usuario
-        const userDocRef = doc(db, 'users', user.uid);
-        const userData = {
-            uid: user.uid,
-            email: email.toLowerCase(),
-            phoneNumber: phoneNumber,
-            language: userLanguage,
-            lastUpdated: serverTimestamp()
-        };
-
-        // Si es nuevo registro, añadir createdAt
-        if (!userCredential.operationType || userCredential.operationType === 'signIn') {
-            userData.createdAt = serverTimestamp();
-        }
-
-        console.log('Datos a guardar:', userData);
-        await setDoc(userDocRef, userData, { merge: true });
-        console.log('Datos guardados exitosamente en Firestore');
-
-        // Verificar que se guardó correctamente
-        const savedDoc = await getDoc(userDocRef);
-        console.log('Documento guardado:', savedDoc.exists(), savedDoc.data());
-
-        localStorage.setItem('userPhone', phoneNumber);
-        localStorage.setItem('userLanguage', userLanguage);
-        
-        showMainScreen();
-        updateUserInfo(user);
-        setupRealtimeChats();
+        // Luego iniciar la verificación por teléfono
+        await startPhoneAuth(phoneNumber);
     } catch (error) {
-        console.error('Error completo:', error);
-        
-        switch (error.code) {
-            case 'auth/weak-password':
-                showError('errorPassword');
-                break;
-            case 'auth/invalid-email':
-                showError('errorInvalidEmail');
-                break;
-            case 'auth/network-request-failed':
-                showError('errorNetwork');
-                break;
-            default:
-                showError('errorGeneric');
-        }
+        console.error('Error en la autenticación:', error);
+        showError('errorAuth');
     }
+});
+
+// Añadir el manejador para el botón de verificación de código
+document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
+    const code = document.getElementById('verificationCode').value.trim();
+    if (!code) {
+        showError('errorEmptyCode');
+        return;
+    }
+    await verifyPhoneCode(code);
 });
 
 // Función para mostrar la pantalla de autenticación
