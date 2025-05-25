@@ -63,12 +63,6 @@
                 <input type="tel" id="phoneNumber" data-translate="phoneNumber" placeholder="Número de teléfono" />
             </div>
             <button id="loginBtn" data-translate="loginRegister">Registrar/Iniciar Sesión</button>
-            
-            <!-- Sección de verificación de código -->
-            <div id="verificationCodeSection" style="display: none;">
-                <input type="text" id="verificationCode" maxlength="6" data-translate="verificationCode" placeholder="Ingresa el código de 6 dígitos" />
-                <button id="verifyCodeBtn" data-translate="verifyCode">Verificar código</button>
-            </div>
         </div>
     </div>
 
@@ -129,7 +123,24 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     
     <!-- Firebase -->
-    <script type="module" src="firebase-config.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
+            authDomain: "traduchat-2.firebaseapp.com",
+            projectId: "traduchat-2",
+            storageBucket: "traduchat-2.appspot.com",
+            messagingSenderId: "304746474467",
+            appId: "1:304746474467:web:a0496a8d1d891cec170ed6"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.auth = getAuth(app);
+        window.db = getFirestore(app);
+    </script>
     <script type="module" src="translations.js"></script>
     <script type="module" src="app.js"></script>
 </body>
