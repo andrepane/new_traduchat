@@ -18,27 +18,30 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication
 const auth = getAuth(app);
 
-// Función para inicializar reCAPTCHA
-function initializeRecaptcha() {
+// Configuración de reCAPTCHA
+export function initializeRecaptcha() {
     try {
-        if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'normal',
-                'callback': (response) => {
-                    console.log("reCAPTCHA verified");
-                },
-                'expired-callback': () => {
-                    console.log("reCAPTCHA expired");
-                }
-            });
-            
-            // Renderizar explícitamente el reCAPTCHA
-            window.recaptchaVerifier.render().then(function(widgetId) {
-                window.recaptchaWidgetId = widgetId;
-            });
+        if (window.recaptchaVerifier) {
+            window.recaptchaVerifier.clear();
         }
+        
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'invisible',
+            'callback': (response) => {
+                console.log('reCAPTCHA resuelto');
+            },
+            'expired-callback': () => {
+                console.log('reCAPTCHA expirado');
+                initializeRecaptcha();
+            },
+            'error-callback': () => {
+                console.error('Error en reCAPTCHA');
+                showError('errorRecaptcha');
+            }
+        });
     } catch (error) {
-        console.error("Error al inicializar reCAPTCHA:", error);
+        console.error('Error al inicializar reCAPTCHA:', error);
+        throw error;
     }
 }
 
