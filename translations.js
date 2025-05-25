@@ -20,6 +20,7 @@ const translations = {
         errorEmailInUse: 'Este email ya está registrado',
         errorNetwork: 'Error de conexión. Verifica tu conexión a internet',
         errorGeneric: 'Ha ocurrido un error',
+        errorRecaptcha: "Error al inicializar la verificación de seguridad. Por favor, recarga la página e intenta de nuevo.",
         
         // Interfaz principal
         newChat: '+',
@@ -96,6 +97,7 @@ const translations = {
         errorEmailInUse: 'This email is already registered',
         errorNetwork: 'Connection error. Check your internet connection',
         errorGeneric: 'An error has occurred',
+        errorRecaptcha: "Error initializing security verification. Please reload the page and try again.",
         
         // Main interface
         newChat: '+',
@@ -172,6 +174,7 @@ const translations = {
         errorEmailInUse: 'Questa email è già registrata',
         errorNetwork: 'Errore di connessione. Verifica la tua connessione internet',
         errorGeneric: 'Si è verificato un errore',
+        errorRecaptcha: "Errore durante l'inizializzazione della verifica di sicurezza. Ricarica la pagina e riprova.",
         
         // Interfaccia principale
         newChat: '+',
