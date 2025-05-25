@@ -1,79 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Funciones auxiliares
+    // Función auxiliar para verificar si el usuario está autenticado
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function isUserAuthenticated(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    function hasValidPhone() {
-      return request.auth.token.phone_number != null;
-    }
-
-    // Función para validar el formato de un mensaje
-    function isValidMessage() {
-      let message = request.resource.data;
-      return message.keys().hasAll(['text', 'senderId', 'timestamp', 'language']) &&
-        message.text is string &&
-        message.text.size() > 0 &&
-        message.text.size() < 1000 &&
-        message.senderId == request.auth.uid &&
-        message.timestamp is timestamp;
-    }
-
-    // Función para verificar si un usuario es participante de un chat
-    function isParticipant(chatId) {
-      let chat = get(/databases/$(database)/documents/chats/$(chatId));
-      return chat != null && 
-             chat.data.participants.hasAny([request.auth.uid]);
-    }
-
-    // Función para validar la estructura del chat
-    function isValidChat() {
-      let chat = request.resource.data;
-      return chat.keys().hasAll(['participants', 'type', 'createdAt', 'lastMessage', 'lastMessageTime', 'createdBy']) &&
-        chat.participants is list &&
-        chat.participants.size() >= 2 &&
-        chat.type in ['individual', 'group'] &&
-        chat.createdBy == request.auth.uid;
-    }
-
-    // Reglas para la colección de usuarios
+    // Reglas para la colección users
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isUserAuthenticated(userId);
+      allow read, list: if isAuthenticated();
+      allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Reglas para la colección de chats
+    // Reglas para la colección chats
     match /chats/{chatId} {
-      // Permitir lectura de chats donde el usuario es participante
-      allow read: if isAuthenticated() && (
-        resource == null || // Permitir verificar si el chat existe
-        resource.data.participants.hasAny([request.auth.uid])
-      );
+      allow read, write: if isAuthenticated();
       
-      // Permitir crear nuevos chats
-      allow create: if isAuthenticated() && 
-        isValidChat() &&
-        request.resource.data.participants.hasAny([request.auth.uid]);
-      
-      // Permitir actualizar solo ciertos campos
-      allow update: if isAuthenticated() && 
-        resource.data.participants.hasAny([request.auth.uid]) &&
-        request.resource.data.participants == resource.data.participants;
-
-      // Reglas para la subcolección de mensajes
       match /messages/{messageId} {
-        allow read: if isAuthenticated() && isParticipant(chatId);
-        allow create: if isAuthenticated() && 
-          isParticipant(chatId) &&
-          isValidMessage();
-        allow update: if false; // No permitir editar mensajes
-        allow delete: if false; // No permitir eliminar mensajes
+        allow read, write: if isAuthenticated();
+      }
+      
+      match /typing/{userId} {
+        allow read, write: if isAuthenticated();
       }
     }
   }
