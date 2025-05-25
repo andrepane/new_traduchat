@@ -1015,79 +1015,6 @@ html {
 
 /* Botones de acción en el header */
 .icon-button {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: var(--color-primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    font-size: 20px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 180, 81, 0.2);
-}
-
-.icon-button:hover {
-    transform: scale(1.05);
-    background: var(--color-primary-dark);
-    box-shadow: 0 4px 12px rgba(0, 180, 81, 0.3);
-}
-
-#logoutBtn {
-    background: var(--color-danger);
-    font-size: 18px;
-}
-
-#logoutBtn:hover {
-    background: #ff3333;
-    box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
-}
-
-#newChat {
-    font-weight: bold;
-}
-
-/* Mejoras en la barra lateral */
-.sidebar {
-    border-right: 1px solid #dee2e6;
-    background-color: white;
-    height: 100%;
-    width: 300px;
-}
-
-.search-container {
-    padding: 8px;
-    background-color: white;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.search-container input {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    background-color: #f8f9fa;
-}
-
-.search-container input:focus {
-    outline: none;
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-}
-
-/* Header actions */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.icon-button {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1102,16 +1029,17 @@ html {
     font-size: 16px;
     transition: all 0.2s ease;
     box-shadow: 0 2px 8px rgba(0, 180, 81, 0.2);
+    margin: 0 4px;
+}
+
+.icon-button i {
+    font-size: 18px;
 }
 
 .icon-button:hover {
     transform: scale(1.05);
     background: var(--color-primary-dark);
     box-shadow: 0 4px 12px rgba(0, 180, 81, 0.3);
-}
-
-.icon-button i {
-    font-size: 18px;
 }
 
 #createGroup {
