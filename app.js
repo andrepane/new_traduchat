@@ -1680,6 +1680,172 @@ async function createGroupChat(groupName, participants) {
     }
 }
 
+// Funciones de UI
+function showLoadingScreen() {
+    const loadingScreen = document.querySelector('.loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'flex';
+    }
+}
+
+function hideLoadingScreen() {
+    const loadingScreen = document.querySelector('.loading-screen');
+    if (loadingScreen) {
+        loadingScreen.style.display = 'none';
+    }
+}
+
+// Función para ajustar el diseño en móvil
+function adjustMobileLayout() {
+    const chatContainer = document.querySelector('.chat-container');
+    const sidebar = document.querySelector('.sidebar');
+    const messagesList = document.querySelector('.messages-list');
+    const inputContainer = document.querySelector('.input-container');
+    const mainScreen = document.getElementById('mainScreen');
+    
+    if (window.innerWidth <= 768) {
+        // Prevenir scroll y zoom indeseado en móviles
+        document.body.style.height = '100vh';
+        document.body.style.overflow = 'hidden';
+        
+        if (mainScreen) {
+            mainScreen.style.height = '100vh';
+            mainScreen.style.overflow = 'hidden';
+        }
+
+        // Ajustes específicos para móvil
+        if (chatContainer) {
+            chatContainer.style.width = '100%';
+            chatContainer.style.height = '100vh';
+            chatContainer.style.position = 'fixed';
+            chatContainer.style.top = '0';
+            chatContainer.style.left = '0';
+            chatContainer.style.zIndex = '1000';
+            chatContainer.style.display = 'flex';
+            chatContainer.style.flexDirection = 'column';
+        }
+        
+        if (sidebar) {
+            sidebar.style.width = '100%';
+            sidebar.style.height = '100vh';
+            sidebar.style.position = 'fixed';
+            sidebar.style.top = '0';
+            sidebar.style.left = '0';
+            sidebar.style.zIndex = '1000';
+        }
+        
+        if (messagesList) {
+            messagesList.style.flex = '1';
+            messagesList.style.height = 'calc(100vh - 130px)'; // Ajustado para dejar espacio para el input
+            messagesList.style.overflow = 'auto';
+            messagesList.style.paddingBottom = '20px';
+            messagesList.style.WebkitOverflowScrolling = 'touch'; // Para scroll suave en iOS
+        }
+        
+        if (inputContainer) {
+            inputContainer.style.position = 'fixed';
+            inputContainer.style.bottom = '0';
+            inputContainer.style.left = '0';
+            inputContainer.style.width = '100%';
+            inputContainer.style.minHeight = '60px';
+            inputContainer.style.padding = '10px';
+            inputContainer.style.backgroundColor = '#fff';
+            inputContainer.style.borderTop = '1px solid #ddd';
+            inputContainer.style.zIndex = '1001';
+            inputContainer.style.display = 'flex';
+            inputContainer.style.alignItems = 'center';
+            inputContainer.style.justifyContent = 'space-between';
+            
+            // Ajustar el input de mensaje
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.style.flex = '1';
+                messageInput.style.margin = '0 10px';
+                messageInput.style.padding = '8px';
+                messageInput.style.fontSize = '16px'; // Previene zoom en iOS
+            }
+        }
+    } else {
+        // Restablecer estilos para desktop
+        document.body.style.height = '';
+        document.body.style.overflow = '';
+        
+        if (mainScreen) {
+            mainScreen.style.height = '';
+            mainScreen.style.overflow = '';
+        }
+
+        if (chatContainer) {
+            chatContainer.style.width = '';
+            chatContainer.style.height = '';
+            chatContainer.style.position = '';
+            chatContainer.style.top = '';
+            chatContainer.style.left = '';
+            chatContainer.style.zIndex = '';
+            chatContainer.style.display = '';
+            chatContainer.style.flexDirection = '';
+        }
+        
+        if (sidebar) {
+            sidebar.style.width = '';
+            sidebar.style.height = '';
+            sidebar.style.position = '';
+            sidebar.style.top = '';
+            sidebar.style.left = '';
+            sidebar.style.zIndex = '';
+        }
+        
+        if (messagesList) {
+            messagesList.style.flex = '';
+            messagesList.style.height = '';
+            messagesList.style.overflow = '';
+            messagesList.style.paddingBottom = '';
+            messagesList.style.WebkitOverflowScrolling = '';
+        }
+        
+        if (inputContainer) {
+            inputContainer.style.position = '';
+            inputContainer.style.bottom = '';
+            inputContainer.style.left = '';
+            inputContainer.style.width = '';
+            inputContainer.style.minHeight = '';
+            inputContainer.style.padding = '';
+            inputContainer.style.backgroundColor = '';
+            inputContainer.style.borderTop = '';
+            inputContainer.style.zIndex = '';
+            inputContainer.style.display = '';
+            inputContainer.style.alignItems = '';
+            inputContainer.style.justifyContent = '';
+            
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.style.flex = '';
+                messageInput.style.margin = '';
+                messageInput.style.padding = '';
+                messageInput.style.fontSize = '';
+            }
+        }
+    }
+}
+
+// Asegurarse de que el teclado virtual no cause problemas
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) {
+        const messagesList = document.querySelector('.messages-list');
+        if (messagesList) {
+            setTimeout(() => {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }, 100);
+        }
+    }
+    adjustMobileLayout();
+});
+
+// Prevenir zoom en inputs en iOS
+document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+});
+
 // Inicialización cuando se carga el documento
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Cargado');
