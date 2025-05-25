@@ -3,9 +3,7 @@ import {
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     onAuthStateChanged,
-    signOut,
-    signInWithPhoneNumber,
-    RecaptchaVerifier
+    signOut
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 import {
@@ -21,22 +19,22 @@ import {
     orderBy,
     setDoc,
     updateDoc,
+    initializeFirestore,
     getFirestore
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
-import { auth, setupRecaptcha } from './firebase-config.js';
 
 // Verificar inicialización de Firebase
 console.log('Verificando inicialización de Firebase...');
-const db = getFirestore();
-if (!auth) {
+if (!window.db) {
+    console.log('Inicializando Firestore...');
+    window.db = getFirestore();
+}
+if (!window.auth) {
     console.error('Auth no está inicializado!');
 }
-
-// Hacer db disponible globalmente de manera segura
-window.db = db;
 
 // Referencias a elementos del DOM
 const authScreen = document.getElementById('authScreen');
@@ -192,12 +190,324 @@ languageSelectMain.addEventListener('change', (e) => {
     translateInterface(userLanguage);
 });
 
+// Función de login/registro
+loginBtn.addEventListener('click', async () => {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+    const phoneNumber = countrySelect.value + phoneInput.value.trim();
+
+    if (!email || !password || !phoneNumber) {
+        showError('errorEmptyFields');
+        return;
+    }
+
+    if (password.length < 6) {
+        showError('errorPassword');
+        return;
+    }
+
+    const auth = window.auth;
+    const db = window.db;
+    
+    if (!auth || !db) {
+        console.error('Auth o Firestore no están inicializados');
+        showError('errorGeneric');
+        return;
+    }
+
+    try {
+        console.log('Iniciando proceso de registro/login...');
+        let userCredential;
+        
+        try {
+            console.log('Intentando crear nuevo usuario:', email);
+            userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            console.log('Usuario creado exitosamente:', userCredential.user.uid);
+        } catch (error) {
+            console.log('Error en creación:', error.code);
+            if (error.code === 'auth/email-already-in-use') {
+                console.log('Email en uso, intentando login...');
+                userCredential = await signInWithEmailAndPassword(auth, email, password);
+                console.log('Login exitoso:', userCredential.user.uid);
+            } else {
+                throw error;
+            }
+        }
+
+        const user = userCredential.user;
+        console.log('Guardando datos en Firestore para usuario:', user.uid);
+
+        // Crear el documento del usuario
+        const userDocRef = doc(db, 'users', user.uid);
+        const userData = {
+            uid: user.uid,
+            email: email.toLowerCase(),
+            phoneNumber: phoneNumber,
+            language: userLanguage,
+            lastUpdated: serverTimestamp()
+        };
+
+        // Si es nuevo registro, añadir createdAt
+        if (!userCredential.operationType || userCredential.operationType === 'signIn') {
+            userData.createdAt = serverTimestamp();
+        }
+
+        console.log('Datos a guardar:', userData);
+        await setDoc(userDocRef, userData, { merge: true });
+        console.log('Datos guardados exitosamente en Firestore');
+
+        // Verificar que se guardó correctamente
+        const savedDoc = await getDoc(userDocRef);
+        console.log('Documento guardado:', savedDoc.exists(), savedDoc.data());
+
+        localStorage.setItem('userPhone', phoneNumber);
+        localStorage.setItem('userLanguage', userLanguage);
+        
+        showMainScreen();
+        updateUserInfo(user);
+        setupRealtimeChats();
+    } catch (error) {
+        console.error('Error completo:', error);
+        
+        switch (error.code) {
+            case 'auth/weak-password':
+                showError('errorPassword');
+                break;
+            case 'auth/invalid-email':
+                showError('errorInvalidEmail');
+                break;
+            case 'auth/network-request-failed':
+                showError('errorNetwork');
+                break;
+            default:
+                showError('errorGeneric');
+        }
+    }
+});
+
 // Función para mostrar la pantalla de autenticación
 function showAuthScreen() {
     document.getElementById('mainScreen').classList.remove('active');
     document.getElementById('authScreen').classList.add('active');
     document.body.classList.remove('in-chat');
 }
+
+// Inicialización cuando se carga el documento
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Cargado');
+    showLoadingScreen();
+
+    // Inicializar la interfaz con el idioma guardado y activar la animación
+    translateInterface(userLanguage);
+    setTimeout(animateTitleWave, 100);
+
+    const auth = window.auth;
+    const db = window.db;
+    
+    if (!auth || !db) {
+        console.error('Auth o Firestore no están inicializados');
+        hideLoadingScreen();
+        return;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log('Usuario autenticado:', user.email);
+            console.log('User ID:', user.uid);
+            
+            try {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (!userDoc.exists()) {
+                    console.log('Creando documento de usuario...');
+                    const phoneNumber = localStorage.getItem('userPhone') || '';
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        email: user.email.toLowerCase(),
+                        phoneNumber: phoneNumber,
+                        language: userLanguage,
+                        createdAt: serverTimestamp(),
+                        lastUpdated: serverTimestamp()
+                    });
+                    console.log('Documento de usuario creado exitosamente');
+                }
+            } catch (error) {
+                console.error('Error al verificar/crear documento de usuario:', error);
+            }
+
+            hideLoadingScreen();
+            showMainScreen();
+            updateUserInfo(user);
+            setupRealtimeChats();
+        } else {
+            console.log('No hay usuario autenticado');
+            hideLoadingScreen();
+            showAuthScreen();
+        }
+    });
+
+    adjustMobileLayout();
+});
+
+// Funciones de UI mejoradas
+function showLoadingScreen() {
+    document.querySelector('.loading-screen').style.display = 'flex';
+}
+
+function hideLoadingScreen() {
+    document.querySelector('.loading-screen').style.display = 'none';
+}
+
+// Función para ajustar el diseño en móvil
+function adjustMobileLayout() {
+    const chatContainer = document.querySelector('.chat-container');
+    const sidebar = document.querySelector('.sidebar');
+    const messagesList = document.querySelector('.messages-list');
+    const inputContainer = document.querySelector('.input-container');
+    const mainScreen = document.getElementById('mainScreen');
+    
+    if (window.innerWidth <= 768) {
+        // Prevenir scroll y zoom indeseado en móviles
+        document.body.style.height = '100vh';
+        document.body.style.overflow = 'hidden';
+        
+        if (mainScreen) {
+            mainScreen.style.height = '100vh';
+            mainScreen.style.overflow = 'hidden';
+        }
+
+        // Ajustes específicos para móvil
+        if (chatContainer) {
+            chatContainer.style.width = '100%';
+            chatContainer.style.height = '100vh';
+            chatContainer.style.position = 'fixed';
+            chatContainer.style.top = '0';
+            chatContainer.style.left = '0';
+            chatContainer.style.zIndex = '1000';
+            chatContainer.style.display = 'flex';
+            chatContainer.style.flexDirection = 'column';
+        }
+        
+        if (sidebar) {
+            sidebar.style.width = '100%';
+            sidebar.style.height = '100vh';
+            sidebar.style.position = 'fixed';
+            sidebar.style.top = '0';
+            sidebar.style.left = '0';
+            sidebar.style.zIndex = '1000';
+        }
+        
+        if (messagesList) {
+            messagesList.style.flex = '1';
+            messagesList.style.height = 'calc(100vh - 130px)'; // Ajustado para dejar espacio para el input
+            messagesList.style.overflow = 'auto';
+            messagesList.style.paddingBottom = '20px';
+            messagesList.style.WebkitOverflowScrolling = 'touch'; // Para scroll suave en iOS
+        }
+        
+        if (inputContainer) {
+            inputContainer.style.position = 'fixed';
+            inputContainer.style.bottom = '0';
+            inputContainer.style.left = '0';
+            inputContainer.style.width = '100%';
+            inputContainer.style.minHeight = '60px';
+            inputContainer.style.padding = '10px';
+            inputContainer.style.backgroundColor = '#fff';
+            inputContainer.style.borderTop = '1px solid #ddd';
+            inputContainer.style.zIndex = '1001';
+            inputContainer.style.display = 'flex';
+            inputContainer.style.alignItems = 'center';
+            inputContainer.style.justifyContent = 'space-between';
+            
+            // Ajustar el input de mensaje
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.style.flex = '1';
+                messageInput.style.margin = '0 10px';
+                messageInput.style.padding = '8px';
+                messageInput.style.fontSize = '16px'; // Previene zoom en iOS
+            }
+        }
+    } else {
+        // Restablecer estilos para desktop
+        document.body.style.height = '';
+        document.body.style.overflow = '';
+        
+        if (mainScreen) {
+            mainScreen.style.height = '';
+            mainScreen.style.overflow = '';
+        }
+
+        if (chatContainer) {
+            chatContainer.style.width = '';
+            chatContainer.style.height = '';
+            chatContainer.style.position = '';
+            chatContainer.style.top = '';
+            chatContainer.style.left = '';
+            chatContainer.style.zIndex = '';
+            chatContainer.style.display = '';
+            chatContainer.style.flexDirection = '';
+        }
+        
+        if (sidebar) {
+            sidebar.style.width = '';
+            sidebar.style.height = '';
+            sidebar.style.position = '';
+            sidebar.style.top = '';
+            sidebar.style.left = '';
+            sidebar.style.zIndex = '';
+        }
+        
+        if (messagesList) {
+            messagesList.style.flex = '';
+            messagesList.style.height = '';
+            messagesList.style.overflow = '';
+            messagesList.style.paddingBottom = '';
+            messagesList.style.WebkitOverflowScrolling = '';
+        }
+        
+        if (inputContainer) {
+            inputContainer.style.position = '';
+            inputContainer.style.bottom = '';
+            inputContainer.style.left = '';
+            inputContainer.style.width = '';
+            inputContainer.style.minHeight = '';
+            inputContainer.style.padding = '';
+            inputContainer.style.backgroundColor = '';
+            inputContainer.style.borderTop = '';
+            inputContainer.style.zIndex = '';
+            inputContainer.style.display = '';
+            inputContainer.style.alignItems = '';
+            inputContainer.style.justifyContent = '';
+            
+            const messageInput = document.getElementById('messageInput');
+            if (messageInput) {
+                messageInput.style.flex = '';
+                messageInput.style.margin = '';
+                messageInput.style.padding = '';
+                messageInput.style.fontSize = '';
+            }
+        }
+    }
+}
+
+// Asegurarse de que el teclado virtual no cause problemas
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) {
+        const messagesList = document.querySelector('.messages-list');
+        if (messagesList) {
+            setTimeout(() => {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }, 100);
+        }
+    }
+});
+
+// Prevenir zoom en inputs en iOS
+document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+});
 
 // Función para mostrar la pantalla principal
 function showMainScreen() {
@@ -233,6 +543,7 @@ async function setupRealtimeChats() {
         unsubscribeChats();
     }
 
+    const db = window.db;
     const currentUser = auth.currentUser;
 
     if (!db || !currentUser) {
@@ -378,6 +689,7 @@ async function searchUsers(searchTerm) {
 
     try {
         console.log('Iniciando búsqueda con término:', searchTerm);
+        const db = window.db;
         const usersRef = collection(db, 'users');
         const currentUserUid = auth.currentUser.uid;
         console.log('Usuario actual:', currentUserUid);
@@ -564,6 +876,7 @@ function displaySearchResults(users) {
 async function createChat(otherUserId) {
     console.log('Creando chat con usuario:', otherUserId);
     try {
+        const db = window.db;
         const currentUser = auth.currentUser;
 
         if (!currentUser || !otherUserId) {
@@ -596,27 +909,15 @@ async function createChat(otherUserId) {
         }
 
         console.log('Creando nuevo chat...');
-        // Si no existe, crear nuevo chat con la estructura correcta
+        // Si no existe, crear nuevo chat
         const newChatRef = await addDoc(collection(db, 'chats'), {
             participants: [currentUser.uid, otherUserId],
-            type: 'individual',
             createdAt: serverTimestamp(),
-            lastMessage: '',
-            lastMessageTime: serverTimestamp(),
-            createdBy: currentUser.uid
+            lastMessage: null,
+            lastMessageTime: null
         });
 
         console.log('Nuevo chat creado:', newChatRef.id);
-
-        // Crear mensaje de sistema inicial
-        await addDoc(collection(db, 'chats', newChatRef.id, 'messages'), {
-            text: getTranslation('newChatStarted', userLanguage).replace('{user}', currentUser.email),
-            type: 'system',
-            senderId: 'system',
-            timestamp: serverTimestamp(),
-            language: userLanguage
-        });
-
         openChat(newChatRef.id);
         
         // En móvil, ocultar la lista de chats y mostrar el chat
@@ -712,6 +1013,7 @@ async function displayMessage(messageData) {
     }
 
     // Obtener el tipo de chat actual
+    const db = window.db;
     const chatDoc = await getDoc(doc(db, 'chats', currentChat));
     const chatData = chatDoc.exists() ? chatDoc.data() : null;
     const isGroupChat = chatData && chatData.type === 'group';
@@ -801,6 +1103,7 @@ async function openChat(chatId) {
     currentChat = chatId;
     
     try {
+        const db = window.db;
         // Obtener información del chat
         const chatDoc = await getDoc(doc(db, 'chats', chatId));
         if (!chatDoc.exists()) {
@@ -843,6 +1146,28 @@ async function openChat(chatId) {
                 currentChatInfo.innerHTML = '';
                 currentChatInfo.appendChild(groupInfoElement);
             }
+
+            // Añadir estilos para la información del grupo
+            const style = document.createElement('style');
+            style.textContent = `
+                .group-info {
+                    padding: 10px;
+                    border-bottom: 1px solid #ddd;
+                }
+                .group-name {
+                    font-weight: bold;
+                    font-size: 1.1em;
+                    margin-bottom: 5px;
+                }
+                .group-participants {
+                    font-size: 0.9em;
+                    color: #666;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+            `;
+            document.head.appendChild(style);
         } else {
             // Es un chat individual
             const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
@@ -891,7 +1216,6 @@ async function openChat(chatId) {
             }
         }, (error) => {
             console.error('Error en la suscripción a mensajes:', error);
-            showError('errorLoadingMessages');
         });
     } catch (error) {
         console.error('Error al abrir chat:', error);
@@ -951,6 +1275,7 @@ async function sendMessage(text) {
     }
 
     try {
+        const db = window.db;
         const user = auth.currentUser;
         
         if (!user) {
@@ -959,14 +1284,14 @@ async function sendMessage(text) {
         }
 
         console.log('Preparando mensaje para enviar...');
-        // Crear el mensaje con la estructura correcta
+        // Crear el mensaje
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
+            senderEmail: user.email,
             timestamp: serverTimestamp(),
             language: userLanguage,
-            translations: {},
-            type: 'message'
+            translations: {}
         };
 
         console.log('Enviando mensaje a Firestore...');
@@ -985,47 +1310,58 @@ async function sendMessage(text) {
         // Limpiar el input
         messageInput.value = '';
         
-        // Obtener información del chat para traducciones
+        // Obtener información del chat
         const chatDoc = await getDoc(chatRef);
-        if (!chatDoc.exists()) {
-            console.error('Chat no encontrado');
-            return;
-        }
-
         const chatData = chatDoc.data();
-        const otherParticipants = chatData.participants.filter(id => id !== user.uid);
+        const isGroupChat = chatData.type === 'group';
         
-        // Obtener idiomas de los otros participantes
-        const participantLanguages = new Set();
-        for (const participantId of otherParticipants) {
-            const userDoc = await getDoc(doc(db, 'users', participantId));
-            if (userDoc.exists()) {
-                const participantLang = userDoc.data().language || 'en';
-                if (participantLang !== userLanguage) {
-                    participantLanguages.add(participantLang);
+        // Determinar los idiomas necesarios para traducción
+        let targetLanguages = new Set();
+        
+        if (isGroupChat) {
+            // Para grupos, obtener los idiomas únicos de todos los participantes
+            const participantsData = await Promise.all(
+                chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
+            );
+            
+            participantsData.forEach(participantDoc => {
+                if (participantDoc.exists()) {
+                    const participantLang = participantDoc.data().language || 'en';
+                    if (participantLang !== userLanguage) {
+                        targetLanguages.add(participantLang);
+                    }
+                }
+            });
+        } else {
+            // Para chats individuales, solo traducir al idioma del otro usuario
+            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
+            if (otherUserId) {
+                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                if (otherUserDoc.exists()) {
+                    const otherUserLang = otherUserDoc.data().language || 'en';
+                    if (otherUserLang !== userLanguage) {
+                        targetLanguages.add(otherUserLang);
+                    }
                 }
             }
         }
         
-        // Realizar traducciones
-        console.log('Traduciendo mensaje a idiomas:', Array.from(participantLanguages));
-        const translations = {};
-        for (const targetLang of participantLanguages) {
+        // Realizar las traducciones necesarias
+        console.log('Traduciendo mensaje a idiomas:', Array.from(targetLanguages));
+        for (const targetLang of targetLanguages) {
             try {
-                translations[targetLang] = await translateText(text.trim(), targetLang);
-            } catch (error) {
-                console.error('Error al traducir al', targetLang, error);
+                const translation = await translateText(text, targetLang);
+                await updateDoc(doc(messagesRef, docRef.id), {
+                    [`translations.${targetLang}`]: translation
+                });
+                console.log(`Traducción guardada para ${targetLang}`);
+            } catch (translationError) {
+                console.error('Error al traducir al', targetLang, translationError);
             }
         }
-
-        // Actualizar mensaje con traducciones
-        if (Object.keys(translations).length > 0) {
-            await updateDoc(doc(messagesRef, docRef.id), { translations });
-        }
-
     } catch (error) {
         console.error('Error al enviar mensaje:', error);
-        showError('errorSendMessage');
+        showError('errorGeneric');
     }
 }
 
@@ -1055,28 +1391,12 @@ window.addEventListener('load', () => {
 // Mejorar la función de cerrar sesión
 async function handleLogout() {
     try {
-        // Primero cancelar todas las suscripciones
-        if (unsubscribeMessages) {
-            unsubscribeMessages();
-            unsubscribeMessages = null;
-        }
-        if (unsubscribeChats) {
-            unsubscribeChats();
-            unsubscribeChats = null;
-        }
-
-        // Limpiar el estado de la UI
-        resetChatState();
-        
-        // Cerrar sesión en Firebase
         await signOut(auth);
+        resetChatState();
+        showAuthScreen();
         
-        // Limpiar localStorage
         localStorage.removeItem('userLanguage');
         localStorage.removeItem('userPhone');
-        
-        // Mostrar pantalla de autenticación
-        showAuthScreen();
         
         alert(getTranslation('logoutSuccess', userLanguage));
     } catch (error) {
@@ -1398,6 +1718,7 @@ async function createGroupChat(groupName, participants) {
         return;
     }
 
+    const db = window.db;
     const currentUser = auth.currentUser;
     
     if (!currentUser) {
@@ -1421,8 +1742,8 @@ async function createGroupChat(groupName, participants) {
             participants: allParticipants,
             createdBy: currentUser.uid,
             createdAt: serverTimestamp(),
-            lastMessage: '',
-            lastMessageTime: serverTimestamp()
+            lastMessage: null,
+            lastMessageTime: null
         });
 
         console.log('Grupo creado exitosamente:', groupChatRef.id);
@@ -1431,9 +1752,8 @@ async function createGroupChat(groupName, participants) {
         await addDoc(collection(db, 'chats', groupChatRef.id, 'messages'), {
             text: `Grupo "${groupName}" creado por ${currentUser.email}`,
             type: 'system',
-            senderId: 'system',
             timestamp: serverTimestamp(),
-            language: userLanguage
+            senderId: 'system'
         });
 
         // Abrir el chat recién creado
@@ -1442,225 +1762,4 @@ async function createGroupChat(groupName, participants) {
         console.error('Error al crear grupo:', error);
         showError('errorCreateGroup');
     }
-}
-
-// Funciones de UI
-function showLoadingScreen() {
-    const loadingScreen = document.querySelector('.loading-screen');
-    if (loadingScreen) {
-        loadingScreen.style.display = 'flex';
-    }
-}
-
-function hideLoadingScreen() {
-    const loadingScreen = document.querySelector('.loading-screen');
-    if (loadingScreen) {
-        loadingScreen.style.display = 'none';
-    }
-}
-
-// Función para ajustar el diseño en móvil
-function adjustMobileLayout() {
-    const chatContainer = document.querySelector('.chat-container');
-    const sidebar = document.querySelector('.sidebar');
-    const messagesList = document.querySelector('.messages-list');
-    const inputContainer = document.querySelector('.input-container');
-    const mainScreen = document.getElementById('mainScreen');
-    
-    if (window.innerWidth <= 768) {
-        // Prevenir scroll y zoom indeseado en móviles
-        document.body.style.height = '100vh';
-        document.body.style.overflow = 'hidden';
-        
-        if (mainScreen) {
-            mainScreen.style.height = '100vh';
-            mainScreen.style.overflow = 'hidden';
-        }
-
-        // Ajustes específicos para móvil
-        if (chatContainer) {
-            chatContainer.style.width = '100%';
-            chatContainer.style.height = '100vh';
-            chatContainer.style.position = 'fixed';
-            chatContainer.style.top = '0';
-            chatContainer.style.left = '0';
-            chatContainer.style.zIndex = '1000';
-            chatContainer.style.display = 'flex';
-            chatContainer.style.flexDirection = 'column';
-        }
-        
-        if (sidebar) {
-            sidebar.style.width = '100%';
-            sidebar.style.height = '100vh';
-            sidebar.style.position = 'fixed';
-            sidebar.style.top = '0';
-            sidebar.style.left = '0';
-            sidebar.style.zIndex = '1000';
-        }
-        
-        if (messagesList) {
-            messagesList.style.flex = '1';
-            messagesList.style.height = 'calc(100vh - 130px)'; // Ajustado para dejar espacio para el input
-            messagesList.style.overflow = 'auto';
-            messagesList.style.paddingBottom = '20px';
-            messagesList.style.WebkitOverflowScrolling = 'touch'; // Para scroll suave en iOS
-        }
-        
-        if (inputContainer) {
-            inputContainer.style.position = 'fixed';
-            inputContainer.style.bottom = '0';
-            inputContainer.style.left = '0';
-            inputContainer.style.width = '100%';
-            inputContainer.style.minHeight = '60px';
-            inputContainer.style.padding = '10px';
-            inputContainer.style.backgroundColor = '#fff';
-            inputContainer.style.borderTop = '1px solid #ddd';
-            inputContainer.style.zIndex = '1001';
-            inputContainer.style.display = 'flex';
-            inputContainer.style.alignItems = 'center';
-            inputContainer.style.justifyContent = 'space-between';
-            
-            // Ajustar el input de mensaje
-            const messageInput = document.getElementById('messageInput');
-            if (messageInput) {
-                messageInput.style.flex = '1';
-                messageInput.style.margin = '0 10px';
-                messageInput.style.padding = '8px';
-                messageInput.style.fontSize = '16px'; // Previene zoom en iOS
-            }
-        }
-    } else {
-        // Restablecer estilos para desktop
-        document.body.style.height = '';
-        document.body.style.overflow = '';
-        
-        if (mainScreen) {
-            mainScreen.style.height = '';
-            mainScreen.style.overflow = '';
-        }
-
-        if (chatContainer) {
-            chatContainer.style.width = '';
-            chatContainer.style.height = '';
-            chatContainer.style.position = '';
-            chatContainer.style.top = '';
-            chatContainer.style.left = '';
-            chatContainer.style.zIndex = '';
-            chatContainer.style.display = '';
-            chatContainer.style.flexDirection = '';
-        }
-        
-        if (sidebar) {
-            sidebar.style.width = '';
-            sidebar.style.height = '';
-            sidebar.style.position = '';
-            sidebar.style.top = '';
-            sidebar.style.left = '';
-            sidebar.style.zIndex = '';
-        }
-        
-        if (messagesList) {
-            messagesList.style.flex = '';
-            messagesList.style.height = '';
-            messagesList.style.overflow = '';
-            messagesList.style.paddingBottom = '';
-            messagesList.style.WebkitOverflowScrolling = '';
-        }
-        
-        if (inputContainer) {
-            inputContainer.style.position = '';
-            inputContainer.style.bottom = '';
-            inputContainer.style.left = '';
-            inputContainer.style.width = '';
-            inputContainer.style.minHeight = '';
-            inputContainer.style.padding = '';
-            inputContainer.style.backgroundColor = '';
-            inputContainer.style.borderTop = '';
-            inputContainer.style.zIndex = '';
-            inputContainer.style.display = '';
-            inputContainer.style.alignItems = '';
-            inputContainer.style.justifyContent = '';
-            
-            const messageInput = document.getElementById('messageInput');
-            if (messageInput) {
-                messageInput.style.flex = '';
-                messageInput.style.margin = '';
-                messageInput.style.padding = '';
-                messageInput.style.fontSize = '';
-            }
-        }
-    }
-}
-
-// Asegurarse de que el teclado virtual no cause problemas
-window.addEventListener('resize', () => {
-    if (window.innerWidth <= 768) {
-        const messagesList = document.querySelector('.messages-list');
-        if (messagesList) {
-            setTimeout(() => {
-                messagesList.scrollTop = messagesList.scrollHeight;
-            }, 100);
-        }
-    }
-    adjustMobileLayout();
-});
-
-// Prevenir zoom en inputs en iOS
-document.addEventListener('gesturestart', function(e) {
-    e.preventDefault();
-});
-
-// Inicialización cuando se carga el documento
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Cargado');
-    showLoadingScreen();
-
-    // Inicializar la interfaz con el idioma guardado y activar la animación
-    translateInterface(userLanguage);
-    setTimeout(animateTitleWave, 100);
-
-    if (!auth || !db) {
-        console.error('Auth o Firestore no están inicializados');
-        hideLoadingScreen();
-        return;
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log('Usuario autenticado:', user.email);
-            console.log('User ID:', user.uid);
-            
-            try {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-                
-                if (!userDoc.exists()) {
-                    console.log('Creando documento de usuario...');
-                    const phoneNumber = localStorage.getItem('userPhone') || '';
-                    await setDoc(userDocRef, {
-                        uid: user.uid,
-                        email: user.email.toLowerCase(),
-                        phoneNumber: phoneNumber,
-                        language: userLanguage,
-                        createdAt: serverTimestamp(),
-                        lastUpdated: serverTimestamp()
-                    });
-                    console.log('Documento de usuario creado exitosamente');
-                }
-            } catch (error) {
-                console.error('Error al verificar/crear documento de usuario:', error);
-            }
-
-            hideLoadingScreen();
-            showMainScreen();
-            updateUserInfo(user);
-            setupRealtimeChats();
-        } else {
-            console.log('No hay usuario autenticado');
-            hideLoadingScreen();
-            showAuthScreen();
-        }
-    });
-
-    adjustMobileLayout();
-}); 
+} 
