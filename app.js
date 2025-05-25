@@ -1824,12 +1824,7 @@ function initializeSpeechRecognition() {
             const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
                 finalTranscript = transcript;
-                // Cuando tenemos la transcripción final, la enviamos como mensaje
-                if (finalTranscript.trim()) {
-                    messageInput.value = finalTranscript;
-                    sendMessage(finalTranscript);
-                    stopRecording();
-                }
+                messageInput.value = finalTranscript;
             } else {
                 interimTranscript += transcript;
                 messageInput.value = interimTranscript;
@@ -1856,6 +1851,8 @@ function stopRecording() {
     }
     isRecording = false;
     micButton.classList.remove('recording');
+    // Restaurar el placeholder original
+    messageInput.placeholder = getTranslation('writeMessage', userLanguage);
 }
 
 // Evento para el botón de micrófono
@@ -1878,7 +1875,9 @@ micButton.addEventListener('click', () => {
         recognition.start();
         micButton.classList.add('recording');
         isRecording = true;
-        messageInput.value = '';
-        messageInput.placeholder = getTranslation('listening', userLanguage);
+        // No limpiar el input si ya tiene texto
+        if (!messageInput.value.trim()) {
+            messageInput.placeholder = getTranslation('listening', userLanguage);
+        }
     }
 }); 
