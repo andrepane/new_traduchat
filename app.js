@@ -1809,29 +1809,6 @@ async function createGroupChat(groupName, participants) {
     }
 }
 
-// Función para transcribir audio usando Web Speech API
-function transcribeAudio(audioBlob) {
-    return new Promise((resolve, reject) => {
-        const recognition = new webkitSpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        recognition.lang = userLanguage === 'es' ? 'es-ES' : 
-                         userLanguage === 'it' ? 'it-IT' : 'en-US';
-        
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            resolve(transcript);
-        };
-        
-        recognition.onerror = (error) => {
-            console.error('Error en reconocimiento de voz:', error);
-            reject(error);
-        };
-        
-        recognition.start();
-    });
-}
-
 // Función para inicializar el grabador de audio
 async function initializeAudioRecorder() {
     try {
@@ -1843,28 +1820,36 @@ async function initializeAudioRecorder() {
         };
         
         mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
             try {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                // Convertir audio a texto usando la Web Speech API
+                const recognition = new webkitSpeechRecognition();
+                recognition.lang = userLanguage === 'es' ? 'es-ES' : 
+                                 userLanguage === 'it' ? 'it-IT' : 'en-US';
                 
-                // Intentar transcribir el audio
-                let transcription = '';
-                try {
-                    transcription = await transcribeAudio(audioBlob);
-                    console.log('Transcripción exitosa:', transcription);
-                } catch (transcriptionError) {
-                    console.error('Error en transcripción:', transcriptionError);
-                    transcription = '[Audio sin transcripción]';
-                }
+                recognition.onresult = async (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    console.log('Transcripción:', transcript);
+                    await sendAudioMessage(audioBlob, transcript);
+                };
                 
-                // Enviar mensaje con audio y transcripción
-                await sendAudioMessage(audioBlob, transcription);
+                recognition.onerror = async (error) => {
+                    console.error('Error en reconocimiento de voz:', error);
+                    // Si hay error en la transcripción, enviar el audio sin texto
+                    await sendAudioMessage(audioBlob, '[Audio]');
+                };
                 
-                // Limpiar
-                audioChunks = [];
+                recognition.start();
             } catch (error) {
                 console.error('Error procesando audio:', error);
-                showError('errorAudio');
+                await sendAudioMessage(audioBlob, '[Audio]');
             }
+            
+            // Limpiar
+            audioChunks = [];
+            URL.revokeObjectURL(audioUrl);
         };
         
         return true;
@@ -1874,6 +1859,37 @@ async function initializeAudioRecorder() {
         return false;
     }
 }
+
+// Evento para el botón de micrófono
+const micButton = document.getElementById('micButton');
+
+micButton.addEventListener('click', async () => {
+    if (!currentChat) {
+        showError('errorNoChat');
+        return;
+    }
+
+    if (isRecording) {
+        // Detener grabación
+        mediaRecorder.stop();
+        micButton.classList.remove('recording');
+        isRecording = false;
+    } else {
+        // Iniciar grabación
+        if (!mediaRecorder) {
+            const initialized = await initializeAudioRecorder();
+            if (!initialized) {
+                showError('errorMicAccess');
+                return;
+            }
+        }
+        
+        audioChunks = [];
+        mediaRecorder.start();
+        micButton.classList.add('recording');
+        isRecording = true;
+    }
+});
 
 // Función para enviar mensaje de audio
 async function sendAudioMessage(audioBlob, transcription) {
@@ -1967,37 +1983,6 @@ async function sendAudioMessage(audioBlob, transcription) {
         showError('errorAudio');
     }
 }
-
-// Evento para el botón de micrófono
-const micButton = document.getElementById('micButton');
-
-micButton.addEventListener('click', async () => {
-    if (!currentChat) {
-        showError('errorNoChat');
-        return;
-    }
-
-    if (isRecording) {
-        // Detener grabación
-        mediaRecorder.stop();
-        micButton.classList.remove('recording');
-        isRecording = false;
-    } else {
-        // Iniciar grabación
-        if (!mediaRecorder) {
-            const initialized = await initializeAudioRecorder();
-            if (!initialized) {
-                showError('errorMicAccess');
-                return;
-            }
-        }
-        
-        audioChunks = [];
-        mediaRecorder.start();
-        micButton.classList.add('recording');
-        isRecording = true;
-    }
-});
 
 // Añadir traducciones para mensajes de audio
 const audioTranslations = {
