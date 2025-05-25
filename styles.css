@@ -1363,4 +1363,128 @@ html {
     height: 40px;
     background: var(--color-primary-light);
     border-radius: 4px;
+}
+
+/* Estilos móviles */
+@media screen and (max-width: 768px) {
+    body {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    #mainScreen {
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .chat-container {
+        width: 100%;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1000;
+    }
+
+    .messages-list {
+        flex: 1;
+        height: calc(100vh - 150px);
+        overflow: auto;
+        padding-bottom: 100px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .input-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        min-height: 60px;
+        max-height: 120px;
+        padding: 10px 15px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+        background-color: #fff;
+        border-top: 1px solid #ddd;
+        z-index: 1001;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    #messageInput {
+        flex: 1;
+        margin: 0;
+        padding: 12px;
+        font-size: 16px;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+        background-color: #f8f9fa;
+    }
+
+    #micButton,
+    #sendMessage {
+        width: 40px;
+        height: 40px;
+        padding: 8px;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    #micButton {
+        background-color: #007bff;
+        color: #fff;
+    }
+
+    #micButton.recording {
+        background-color: #dc3545;
+        animation: pulse 1.5s infinite;
+    }
+
+    #sendMessage {
+        background-color: #28a745;
+        color: #fff;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    /* Ajustes para iPhone X y posteriores */
+    @supports (padding: max(0px)) {
+        .input-container {
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+    }
+}
+
+/* Estilos para los botones en estado activo/hover */
+@media screen and (max-width: 768px) {
+    #micButton:active,
+    #sendMessage:active {
+        opacity: 0.8;
+        transform: scale(0.95);
+    }
+
+    #micButton.recording:active {
+        animation: none;
+        opacity: 0.8;
+    }
 } 
