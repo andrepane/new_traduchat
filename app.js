@@ -270,7 +270,7 @@ async function startPhoneAuth(phoneNumber) {
     try {
         // Asegurarse de que reCAPTCHA esté inicializado
         if (!window.recaptchaVerifier) {
-            await initializeRecaptchaVerifier();
+            await initializeRecaptcha();
         }
         
         const appVerifier = window.recaptchaVerifier;
@@ -278,23 +278,43 @@ async function startPhoneAuth(phoneNumber) {
             throw new Error('reCAPTCHA no está inicializado');
         }
 
-        const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
-        window.confirmationResult = confirmationResult;
-        
-        // Mostrar el campo para ingresar el código
-        document.getElementById('verificationCodeSection').style.display = 'block';
-        alert(getTranslation('codeSent', userLanguage));
-    } catch (error) {
-        console.error('Error al enviar el código:', error);
-        
-        // Reinicializar reCAPTCHA en caso de error
-        await initializeRecaptchaVerifier();
-        
-        if (error.code === 'auth/invalid-phone-number') {
-            showError('errorInvalidPhone');
-        } else {
-            showError('errorSendingCode');
+        // Mostrar indicador de carga
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.disabled = true;
+            loginBtn.textContent = getTranslation('loading', userLanguage);
         }
+
+        try {
+            const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+            window.confirmationResult = confirmationResult;
+            
+            // Mostrar el campo para ingresar el código
+            document.getElementById('verificationCodeSection').style.display = 'block';
+            alert(getTranslation('codeSent', userLanguage));
+        } catch (error) {
+            console.error('Error al enviar el código:', error);
+            
+            if (error.code === 'auth/invalid-phone-number') {
+                showError('errorInvalidPhone');
+            } else if (error.code === 'auth/too-many-requests') {
+                showError('errorTooManyAttempts');
+            } else {
+                showError('errorSendingCode');
+            }
+
+            // Reinicializar reCAPTCHA
+            await initializeRecaptcha();
+        } finally {
+            // Restaurar el botón
+            if (loginBtn) {
+                loginBtn.disabled = false;
+                loginBtn.textContent = getTranslation('loginRegister', userLanguage);
+            }
+        }
+    } catch (error) {
+        console.error('Error en el proceso de autenticación:', error);
+        showError('errorAuth');
     }
 }
 
