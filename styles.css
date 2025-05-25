@@ -550,7 +550,6 @@ body {
 .screen.active {
   display: flex;
   opacity: 1;
-  visibility: visible;
 }
 
 /* Pantalla de autenticación */
@@ -747,24 +746,19 @@ button:hover:not(:disabled) {
     background: var(--color-user-left);
 }
 
-/* Entrada de teléfono */
-.phone-input {
-    display: flex;
-    gap: 10px;
+/* Entrada de usuario */
+.user-input {
+    width: 100%;
     margin-bottom: 1rem;
 }
 
-.country-select {
-    width: 40%;
+.user-input input {
+    width: 100%;
     padding: 0.8rem;
     border: 1.5px solid var(--color-border);
     border-radius: 10px;
     font-size: 1rem;
     background: #fff;
-}
-
-#phoneNumber {
-    width: 60%;
 }
 
 /* Responsive para tablets y desktop */
