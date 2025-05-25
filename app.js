@@ -1821,16 +1821,19 @@ function initializeSpeechRecognition() {
     
     recognition.onresult = (event) => {
         let interimTranscript = '';
+        finalTranscript = ''; // Reiniciar la transcripción final
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-                finalTranscript += transcript + ' ';
+                finalTranscript = transcript; // Guardar solo la última transcripción final
             } else {
                 interimTranscript += transcript;
             }
         }
         
+        // Mostrar la transcripción en el input de mensaje
+        messageInput.value = finalTranscript || interimTranscript;
         console.log('Transcripción final:', finalTranscript);
         console.log('Transcripción intermedia:', interimTranscript);
     };
@@ -1934,7 +1937,7 @@ async function sendAudioMessage(audioBlob, transcription) {
 
         // Subir audio a Firebase Storage
         const storage = getStorage();
-        const audioRef = ref(storage, `audios/${currentChat}/${Date.now()}.wav`);
+        const audioRef = storageRef(storage, `audios/${currentChat}/${Date.now()}.wav`);
         await uploadBytes(audioRef, audioBlob);
         const audioUrl = await getDownloadURL(audioRef);
 
