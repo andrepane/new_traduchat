@@ -22,14 +22,19 @@ const auth = getAuth(app);
 function initializeRecaptcha() {
     try {
         if (!window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'sign-in-button', {
-                'size': 'invisible',
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                'size': 'normal',
                 'callback': (response) => {
                     console.log("reCAPTCHA verified");
                 },
                 'expired-callback': () => {
                     console.log("reCAPTCHA expired");
                 }
+            });
+            
+            // Renderizar explícitamente el reCAPTCHA
+            window.recaptchaVerifier.render().then(function(widgetId) {
+                window.recaptchaWidgetId = widgetId;
             });
         }
     } catch (error) {
