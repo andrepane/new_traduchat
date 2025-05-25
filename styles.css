@@ -96,14 +96,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
 }
 
 .user-info {
-  flex: 1;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 10px;
   min-width: 0;
+  flex: 1;
 }
 
 #userInfo {
@@ -1013,10 +1014,19 @@ html {
     height: -webkit-fill-available;
 }
 
-/* Botones de acción en el header */
+/* Header actions */
+.header-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
 .icon-button {
     width: 36px;
     height: 36px;
+    min-width: 36px; /* Evita que los botones se encojan */
     border-radius: 50%;
     border: none;
     background: var(--color-primary);
@@ -1029,7 +1039,6 @@ html {
     font-size: 16px;
     transition: all 0.2s ease;
     box-shadow: 0 2px 8px rgba(0, 180, 81, 0.2);
-    margin: 0 4px;
 }
 
 .icon-button i {
@@ -1051,10 +1060,6 @@ html {
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
-#newChat {
-    background: var(--color-primary);
-}
-
 #logoutBtn {
     background: var(--color-danger);
 }
@@ -1062,6 +1067,68 @@ html {
 #logoutBtn:hover {
     background: #dc2626;
     box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+/* Ajustes responsivos para el header */
+.user-header {
+    height: var(--header-height);
+    padding: 12px 15px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    flex: 1;
+}
+
+/* Ajustes específicos para móvil */
+@media (max-width: 768px) {
+    .user-header {
+        padding: 8px 10px;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .icon-button {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+
+    .icon-button i {
+        font-size: 16px;
+    }
+
+    .user-info {
+        gap: 6px;
+    }
+}
+
+/* Ajustes para pantallas muy pequeñas */
+@media (max-width: 360px) {
+    .user-header {
+        padding: 6px 8px;
+    }
+
+    .header-actions {
+        gap: 4px;
+    }
+
+    .icon-button {
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+    }
 }
 
 /* Modal de creación de grupo */
