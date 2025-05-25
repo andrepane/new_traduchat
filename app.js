@@ -26,7 +26,7 @@ import {
 
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
-import { auth, initializeRecaptcha } from './firebase-config.js';
+import { auth, setupRecaptcha } from './firebase-config.js';
 
 // Verificar inicialización de Firebase
 console.log('Verificando inicialización de Firebase...');
@@ -253,16 +253,18 @@ async function initializeRecaptchaVerifier() {
     }
 }
 
-// Inicializar reCAPTCHA cuando se muestra la pantalla de autenticación
+// Función para mostrar la pantalla de autenticación
 function showAuthScreen() {
     document.getElementById('mainScreen').classList.remove('active');
     document.getElementById('authScreen').classList.add('active');
     document.body.classList.remove('in-chat');
     
-    // Inicializar reCAPTCHA
-    initializeRecaptchaVerifier().catch(error => {
-        console.error('Error al inicializar reCAPTCHA en showAuthScreen:', error);
-    });
+    // Configurar reCAPTCHA
+    try {
+        setupRecaptcha('loginBtn');
+    } catch (error) {
+        console.error('Error al configurar reCAPTCHA:', error);
+    }
 }
 
 // Función para iniciar la autenticación por teléfono
@@ -270,7 +272,7 @@ async function startPhoneAuth(phoneNumber) {
     try {
         // Asegurarse de que reCAPTCHA esté inicializado
         if (!window.recaptchaVerifier) {
-            await initializeRecaptcha();
+            await setupRecaptcha();
         }
         
         const appVerifier = window.recaptchaVerifier;
@@ -304,7 +306,7 @@ async function startPhoneAuth(phoneNumber) {
             }
 
             // Reinicializar reCAPTCHA
-            await initializeRecaptcha();
+            await setupRecaptcha();
         } finally {
             // Restaurar el botón
             if (loginBtn) {
@@ -1676,4 +1678,59 @@ async function createGroupChat(groupName, participants) {
         console.error('Error al crear grupo:', error);
         showError('errorCreateGroup');
     }
-} 
+}
+
+// Inicialización cuando se carga el documento
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Cargado');
+    showLoadingScreen();
+
+    // Inicializar la interfaz con el idioma guardado y activar la animación
+    translateInterface(userLanguage);
+    setTimeout(animateTitleWave, 100);
+
+    if (!auth || !db) {
+        console.error('Auth o Firestore no están inicializados');
+        hideLoadingScreen();
+        return;
+    }
+
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log('Usuario autenticado:', user.email);
+            console.log('User ID:', user.uid);
+            
+            try {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
+                
+                if (!userDoc.exists()) {
+                    console.log('Creando documento de usuario...');
+                    const phoneNumber = localStorage.getItem('userPhone') || '';
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        email: user.email.toLowerCase(),
+                        phoneNumber: phoneNumber,
+                        language: userLanguage,
+                        createdAt: serverTimestamp(),
+                        lastUpdated: serverTimestamp()
+                    });
+                    console.log('Documento de usuario creado exitosamente');
+                }
+            } catch (error) {
+                console.error('Error al verificar/crear documento de usuario:', error);
+            }
+
+            hideLoadingScreen();
+            showMainScreen();
+            updateUserInfo(user);
+            setupRealtimeChats();
+        } else {
+            console.log('No hay usuario autenticado');
+            hideLoadingScreen();
+            showAuthScreen();
+        }
+    });
+
+    adjustMobileLayout();
+}); 
