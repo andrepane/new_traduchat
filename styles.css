@@ -1318,4 +1318,49 @@ html {
     .modal h2 {
         font-size: 1.25rem;
     }
+}
+
+/* Botón de micrófono */
+#micButton {
+    margin-right: 10px;
+    transition: all 0.3s ease;
+}
+
+#micButton.recording {
+    color: #ff4444;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.audio-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    border-radius: 8px;
+    background-color: var(--color-bg-alt);
+}
+
+.audio-message .play-button {
+    cursor: pointer;
+    color: var(--color-primary);
+}
+
+.audio-message .transcription {
+    font-style: italic;
+    margin-top: 4px;
+    font-size: 0.9em;
+    color: var(--color-text-secondary);
+}
+
+.audio-message .waveform {
+    flex: 1;
+    height: 40px;
+    background: var(--color-primary-light);
+    border-radius: 4px;
 } 
