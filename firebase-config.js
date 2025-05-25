@@ -18,17 +18,23 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Authentication
 const auth = getAuth(app);
 
-// Configure reCAPTCHA Verifier
-window.recaptchaVerifier = new RecaptchaVerifier(auth, 'sign-in-button', {
-    'size': 'invisible',
-    'callback': (response) => {
-        // reCAPTCHA solved, allow signInWithPhoneNumber.
-        console.log("reCAPTCHA verified");
-    },
-    'expired-callback': () => {
-        // Response expired. Ask user to solve reCAPTCHA again.
-        console.log("reCAPTCHA expired");
+// Función para inicializar reCAPTCHA
+function initializeRecaptcha() {
+    try {
+        if (!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'sign-in-button', {
+                'size': 'invisible',
+                'callback': (response) => {
+                    console.log("reCAPTCHA verified");
+                },
+                'expired-callback': () => {
+                    console.log("reCAPTCHA expired");
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error al inicializar reCAPTCHA:", error);
     }
-});
+}
 
-export { auth }; 
+export { auth, initializeRecaptcha }; 
