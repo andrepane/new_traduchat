@@ -879,15 +879,27 @@ async function createChat(otherUserId) {
         }
 
         console.log('Creando nuevo chat...');
-        // Si no existe, crear nuevo chat
+        // Si no existe, crear nuevo chat con la estructura correcta
         const newChatRef = await addDoc(collection(db, 'chats'), {
             participants: [currentUser.uid, otherUserId],
+            type: 'individual',
             createdAt: serverTimestamp(),
-            lastMessage: null,
-            lastMessageTime: null
+            lastMessage: '',
+            lastMessageTime: serverTimestamp(),
+            createdBy: currentUser.uid
         });
 
         console.log('Nuevo chat creado:', newChatRef.id);
+
+        // Crear mensaje de sistema inicial
+        await addDoc(collection(db, 'chats', newChatRef.id, 'messages'), {
+            text: getTranslation('newChatStarted', userLanguage).replace('{user}', currentUser.email),
+            type: 'system',
+            senderId: 'system',
+            timestamp: serverTimestamp(),
+            language: userLanguage
+        });
+
         openChat(newChatRef.id);
         
         // En móvil, ocultar la lista de chats y mostrar el chat
@@ -1244,7 +1256,6 @@ async function sendMessage(text) {
     }
 
     try {
-        const db = window.db;
         const user = auth.currentUser;
         
         if (!user) {
@@ -1253,14 +1264,14 @@ async function sendMessage(text) {
         }
 
         console.log('Preparando mensaje para enviar...');
-        // Crear el mensaje
+        // Crear el mensaje con la estructura correcta
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
-            senderEmail: user.email,
             timestamp: serverTimestamp(),
             language: userLanguage,
-            translations: {}
+            translations: {},
+            type: 'message'
         };
 
         console.log('Enviando mensaje a Firestore...');
@@ -1279,58 +1290,47 @@ async function sendMessage(text) {
         // Limpiar el input
         messageInput.value = '';
         
-        // Obtener información del chat
+        // Obtener información del chat para traducciones
         const chatDoc = await getDoc(chatRef);
+        if (!chatDoc.exists()) {
+            console.error('Chat no encontrado');
+            return;
+        }
+
         const chatData = chatDoc.data();
-        const isGroupChat = chatData.type === 'group';
+        const otherParticipants = chatData.participants.filter(id => id !== user.uid);
         
-        // Determinar los idiomas necesarios para traducción
-        let targetLanguages = new Set();
-        
-        if (isGroupChat) {
-            // Para grupos, obtener los idiomas únicos de todos los participantes
-            const participantsData = await Promise.all(
-                chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
-            );
-            
-            participantsData.forEach(participantDoc => {
-                if (participantDoc.exists()) {
-                    const participantLang = participantDoc.data().language || 'en';
-                    if (participantLang !== userLanguage) {
-                        targetLanguages.add(participantLang);
-                    }
-                }
-            });
-        } else {
-            // Para chats individuales, solo traducir al idioma del otro usuario
-            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
-            if (otherUserId) {
-                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                if (otherUserDoc.exists()) {
-                    const otherUserLang = otherUserDoc.data().language || 'en';
-                    if (otherUserLang !== userLanguage) {
-                        targetLanguages.add(otherUserLang);
-                    }
+        // Obtener idiomas de los otros participantes
+        const participantLanguages = new Set();
+        for (const participantId of otherParticipants) {
+            const userDoc = await getDoc(doc(db, 'users', participantId));
+            if (userDoc.exists()) {
+                const participantLang = userDoc.data().language || 'en';
+                if (participantLang !== userLanguage) {
+                    participantLanguages.add(participantLang);
                 }
             }
         }
         
-        // Realizar las traducciones necesarias
-        console.log('Traduciendo mensaje a idiomas:', Array.from(targetLanguages));
-        for (const targetLang of targetLanguages) {
+        // Realizar traducciones
+        console.log('Traduciendo mensaje a idiomas:', Array.from(participantLanguages));
+        const translations = {};
+        for (const targetLang of participantLanguages) {
             try {
-                const translation = await translateText(text, targetLang);
-                await updateDoc(doc(messagesRef, docRef.id), {
-                    [`translations.${targetLang}`]: translation
-                });
-                console.log(`Traducción guardada para ${targetLang}`);
-            } catch (translationError) {
-                console.error('Error al traducir al', targetLang, translationError);
+                translations[targetLang] = await translateText(text.trim(), targetLang);
+            } catch (error) {
+                console.error('Error al traducir al', targetLang, error);
             }
         }
+
+        // Actualizar mensaje con traducciones
+        if (Object.keys(translations).length > 0) {
+            await updateDoc(doc(messagesRef, docRef.id), { translations });
+        }
+
     } catch (error) {
         console.error('Error al enviar mensaje:', error);
-        showError('errorGeneric');
+        showError('errorSendMessage');
     }
 }
 
@@ -1687,7 +1687,6 @@ async function createGroupChat(groupName, participants) {
         return;
     }
 
-    const db = window.db;
     const currentUser = auth.currentUser;
     
     if (!currentUser) {
@@ -1711,8 +1710,8 @@ async function createGroupChat(groupName, participants) {
             participants: allParticipants,
             createdBy: currentUser.uid,
             createdAt: serverTimestamp(),
-            lastMessage: null,
-            lastMessageTime: null
+            lastMessage: '',
+            lastMessageTime: serverTimestamp()
         });
 
         console.log('Grupo creado exitosamente:', groupChatRef.id);
@@ -1721,8 +1720,9 @@ async function createGroupChat(groupName, participants) {
         await addDoc(collection(db, 'chats', groupChatRef.id, 'messages'), {
             text: `Grupo "${groupName}" creado por ${currentUser.email}`,
             type: 'system',
+            senderId: 'system',
             timestamp: serverTimestamp(),
-            senderId: 'system'
+            language: userLanguage
         });
 
         // Abrir el chat recién creado
