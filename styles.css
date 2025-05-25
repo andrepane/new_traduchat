@@ -1970,80 +1970,149 @@ html {
 
 /* Ajustes específicos para iOS */
 @supports (-webkit-touch-callout: none) {
-    /* Input container ajustado */
+    :root {
+        --header-height: 40px;
+        --footer-height: 45px;
+        --safe-top: env(safe-area-inset-top);
+        --safe-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Header ajustado para iPhone */
+    .chat-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: calc(var(--header-height) + var(--safe-top));
+        padding: 4px 8px;
+        padding-top: max(4px, var(--safe-top));
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+    }
+
+    /* Lista de mensajes ajustada */
+    .messages-list {
+        margin-top: calc(var(--header-height) + var(--safe-top));
+        margin-bottom: calc(var(--footer-height) + var(--safe-bottom));
+        padding: 4px 8px;
+        height: calc(100vh - var(--header-height) - var(--footer-height) - var(--safe-top) - var(--safe-bottom) - 10px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Barra de entrada ajustada */
     .message-input {
         position: fixed;
         bottom: 0;
         left: 0;
         right: 0;
-        padding: 8px;
-        padding-bottom: max(8px, env(safe-area-inset-bottom));
+        height: calc(var(--footer-height) + var(--safe-bottom));
+        padding: 4px 8px;
+        padding-bottom: max(4px, var(--safe-bottom));
         background-color: #f8f9fa;
         border-top: 1px solid #dee2e6;
         display: flex;
         align-items: center;
         gap: 8px;
-        height: auto;
-        min-height: calc(50px + env(safe-area-inset-bottom));
-        z-index: 1002;
-        width: 100%;
+        z-index: 100;
     }
 
+    /* Ajustes para la lista de chats */
+    .chat-list {
+        margin-top: calc(var(--header-height) + 45px + var(--safe-top));
+        height: calc(100vh - var(--header-height) - 45px - var(--safe-top) - var(--safe-bottom));
+        overflow-y: auto;
+        padding: 4px 0;
+    }
+
+    /* Ajustar elementos de entrada */
     #messageInput {
+        height: 32px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 15px;
         flex: 1;
-        height: 36px;
-        padding: 8px 12px;
-        border: 1px solid #dee2e6;
-        border-radius: 20px;
-        font-size: 16px;
-        background: #f8f9fa;
-        margin: 0;
     }
 
     #micButton,
     #sendMessage {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         padding: 0;
-        border-radius: 50%;
-        border: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: var(--color-primary);
-        color: white;
-        flex-shrink: 0;
     }
 
-    /* Asegurar que los mensajes no se superpongan con el input */
-    .messages-list {
-        padding-bottom: calc(60px + env(safe-area-inset-bottom));
+    /* Ajustar tamaños de mensajes */
+    .message {
+        padding: 6px 10px;
+        margin-bottom: 2px;
+        font-size: 14px;
     }
 
-    /* Ajustar el contenedor del chat */
-    .chat-container {
-        position: relative;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
+    .message-time {
+        font-size: 11px;
+    }
+
+    /* Ajustar header de usuario */
+    .user-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: calc(var(--header-height) + var(--safe-top));
+        padding: 4px 8px;
+        padding-top: max(4px, var(--safe-top));
+        z-index: 100;
+    }
+
+    /* Ajustar barra de búsqueda */
+    .search-container {
+        position: fixed;
+        top: calc(var(--header-height) + var(--safe-top));
+        left: 0;
+        right: 0;
+        padding: 4px 8px;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        z-index: 99;
+    }
+
+    #searchContacts {
+        height: 32px;
+        padding: 4px 12px;
+        font-size: 14px;
     }
 }
 
-/* Ajustes específicos para dispositivos móviles */
-@media screen and (max-width: 768px) {
-    .message-input {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        padding: 8px;
-        padding-bottom: max(8px, env(safe-area-inset-bottom));
-        background-color: #f8f9fa;
-        border-top: 1px solid #dee2e6;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        z-index: 1002;
-        width: 100%;
+/* Ajustes para pantallas muy pequeñas */
+@media screen and (max-width: 375px) {
+    @supports (-webkit-touch-callout: none) {
+        :root {
+            --header-height: 35px;
+            --footer-height: 40px;
+        }
+
+        .message {
+            max-width: 85%;
+            font-size: 13px;
+            padding: 6px 8px;
+        }
+
+        .message-time {
+            font-size: 10px;
+        }
+
+        #messageInput {
+            font-size: 14px;
+            height: 30px;
+        }
+
+        #micButton,
+        #sendMessage {
+            width: 30px;
+            height: 30px;
+        }
     }
 } 
