@@ -329,43 +329,61 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!auth || !db) {
         console.error('Auth o Firestore no están inicializados');
         hideLoadingScreen();
+        showError('errorGeneric');
         return;
     }
 
+    // Manejar cambios en el estado de autenticación
     onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log('Usuario autenticado:', user.email);
-            console.log('User ID:', user.uid);
-            
-            try {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
+        try {
+            if (user) {
+                console.log('Usuario autenticado:', user.email);
+                console.log('User ID:', user.uid);
                 
-                if (!userDoc.exists()) {
-                    console.log('Creando documento de usuario...');
-                    const phoneNumber = localStorage.getItem('userPhone') || '';
-                    await setDoc(userDocRef, {
-                        uid: user.uid,
-                        email: user.email.toLowerCase(),
-                        phoneNumber: phoneNumber,
-                        language: userLanguage,
-                        createdAt: serverTimestamp(),
-                        lastUpdated: serverTimestamp()
-                    });
-                    console.log('Documento de usuario creado exitosamente');
-                }
-            } catch (error) {
-                console.error('Error al verificar/crear documento de usuario:', error);
-            }
+                // Limpiar cualquier estado anterior
+                resetChatState();
+                
+                try {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    
+                    if (!userDoc.exists()) {
+                        console.log('Creando documento de usuario...');
+                        await setDoc(userDocRef, {
+                            uid: user.uid,
+                            email: user.email.toLowerCase(),
+                            language: userLanguage,
+                            createdAt: serverTimestamp(),
+                            lastUpdated: serverTimestamp()
+                        });
+                        console.log('Documento de usuario creado exitosamente');
+                    }
 
+                    // Actualizar el estado del usuario actual
+                    currentUser = user;
+                    
+                    // Mostrar la pantalla principal
+                    hideLoadingScreen();
+                    showMainScreen();
+                    updateUserInfo(user);
+                    setupRealtimeChats();
+                } catch (error) {
+                    console.error('Error al verificar/crear documento de usuario:', error);
+                    showError('errorGeneric');
+                }
+            } else {
+                console.log('No hay usuario autenticado');
+                // Limpiar el estado
+                currentUser = null;
+                resetChatState();
+                
+                hideLoadingScreen();
+                showAuthScreen();
+            }
+        } catch (error) {
+            console.error('Error en el manejo de autenticación:', error);
             hideLoadingScreen();
-            showMainScreen();
-            updateUserInfo(user);
-            setupRealtimeChats();
-        } else {
-            console.log('No hay usuario autenticado');
-            hideLoadingScreen();
-            showAuthScreen();
+            showError('errorGeneric');
         }
     });
 
@@ -450,8 +468,11 @@ function resetChatState() {
 // Función para cargar chats en tiempo real
 async function setupRealtimeChats() {
     console.log('Configurando escucha de chats en tiempo real');
+    
+    // Cancelar suscripción anterior si existe
     if (unsubscribeChats) {
         unsubscribeChats();
+        unsubscribeChats = null;
     }
 
     const db = window.db;
@@ -459,6 +480,7 @@ async function setupRealtimeChats() {
 
     if (!db || !currentUser) {
         console.error('Firestore o usuario no inicializados');
+        chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
         return;
     }
 
@@ -472,93 +494,96 @@ async function setupRealtimeChats() {
         );
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
-            console.log('Actualización de chats detectada');
-            chatList.innerHTML = '';
-            
-            if (snapshot.empty) {
-                chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
-                return;
-            }
+            try {
+                console.log('Actualización de chats detectada');
+                chatList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
+                    return;
+                }
 
-            // Obtener todos los chats y ordenarlos manualmente
-            const chats = [];
-            for (const doc of snapshot.docs) {
-                const chatData = doc.data();
-                chats.push({
-                    id: doc.id,
-                    ...chatData,
-                    lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
-                });
-            }
+                // Obtener todos los chats y ordenarlos manualmente
+                const chats = [];
+                for (const doc of snapshot.docs) {
+                    const chatData = doc.data();
+                    chats.push({
+                        id: doc.id,
+                        ...chatData,
+                        lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
+                    });
+                }
 
-            // Ordenar chats por lastMessageTime
-            chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+                // Ordenar chats por lastMessageTime
+                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
 
-            for (const chat of chats) {
-                try {
-                    const chatElement = document.createElement('div');
-                    chatElement.className = 'chat-item';
-                    if (chat.type === 'group') {
-                        chatElement.classList.add('group-chat');
-                    }
-                    if (chat.id === currentChat) {
-                        chatElement.classList.add('active');
-                    }
+                for (const chat of chats) {
+                    try {
+                        const chatElement = document.createElement('div');
+                        chatElement.className = 'chat-item';
+                        if (chat.type === 'group') {
+                            chatElement.classList.add('group-chat');
+                        }
+                        if (chat.id === currentChat) {
+                            chatElement.classList.add('active');
+                        }
 
-                    let chatName = '';
-                    if (chat.type === 'group') {
-                        // Para grupos, usar el nombre del grupo
-                        chatName = chat.name;
-                    } else {
-                        // Para chats individuales, obtener el nombre del otro usuario
-                        const otherUserId = chat.participants.find(id => id !== currentUser.uid);
-                        if (otherUserId) {
-                            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                            if (otherUserDoc.exists()) {
-                                const otherUserData = otherUserDoc.data();
-                                // Extraer el nombre del email (todo antes del @)
-                                chatName = otherUserData.email.split('@')[0];
+                        let chatName = '';
+                        if (chat.type === 'group') {
+                            chatName = chat.name;
+                        } else {
+                            const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+                            if (otherUserId) {
+                                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                                if (otherUserDoc.exists()) {
+                                    const otherUserData = otherUserDoc.data();
+                                    chatName = otherUserData.username || otherUserData.email.split('@')[0];
+                                }
                             }
                         }
-                    }
 
-                    // Formatear la hora del último mensaje
-                    const lastMessageTime = chat.lastMessageTime ? 
-                        chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                        const lastMessageTime = chat.lastMessageTime ? 
+                            chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-                    chatElement.innerHTML = `
-                        <div class="chat-info">
-                            <div class="chat-name">${chatName}</div>
-                            <div class="last-message-container">
-                                <div class="last-message">${chat.lastMessage || ''}</div>
-                                <div class="last-message-time">${lastMessageTime}</div>
+                        chatElement.innerHTML = `
+                            <div class="chat-info">
+                                <div class="chat-name">${chatName}</div>
+                                <div class="last-message-container">
+                                    <div class="last-message">${chat.lastMessage || ''}</div>
+                                    <div class="last-message-time">${lastMessageTime}</div>
+                                </div>
                             </div>
-                        </div>
-                    `;
+                        `;
 
-                    // Si es un chat nuevo o actualizado, añadir clase para animación
-                    if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
-                        chatElement.classList.add('chat-updated');
-                        setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
+                        if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
+                            chatElement.classList.add('chat-updated');
+                            setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
+                        }
+
+                        chatElement.addEventListener('click', () => {
+                            console.log('Abriendo chat:', chat.id);
+                            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+                            chatElement.classList.add('active');
+                            openChat(chat.id);
+                        });
+
+                        chatList.appendChild(chatElement);
+                    } catch (error) {
+                        console.error('Error al procesar chat individual:', error);
                     }
-
-                    chatElement.addEventListener('click', () => {
-                        console.log('Abriendo chat:', chat.id);
-                        // Remover clase active de todos los chats
-                        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-                        // Añadir clase active al chat seleccionado
-                        chatElement.classList.add('active');
-                        openChat(chat.id);
-                    });
-
-                    chatList.appendChild(chatElement);
-                } catch (error) {
-                    console.error('Error al procesar chat individual:', error);
                 }
+            } catch (error) {
+                console.error('Error al procesar actualización de chats:', error);
+                chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
             }
         }, (error) => {
             console.error('Error en escucha de chats:', error);
-            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+            // Si el error es de permisos, probablemente el usuario ya no está autenticado
+            if (error.code === 'permission-denied') {
+                handleLogout();
+            } else {
+                chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+            }
         });
 
     } catch (error) {
@@ -1256,13 +1281,32 @@ window.addEventListener('load', () => {
 // Mejorar la función de cerrar sesión
 async function handleLogout() {
     try {
-        await signOut(auth);
+        // Cancelar todas las suscripciones antes de cerrar sesión
+        if (unsubscribeChats) {
+            unsubscribeChats();
+            unsubscribeChats = null;
+        }
+        if (unsubscribeMessages) {
+            unsubscribeMessages();
+            unsubscribeMessages = null;
+        }
+
+        // Limpiar el estado de la aplicación
         resetChatState();
-        showAuthScreen();
+        currentUser = null;
+        currentChat = null;
         
+        // Cerrar sesión en Firebase
+        await signOut(auth);
+        
+        // Limpiar localStorage
         localStorage.removeItem('userLanguage');
         localStorage.removeItem('userPhone');
         
+        // Mostrar pantalla de autenticación
+        showAuthScreen();
+        
+        // Mostrar mensaje de éxito
         alert(getTranslation('logoutSuccess', userLanguage));
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
