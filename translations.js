@@ -20,9 +20,6 @@ const translations = {
         errorEmailInUse: 'Este email ya está registrado',
         errorNetwork: 'Error de conexión. Verifica tu conexión a internet',
         errorGeneric: 'Ha ocurrido un error',
-        errorRecaptcha: "Error al inicializar la verificación de seguridad. Por favor, recarga la página e intenta de nuevo.",
-        errorTooManyAttempts: 'Demasiados intentos. Por favor, espera unos minutos antes de intentarlo de nuevo.',
-        errorInvalidPhone: 'El número de teléfono no es válido. Por favor, verifica el formato.',
         
         // Interfaz principal
         newChat: '+',
@@ -70,14 +67,7 @@ const translations = {
         cancel: 'Cancelar',
         errorCreateGroup: 'Error al crear el grupo',
         errorMinUsers: 'Se necesitan al menos 2 participantes para crear un grupo',
-        groupCreated: 'Grupo creado exitosamente',
-        
-        // Verificación
-        verificationCode: 'Código de verificación',
-        verifyCode: 'Verificar código',
-        codeSent: 'Código enviado correctamente',
-        errorSendingCode: 'Error al enviar el código de verificación',
-        errorVerifyingCode: 'Error al verificar el código'
+        groupCreated: 'Grupo creado exitosamente'
     },
     en: {
         // Authentication
@@ -99,9 +89,6 @@ const translations = {
         errorEmailInUse: 'This email is already registered',
         errorNetwork: 'Connection error. Check your internet connection',
         errorGeneric: 'An error has occurred',
-        errorRecaptcha: "Error initializing security verification. Please reload the page and try again.",
-        errorTooManyAttempts: 'Too many attempts. Please wait a few minutes before trying again.',
-        errorInvalidPhone: 'The phone number is not valid. Please check the format.',
         
         // Main interface
         newChat: '+',
@@ -149,14 +136,7 @@ const translations = {
         cancel: 'Cancel',
         errorCreateGroup: 'Error creating group',
         errorMinUsers: 'At least 2 participants are needed to create a group',
-        groupCreated: 'Group successfully created',
-        
-        // Verification
-        verificationCode: 'Verification code',
-        verifyCode: 'Verify code',
-        codeSent: 'Code sent successfully',
-        errorSendingCode: 'Error sending verification code',
-        errorVerifyingCode: 'Error verifying code'
+        groupCreated: 'Group successfully created'
     },
     it: {
         // Autenticazione
@@ -178,9 +158,6 @@ const translations = {
         errorEmailInUse: 'Questa email è già registrata',
         errorNetwork: 'Errore di connessione. Verifica la tua connessione internet',
         errorGeneric: 'Si è verificato un errore',
-        errorRecaptcha: "Errore durante l'inizializzazione della verifica di sicurezza. Ricarica la pagina e riprova.",
-        errorTooManyAttempts: 'Troppi tentativi. Attendi qualche minuto prima di riprovare.',
-        errorInvalidPhone: 'Il numero di telefono non è valido. Verifica il formato.',
         
         // Interfaccia principale
         newChat: '+',
@@ -228,14 +205,7 @@ const translations = {
         cancel: 'Annulla',
         errorCreateGroup: 'Errore durante la creazione del gruppo',
         errorMinUsers: 'Sono necessari almeno 2 partecipanti per creare un gruppo',
-        groupCreated: 'Gruppo creato con successo',
-        
-        // Verifica
-        verificationCode: 'Codice di verifica',
-        verifyCode: 'Verifica codice',
-        codeSent: 'Codice inviato con successo',
-        errorSendingCode: 'Errore nell\'invio del codice di verifica',
-        errorVerifyingCode: 'Errore nella verifica del codice'
+        groupCreated: 'Gruppo creato con successo'
     }
 };
 
