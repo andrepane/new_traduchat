@@ -1970,47 +1970,32 @@ html {
 
 /* Ajustes específicos para iOS */
 @supports (-webkit-touch-callout: none) {
-    /* Prevenir el zoom en inputs */
-    input, textarea, select {
-        font-size: 16px !important;
-    }
-
-    /* Ajustar el viewport para notch */
-    .chat-container {
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
+    :root {
+        --header-height: 50px;
+        --footer-height: 50px;
     }
 
     /* Header ajustado para iPhone */
     .chat-header {
-        padding-top: max(12px, env(safe-area-inset-top));
-        height: calc(var(--header-height) + env(safe-area-inset-top));
+        padding-top: max(8px, env(safe-area-inset-top));
+        height: calc(45px + env(safe-area-inset-top));
         background-color: #f8f9fa;
         border-bottom: 1px solid #dee2e6;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
     }
 
     /* Ajustar lista de mensajes */
     .messages-list {
-        margin-top: calc(var(--header-height) + env(safe-area-inset-top));
-        margin-bottom: calc(var(--footer-height) + env(safe-area-inset-bottom));
-        padding: 10px 8px;
+        margin-top: calc(45px + env(safe-area-inset-top));
+        margin-bottom: calc(50px + env(safe-area-inset-bottom));
+        padding: 8px;
+        height: calc(100vh - 95px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-    }
-
-    /* Mejorar espaciado de mensajes */
-    .message {
-        max-width: 85%;
-        padding: 8px 12px;
-        margin-bottom: 2px;
-        border-radius: 15px;
-    }
-
-    .message + .message {
-        margin-top: 1px;
-    }
-
-    .message:not([data-same-sender="true"]) {
-        margin-top: 8px;
     }
 
     /* Input container ajustado */
@@ -2027,75 +2012,104 @@ html {
         align-items: center;
         gap: 8px;
         height: auto;
-        min-height: calc(var(--footer-height) + env(safe-area-inset-bottom));
-    }
-
-    #messageInput {
-        margin: 0;
-        padding: 8px 12px;
-        border-radius: 20px;
-        border: 1px solid #dee2e6;
-        flex: 1;
-        min-height: 36px;
-        max-height: 100px;
-        font-size: 16px !important;
-    }
-
-    /* Botones de enviar y micrófono */
-    #sendMessage,
-    #micButton {
-        width: 36px;
-        height: 36px;
-        padding: 0;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
+        min-height: calc(50px + env(safe-area-inset-bottom));
+        z-index: 100;
     }
 
     /* Ajustes para la lista de chats */
     .chat-list {
-        margin-top: calc(var(--header-height) + env(safe-area-inset-top));
+        margin-top: calc(100px + env(safe-area-inset-top));
+        height: calc(100vh - 100px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+        overflow-y: auto;
         padding-bottom: env(safe-area-inset-bottom);
-    }
-
-    .chat-item {
-        padding: 12px 16px;
     }
 
     /* Ajustar la barra de búsqueda */
     .search-container {
-        padding: 8px 12px;
-        position: sticky;
-        top: calc(var(--header-height) + env(safe-area-inset-top));
+        padding: 8px;
+        position: fixed;
+        top: calc(45px + env(safe-area-inset-top));
+        left: 0;
+        right: 0;
         background-color: #f8f9fa;
-        z-index: 10;
+        z-index: 99;
+        border-bottom: 1px solid #dee2e6;
     }
 
-    #searchContacts {
-        border-radius: 20px;
-        padding: 8px 16px;
-        font-size: 16px !important;
+    /* Ajustar el header del usuario */
+    .user-header {
+        height: calc(45px + env(safe-area-inset-top));
+        padding: 8px;
+        padding-top: max(8px, env(safe-area-inset-top));
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+    }
+
+    /* Ajustar tamaños de elementos */
+    #messageInput {
+        height: 36px;
+        padding: 8px 12px;
+        margin: 0;
+    }
+
+    #sendMessage,
+    #micButton {
+        width: 36px;
+        height: 36px;
+    }
+
+    .chat-item {
+        padding: 10px 12px;
+    }
+
+    /* Ajustar el contenedor principal */
+    .chat-container {
+        height: 100vh;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
     }
 }
 
 /* Ajustes adicionales para pantallas pequeñas de iPhone */
 @media screen and (max-width: 375px) {
+    :root {
+        --header-height: 45px;
+        --footer-height: 45px;
+    }
+
     .message {
-        max-width: 90%;
-        font-size: 15px;
+        max-width: 85%;
+        font-size: 14px;
+        padding: 8px 10px;
     }
 
     .message-time {
-        font-size: 11px;
+        font-size: 10px;
     }
 
     .chat-name {
-        font-size: 15px;
+        font-size: 14px;
     }
 
     .last-message {
-        font-size: 13px;
+        font-size: 12px;
+    }
+
+    #messageInput {
+        font-size: 14px !important;
+    }
+}
+
+/* Ajustes específicos para dispositivos muy pequeños */
+@media screen and (max-height: 667px) {
+    .messages-list {
+        height: calc(100vh - 90px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    }
+
+    .chat-list {
+        height: calc(100vh - 95px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     }
 } 
