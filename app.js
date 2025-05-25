@@ -47,6 +47,7 @@ if (!window.auth) {
 const authScreen = document.getElementById('authScreen');
 const mainScreen = document.getElementById('mainScreen');
 const emailInput = document.getElementById('emailInput');
+const usernameInput = document.getElementById('usernameInput');
 const passwordInput = document.getElementById('passwordInput');
 const phoneInput = document.getElementById('phoneNumber');
 const countrySelect = document.getElementById('countryCode');
@@ -176,9 +177,8 @@ function showError(errorKey) {
 
 // Función para actualizar la información del usuario
 function updateUserInfo(user) {
-    const phoneNumber = localStorage.getItem('userPhone');
     if (userInfo) {
-        userInfo.textContent = `${user.email} (${phoneNumber || getTranslation('noPhone', userLanguage)})`;
+        userInfo.textContent = user.username || user.email;
     }
     if (currentChatInfo) {
         currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
@@ -204,10 +204,10 @@ languageSelectMain.addEventListener('change', (e) => {
 // Función de login/registro
 loginBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
+    const username = usernameInput.value.trim();
     const password = passwordInput.value;
-    const phoneNumber = countrySelect.value + phoneInput.value.trim();
 
-    if (!email || !password || !phoneNumber) {
+    if (!email || !password || !username) {
         showError('errorEmptyFields');
         return;
     }
@@ -228,10 +228,22 @@ loginBtn.addEventListener('click', async () => {
 
     try {
         console.log('Iniciando proceso de registro/login...');
+        
+        // Verificar si el nombre de usuario ya existe
+        const usernameQuery = query(
+            collection(db, 'users'),
+            where('username', '==', username.toLowerCase())
+        );
+        const usernameSnapshot = await getDocs(usernameQuery);
+        
         let userCredential;
         
         try {
             console.log('Intentando crear nuevo usuario:', email);
+            if (!usernameSnapshot.empty) {
+                showError('errorUsernameInUse');
+                return;
+            }
             userCredential = await createUserWithEmailAndPassword(auth, email, password);
             console.log('Usuario creado exitosamente:', userCredential.user.uid);
         } catch (error) {
@@ -253,7 +265,7 @@ loginBtn.addEventListener('click', async () => {
         const userData = {
             uid: user.uid,
             email: email.toLowerCase(),
-            phoneNumber: phoneNumber,
+            username: username.toLowerCase(),
             language: userLanguage,
             lastUpdated: serverTimestamp()
         };
@@ -271,11 +283,10 @@ loginBtn.addEventListener('click', async () => {
         const savedDoc = await getDoc(userDocRef);
         console.log('Documento guardado:', savedDoc.exists(), savedDoc.data());
 
-        localStorage.setItem('userPhone', phoneNumber);
         localStorage.setItem('userLanguage', userLanguage);
         
         showMainScreen();
-        updateUserInfo(user);
+        updateUserInfo({...user, username});
         setupRealtimeChats();
     } catch (error) {
         console.error('Error completo:', error);
@@ -594,72 +605,51 @@ async function searchUsers(searchTerm) {
         const currentUserUid = auth.currentUser.uid;
         console.log('Usuario actual:', currentUserUid);
         
-        // Obtener todos los usuarios primero
-        const allUsersQuery = query(usersRef);
-        const snapshot = await getDocs(allUsersQuery);
+        // Buscar usuarios por nombre de usuario
+        const searchQuery = query(
+            usersRef,
+            where('username', '>=', searchTerm.toLowerCase()),
+            where('username', '<=', searchTerm.toLowerCase() + '\uf8ff')
+        );
         
-        console.log('Total de usuarios en la base de datos:', snapshot.size);
+        const snapshot = await getDocs(searchQuery);
+        console.log('Total de usuarios encontrados:', snapshot.size);
         
-        const users = new Set();
-        
-        // Buscar coincidencias
+        const users = [];
         snapshot.forEach(doc => {
             const userData = doc.data();
-            console.log('Revisando usuario:', userData.email);
-            
-            if (userData.uid !== currentUserUid && 
-                userData.email && 
-                userData.email.toLowerCase().includes(searchTerm.toLowerCase())) {
-                console.log('¡Coincidencia encontrada!:', userData.email);
-                users.add({ id: userData.uid, ...userData });
+            if (userData.uid !== currentUserUid) {
+                users.push({
+                    id: userData.uid,
+                    username: userData.username,
+                    email: userData.email
+                });
             }
         });
 
-        const resultsArray = Array.from(users);
-        console.log('Resultados de búsqueda:', resultsArray.length);
-        if (resultsArray.length === 0) {
-            console.log('No se encontraron usuarios que coincidan con:', searchTerm);
-        } else {
-            console.log('Usuarios encontrados:', resultsArray.map(u => u.email));
-        }
-        
-        displaySearchResults(resultsArray);
+        displaySearchResults(users);
     } catch (error) {
         console.error('Error detallado al buscar usuarios:', error);
         showError('errorSearch');
     }
 }
 
-// Función unificada para mostrar resultados de búsqueda
+// Función para mostrar resultados de búsqueda
 function displaySearchResults(users) {
     chatList.innerHTML = '';
     
     // Añadir botón de crear grupo
     const createGroupButton = document.createElement('div');
     createGroupButton.className = 'chat-item create-group';
-    createGroupButton.style.display = 'flex';
-    createGroupButton.style.alignItems = 'center';
-    createGroupButton.style.padding = '15px';
-    createGroupButton.style.backgroundColor = '#f8f9fa';
-    createGroupButton.style.cursor = 'pointer';
-    createGroupButton.style.borderBottom = '1px solid #dee2e6';
     createGroupButton.innerHTML = `
-        <div class="group-button" style="display: flex; align-items: center; gap: 10px;">
-            <i class="fas fa-users" style="font-size: 20px; color: #007bff;"></i>
-            <span data-translate="createNewGroup" style="font-weight: 500;">${getTranslation('createNewGroup', userLanguage)}</span>
+        <div class="group-button">
+            <i class="fas fa-users"></i>
+            <span data-translate="createNewGroup">${getTranslation('createNewGroup', userLanguage)}</span>
         </div>
     `;
     
-    // Efecto hover para el botón de crear grupo
-    createGroupButton.addEventListener('mouseover', () => {
-        createGroupButton.style.backgroundColor = '#e9ecef';
-    });
-    createGroupButton.addEventListener('mouseout', () => {
-        createGroupButton.style.backgroundColor = '#f8f9fa';
-    });
-    
     createGroupButton.addEventListener('click', () => {
-        selectedUsers.clear(); // Limpiar usuarios seleccionados anteriormente
+        selectedUsers.clear();
         showGroupCreationModal();
     });
     
@@ -670,9 +660,6 @@ function displaySearchResults(users) {
         noUsersMessage.className = 'chat-item';
         noUsersMessage.setAttribute('data-translate', 'noUsersFound');
         noUsersMessage.textContent = getTranslation('noUsersFound', userLanguage);
-        noUsersMessage.style.padding = '15px';
-        noUsersMessage.style.textAlign = 'center';
-        noUsersMessage.style.color = '#6c757d';
         chatList.appendChild(noUsersMessage);
         return;
     }
@@ -681,40 +668,23 @@ function displaySearchResults(users) {
     users.forEach(user => {
         const userElement = document.createElement('div');
         userElement.className = 'chat-item';
-        userElement.style.display = 'flex';
-        userElement.style.justifyContent = 'space-between';
-        userElement.style.alignItems = 'center';
-        userElement.style.padding = '10px 15px';
-        userElement.style.borderBottom = '1px solid #dee2e6';
 
         // Contenedor para la información del usuario
         const userInfoContainer = document.createElement('div');
         userInfoContainer.className = 'user-info';
-        userInfoContainer.style.flex = '1';
-        userInfoContainer.style.minWidth = '0';
-        userInfoContainer.style.overflow = 'hidden';
 
-        // Email del usuario
+        // Nombre de usuario
+        const username = document.createElement('div');
+        username.className = 'user-name';
+        username.textContent = user.username;
+
+        // Email del usuario (como información secundaria)
         const userEmail = document.createElement('div');
-        userEmail.className = 'user-name';
+        userEmail.className = 'user-email';
         userEmail.textContent = user.email;
-        userEmail.style.fontWeight = '500';
-        userEmail.style.overflow = 'hidden';
-        userEmail.style.textOverflow = 'ellipsis';
-        userEmail.style.whiteSpace = 'nowrap';
 
-        // Número de teléfono
-        const userPhone = document.createElement('div');
-        userPhone.className = 'user-phone';
-        userPhone.textContent = user.phoneNumber || '';
-        userPhone.style.fontSize = '0.875rem';
-        userPhone.style.color = '#6c757d';
-        userPhone.style.overflow = 'hidden';
-        userPhone.style.textOverflow = 'ellipsis';
-        userPhone.style.whiteSpace = 'nowrap';
-
+        userInfoContainer.appendChild(username);
         userInfoContainer.appendChild(userEmail);
-        userInfoContainer.appendChild(userPhone);
 
         // Botón de iniciar chat
         const startChatBtn = document.createElement('button');
@@ -722,22 +692,6 @@ function displaySearchResults(users) {
         startChatBtn.setAttribute('data-userid', user.id);
         startChatBtn.setAttribute('data-translate', 'startChat');
         startChatBtn.textContent = getTranslation('startChat', userLanguage);
-        startChatBtn.style.padding = '6px 12px';
-        startChatBtn.style.fontSize = '0.875rem';
-        startChatBtn.style.backgroundColor = '#007bff';
-        startChatBtn.style.color = 'white';
-        startChatBtn.style.border = 'none';
-        startChatBtn.style.borderRadius = '4px';
-        startChatBtn.style.cursor = 'pointer';
-        startChatBtn.style.marginLeft = '10px';
-
-        // Efectos del botón
-        startChatBtn.addEventListener('mouseover', () => {
-            startChatBtn.style.backgroundColor = '#0056b3';
-        });
-        startChatBtn.addEventListener('mouseout', () => {
-            startChatBtn.style.backgroundColor = '#007bff';
-        });
 
         startChatBtn.addEventListener('click', () => {
             console.log('Iniciando chat con usuario:', user.id);
@@ -746,30 +700,8 @@ function displaySearchResults(users) {
 
         userElement.appendChild(userInfoContainer);
         userElement.appendChild(startChatBtn);
-
-        // Efecto hover para el elemento completo
-        userElement.addEventListener('mouseover', () => {
-            userElement.style.backgroundColor = '#f8f9fa';
-        });
-        userElement.addEventListener('mouseout', () => {
-            userElement.style.backgroundColor = '';
-        });
-
         chatList.appendChild(userElement);
     });
-
-    // Ajustes específicos para móvil
-    if (window.innerWidth <= 768) {
-        const searchResults = document.querySelectorAll('.chat-item');
-        searchResults.forEach(result => {
-            result.style.padding = '12px 10px';
-            const button = result.querySelector('.start-chat-btn');
-            if (button) {
-                button.style.padding = '4px 8px';
-                button.style.fontSize = '12px';
-            }
-        });
-    }
 }
 
 // Función para crear un nuevo chat
