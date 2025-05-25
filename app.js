@@ -4,7 +4,8 @@ import {
     createUserWithEmailAndPassword, 
     onAuthStateChanged,
     signOut,
-    signInWithPhoneNumber
+    signInWithPhoneNumber,
+    RecaptchaVerifier
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 import {
@@ -191,12 +192,33 @@ languageSelectMain.addEventListener('change', (e) => {
     translateInterface(userLanguage);
 });
 
+// Función para crear el contenedor de reCAPTCHA si no existe
+function ensureRecaptchaContainer() {
+    let container = document.getElementById('recaptcha-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'recaptcha-container';
+        container.style.marginTop = '10px';
+        // Insertar antes del botón de login
+        const loginBtn = document.getElementById('loginBtn');
+        loginBtn.parentNode.insertBefore(container, loginBtn);
+    }
+    return container;
+}
+
 // Función para inicializar reCAPTCHA
 async function initializeRecaptchaVerifier() {
     try {
+        // Asegurarse de que el contenedor existe
+        ensureRecaptchaContainer();
+        
         // Limpiar instancia anterior si existe
         if (window.recaptchaVerifier) {
-            await window.recaptchaVerifier.clear();
+            try {
+                await window.recaptchaVerifier.clear();
+            } catch (error) {
+                console.warn('Error al limpiar reCAPTCHA anterior:', error);
+            }
         }
         
         // Crear nueva instancia
@@ -204,9 +226,15 @@ async function initializeRecaptchaVerifier() {
             'size': 'normal',
             'callback': (response) => {
                 console.log('reCAPTCHA verificado');
+                // Habilitar el botón de login cuando se verifica reCAPTCHA
+                const loginBtn = document.getElementById('loginBtn');
+                if (loginBtn) loginBtn.disabled = false;
             },
             'expired-callback': () => {
                 console.log('reCAPTCHA expirado');
+                // Deshabilitar el botón de login cuando expira reCAPTCHA
+                const loginBtn = document.getElementById('loginBtn');
+                if (loginBtn) loginBtn.disabled = true;
                 // Reinicializar reCAPTCHA
                 initializeRecaptchaVerifier();
             }
@@ -214,10 +242,27 @@ async function initializeRecaptchaVerifier() {
 
         // Renderizar el widget
         await window.recaptchaVerifier.render();
+        
+        // Deshabilitar el botón de login hasta que se verifique reCAPTCHA
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) loginBtn.disabled = true;
+        
     } catch (error) {
         console.error('Error al inicializar reCAPTCHA:', error);
         showError('errorRecaptcha');
     }
+}
+
+// Inicializar reCAPTCHA cuando se muestra la pantalla de autenticación
+function showAuthScreen() {
+    document.getElementById('mainScreen').classList.remove('active');
+    document.getElementById('authScreen').classList.add('active');
+    document.body.classList.remove('in-chat');
+    
+    // Inicializar reCAPTCHA
+    initializeRecaptchaVerifier().catch(error => {
+        console.error('Error al inicializar reCAPTCHA en showAuthScreen:', error);
+    });
 }
 
 // Función para iniciar la autenticación por teléfono
@@ -332,227 +377,6 @@ document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
         return;
     }
     await verifyPhoneCode(code);
-});
-
-// Función para mostrar la pantalla de autenticación
-function showAuthScreen() {
-    document.getElementById('mainScreen').classList.remove('active');
-    document.getElementById('authScreen').classList.add('active');
-    document.body.classList.remove('in-chat');
-}
-
-// Inicialización cuando se carga el documento
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Cargado');
-    showLoadingScreen();
-
-    // Inicializar la interfaz con el idioma guardado y activar la animación
-    translateInterface(userLanguage);
-    setTimeout(animateTitleWave, 100);
-
-    if (!auth || !db) {
-        console.error('Auth o Firestore no están inicializados');
-        hideLoadingScreen();
-        return;
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log('Usuario autenticado:', user.email);
-            console.log('User ID:', user.uid);
-            
-            try {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-                
-                if (!userDoc.exists()) {
-                    console.log('Creando documento de usuario...');
-                    const phoneNumber = localStorage.getItem('userPhone') || '';
-                    await setDoc(userDocRef, {
-                        uid: user.uid,
-                        email: user.email.toLowerCase(),
-                        phoneNumber: phoneNumber,
-                        language: userLanguage,
-                        createdAt: serverTimestamp(),
-                        lastUpdated: serverTimestamp()
-                    });
-                    console.log('Documento de usuario creado exitosamente');
-                }
-            } catch (error) {
-                console.error('Error al verificar/crear documento de usuario:', error);
-            }
-
-            hideLoadingScreen();
-            showMainScreen();
-            updateUserInfo(user);
-            setupRealtimeChats();
-        } else {
-            console.log('No hay usuario autenticado');
-            hideLoadingScreen();
-            showAuthScreen();
-        }
-    });
-
-    adjustMobileLayout();
-});
-
-// Funciones de UI mejoradas
-function showLoadingScreen() {
-    document.querySelector('.loading-screen').style.display = 'flex';
-}
-
-function hideLoadingScreen() {
-    document.querySelector('.loading-screen').style.display = 'none';
-}
-
-// Función para ajustar el diseño en móvil
-function adjustMobileLayout() {
-    const chatContainer = document.querySelector('.chat-container');
-    const sidebar = document.querySelector('.sidebar');
-    const messagesList = document.querySelector('.messages-list');
-    const inputContainer = document.querySelector('.input-container');
-    const mainScreen = document.getElementById('mainScreen');
-    
-    if (window.innerWidth <= 768) {
-        // Prevenir scroll y zoom indeseado en móviles
-        document.body.style.height = '100vh';
-        document.body.style.overflow = 'hidden';
-        
-        if (mainScreen) {
-            mainScreen.style.height = '100vh';
-            mainScreen.style.overflow = 'hidden';
-        }
-
-        // Ajustes específicos para móvil
-        if (chatContainer) {
-            chatContainer.style.width = '100%';
-            chatContainer.style.height = '100vh';
-            chatContainer.style.position = 'fixed';
-            chatContainer.style.top = '0';
-            chatContainer.style.left = '0';
-            chatContainer.style.zIndex = '1000';
-            chatContainer.style.display = 'flex';
-            chatContainer.style.flexDirection = 'column';
-        }
-        
-        if (sidebar) {
-            sidebar.style.width = '100%';
-            sidebar.style.height = '100vh';
-            sidebar.style.position = 'fixed';
-            sidebar.style.top = '0';
-            sidebar.style.left = '0';
-            sidebar.style.zIndex = '1000';
-        }
-        
-        if (messagesList) {
-            messagesList.style.flex = '1';
-            messagesList.style.height = 'calc(100vh - 130px)'; // Ajustado para dejar espacio para el input
-            messagesList.style.overflow = 'auto';
-            messagesList.style.paddingBottom = '20px';
-            messagesList.style.WebkitOverflowScrolling = 'touch'; // Para scroll suave en iOS
-        }
-        
-        if (inputContainer) {
-            inputContainer.style.position = 'fixed';
-            inputContainer.style.bottom = '0';
-            inputContainer.style.left = '0';
-            inputContainer.style.width = '100%';
-            inputContainer.style.minHeight = '60px';
-            inputContainer.style.padding = '10px';
-            inputContainer.style.backgroundColor = '#fff';
-            inputContainer.style.borderTop = '1px solid #ddd';
-            inputContainer.style.zIndex = '1001';
-            inputContainer.style.display = 'flex';
-            inputContainer.style.alignItems = 'center';
-            inputContainer.style.justifyContent = 'space-between';
-            
-            // Ajustar el input de mensaje
-            const messageInput = document.getElementById('messageInput');
-            if (messageInput) {
-                messageInput.style.flex = '1';
-                messageInput.style.margin = '0 10px';
-                messageInput.style.padding = '8px';
-                messageInput.style.fontSize = '16px'; // Previene zoom en iOS
-            }
-        }
-    } else {
-        // Restablecer estilos para desktop
-        document.body.style.height = '';
-        document.body.style.overflow = '';
-        
-        if (mainScreen) {
-            mainScreen.style.height = '';
-            mainScreen.style.overflow = '';
-        }
-
-        if (chatContainer) {
-            chatContainer.style.width = '';
-            chatContainer.style.height = '';
-            chatContainer.style.position = '';
-            chatContainer.style.top = '';
-            chatContainer.style.left = '';
-            chatContainer.style.zIndex = '';
-            chatContainer.style.display = '';
-            chatContainer.style.flexDirection = '';
-        }
-        
-        if (sidebar) {
-            sidebar.style.width = '';
-            sidebar.style.height = '';
-            sidebar.style.position = '';
-            sidebar.style.top = '';
-            sidebar.style.left = '';
-            sidebar.style.zIndex = '';
-        }
-        
-        if (messagesList) {
-            messagesList.style.flex = '';
-            messagesList.style.height = '';
-            messagesList.style.overflow = '';
-            messagesList.style.paddingBottom = '';
-            messagesList.style.WebkitOverflowScrolling = '';
-        }
-        
-        if (inputContainer) {
-            inputContainer.style.position = '';
-            inputContainer.style.bottom = '';
-            inputContainer.style.left = '';
-            inputContainer.style.width = '';
-            inputContainer.style.minHeight = '';
-            inputContainer.style.padding = '';
-            inputContainer.style.backgroundColor = '';
-            inputContainer.style.borderTop = '';
-            inputContainer.style.zIndex = '';
-            inputContainer.style.display = '';
-            inputContainer.style.alignItems = '';
-            inputContainer.style.justifyContent = '';
-            
-            const messageInput = document.getElementById('messageInput');
-            if (messageInput) {
-                messageInput.style.flex = '';
-                messageInput.style.margin = '';
-                messageInput.style.padding = '';
-                messageInput.style.fontSize = '';
-            }
-        }
-    }
-}
-
-// Asegurarse de que el teclado virtual no cause problemas
-window.addEventListener('resize', () => {
-    if (window.innerWidth <= 768) {
-        const messagesList = document.querySelector('.messages-list');
-        if (messagesList) {
-            setTimeout(() => {
-                messagesList.scrollTop = messagesList.scrollHeight;
-            }, 100);
-        }
-    }
-});
-
-// Prevenir zoom en inputs en iOS
-document.addEventListener('gesturestart', function(e) {
-    e.preventDefault();
 });
 
 // Función para mostrar la pantalla principal
