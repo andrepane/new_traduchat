@@ -3,7 +3,9 @@ import {
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     onAuthStateChanged,
-    signOut
+    signOut,
+    setPersistence,
+    browserLocalPersistence
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
 import {
@@ -229,29 +231,52 @@ loginBtn.addEventListener('click', async () => {
     try {
         console.log('Iniciando proceso de registro/login...');
         
+        // Configurar persistencia local
+        try {
+            await setPersistence(auth, browserLocalPersistence);
+        } catch (persistenceError) {
+            console.warn('Error al configurar persistencia:', persistenceError);
+            // Continuar aunque falle la persistencia
+        }
+        
         // Verificar si el nombre de usuario ya existe
         const usernameQuery = query(
             collection(db, 'users'),
             where('username', '==', username.toLowerCase())
         );
-        const usernameSnapshot = await getDocs(usernameQuery);
         
         let userCredential;
+        let isNewUser = false;
         
         try {
-            console.log('Intentando crear nuevo usuario:', email);
-            if (!usernameSnapshot.empty) {
+            const usernameSnapshot = await getDocs(usernameQuery);
+            
+            if (!usernameSnapshot.empty && 
+                usernameSnapshot.docs[0].data().email.toLowerCase() !== email.toLowerCase()) {
                 showError('errorUsernameInUse');
                 return;
             }
-            userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            console.log('Usuario creado exitosamente:', userCredential.user.uid);
+
+            try {
+                console.log('Intentando crear nuevo usuario:', email);
+                userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                isNewUser = true;
+                console.log('Usuario creado exitosamente:', userCredential.user.uid);
+            } catch (error) {
+                console.log('Error en creación:', error.code);
+                if (error.code === 'auth/email-already-in-use') {
+                    console.log('Email en uso, intentando login...');
+                    userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    console.log('Login exitoso:', userCredential.user.uid);
+                } else {
+                    throw error;
+                }
+            }
         } catch (error) {
-            console.log('Error en creación:', error.code);
-            if (error.code === 'auth/email-already-in-use') {
-                console.log('Email en uso, intentando login...');
+            if (error.code === 'permission-denied') {
+                console.error('Error de permisos al verificar usuario:', error);
+                // Intentar login directo si hay error de permisos
                 userCredential = await signInWithEmailAndPassword(auth, email, password);
-                console.log('Login exitoso:', userCredential.user.uid);
             } else {
                 throw error;
             }
@@ -260,34 +285,45 @@ loginBtn.addEventListener('click', async () => {
         const user = userCredential.user;
         console.log('Guardando datos en Firestore para usuario:', user.uid);
 
-        // Crear el documento del usuario
-        const userDocRef = doc(db, 'users', user.uid);
-        const userData = {
-            uid: user.uid,
-            email: email.toLowerCase(),
-            username: username.toLowerCase(),
-            language: userLanguage,
-            lastUpdated: serverTimestamp()
-        };
+        try {
+            // Crear o actualizar el documento del usuario
+            const userDocRef = doc(db, 'users', user.uid);
+            const userData = {
+                uid: user.uid,
+                email: email.toLowerCase(),
+                username: username.toLowerCase(),
+                language: userLanguage,
+                lastUpdated: serverTimestamp()
+            };
 
-        // Si es nuevo registro, añadir createdAt
-        if (!userCredential.operationType || userCredential.operationType === 'signIn') {
-            userData.createdAt = serverTimestamp();
+            // Si es nuevo registro, añadir createdAt
+            if (isNewUser) {
+                userData.createdAt = serverTimestamp();
+            }
+
+            console.log('Datos a guardar:', userData);
+            await setDoc(userDocRef, userData, { merge: true });
+            console.log('Datos guardados exitosamente en Firestore');
+
+            // Verificar que se guardó correctamente
+            const savedDoc = await getDoc(userDocRef);
+            if (!savedDoc.exists()) {
+                throw new Error('No se pudo verificar el documento del usuario');
+            }
+            console.log('Documento guardado:', savedDoc.data());
+
+            localStorage.setItem('userLanguage', userLanguage);
+            
+            showMainScreen();
+            updateUserInfo({...user, username});
+            setupRealtimeChats();
+        } catch (firestoreError) {
+            console.error('Error al guardar datos en Firestore:', firestoreError);
+            // Si falla Firestore pero la autenticación fue exitosa, continuar
+            showMainScreen();
+            updateUserInfo({...user, username});
+            setupRealtimeChats();
         }
-
-        console.log('Datos a guardar:', userData);
-        await setDoc(userDocRef, userData, { merge: true });
-        console.log('Datos guardados exitosamente en Firestore');
-
-        // Verificar que se guardó correctamente
-        const savedDoc = await getDoc(userDocRef);
-        console.log('Documento guardado:', savedDoc.exists(), savedDoc.data());
-
-        localStorage.setItem('userLanguage', userLanguage);
-        
-        showMainScreen();
-        updateUserInfo({...user, username});
-        setupRealtimeChats();
     } catch (error) {
         console.error('Error completo:', error);
         
@@ -300,6 +336,11 @@ loginBtn.addEventListener('click', async () => {
                 break;
             case 'auth/network-request-failed':
                 showError('errorNetwork');
+                break;
+            case 'auth/operation-not-allowed':
+            case 'auth/internal-error':
+                showError('errorGeneric');
+                console.error('Error interno de Firebase:', error);
                 break;
             default:
                 showError('errorGeneric');
