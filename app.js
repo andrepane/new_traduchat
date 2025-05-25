@@ -1809,6 +1809,29 @@ async function createGroupChat(groupName, participants) {
     }
 }
 
+// Función para transcribir audio usando Web Speech API
+function transcribeAudio(audioBlob) {
+    return new Promise((resolve, reject) => {
+        const recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = userLanguage === 'es' ? 'es-ES' : 
+                         userLanguage === 'it' ? 'it-IT' : 'en-US';
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            resolve(transcript);
+        };
+        
+        recognition.onerror = (error) => {
+            console.error('Error en reconocimiento de voz:', error);
+            reject(error);
+        };
+        
+        recognition.start();
+    });
+}
+
 // Función para inicializar el grabador de audio
 async function initializeAudioRecorder() {
     try {
@@ -1820,20 +1843,24 @@ async function initializeAudioRecorder() {
         };
         
         mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(audioBlob);
-            
             try {
-                // Convertir audio a texto usando la Web Speech API
-                const transcription = await transcribeAudio(audioBlob);
-                console.log('Transcripción:', transcription);
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                
+                // Intentar transcribir el audio
+                let transcription = '';
+                try {
+                    transcription = await transcribeAudio(audioBlob);
+                    console.log('Transcripción exitosa:', transcription);
+                } catch (transcriptionError) {
+                    console.error('Error en transcripción:', transcriptionError);
+                    transcription = '[Audio sin transcripción]';
+                }
                 
                 // Enviar mensaje con audio y transcripción
                 await sendAudioMessage(audioBlob, transcription);
                 
                 // Limpiar
                 audioChunks = [];
-                URL.revokeObjectURL(audioUrl);
             } catch (error) {
                 console.error('Error procesando audio:', error);
                 showError('errorAudio');
@@ -1843,31 +1870,9 @@ async function initializeAudioRecorder() {
         return true;
     } catch (error) {
         console.error('Error accediendo al micrófono:', error);
+        showError('errorMicAccess');
         return false;
     }
-}
-
-// Función para transcribir audio usando Web Speech API
-function transcribeAudio(audioBlob) {
-    return new Promise((resolve, reject) => {
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = userLanguage === 'es' ? 'es-ES' : 
-                          userLanguage === 'it' ? 'it-IT' : 'en-US';
-        
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            resolve(transcript);
-        };
-        
-        recognition.onerror = (error) => {
-            reject(error);
-        };
-        
-        // Convertir Blob a audio y reproducirlo para la transcripción
-        const audio = new Audio(URL.createObjectURL(audioBlob));
-        audio.play();
-        recognition.start();
-    });
 }
 
 // Función para enviar mensaje de audio
