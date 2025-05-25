@@ -1,27 +1,50 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Función auxiliar para verificar si el usuario está autenticado
+    // Funciones auxiliares
     function isAuthenticated() {
       return request.auth != null;
     }
 
+    function isUserAuthenticated(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasValidPhone() {
+      return request.auth.token.phone_number != null;
+    }
+
     // Reglas para la colección users
     match /users/{userId} {
-      allow read, list: if isAuthenticated();
-      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow read: if isAuthenticated();
+      allow create: if isUserAuthenticated(userId);
+      allow update: if isUserAuthenticated(userId);
+      allow delete: if isUserAuthenticated(userId);
     }
 
     // Reglas para la colección chats
     match /chats/{chatId} {
-      allow read, write: if isAuthenticated();
+      function isParticipant() {
+        return isAuthenticated() && 
+               exists(/databases/$(database)/documents/chats/$(chatId)) &&
+               request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+      }
+
+      allow read: if isParticipant();
+      allow create: if isAuthenticated();
+      allow update: if isParticipant();
+      allow delete: if false; // No permitir eliminar chats
       
       match /messages/{messageId} {
-        allow read, write: if isAuthenticated();
+        allow read: if isParticipant();
+        allow create: if isParticipant();
+        allow update: if false; // No permitir editar mensajes
+        allow delete: if false; // No permitir eliminar mensajes
       }
       
       match /typing/{userId} {
-        allow read, write: if isAuthenticated();
+        allow read: if isParticipant();
+        allow write: if isAuthenticated() && userId == request.auth.uid;
       }
     }
   }
