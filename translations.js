@@ -67,7 +67,14 @@ const translations = {
         cancel: 'Cancelar',
         errorCreateGroup: 'Error al crear el grupo',
         errorMinUsers: 'Se necesitan al menos 2 participantes para crear un grupo',
-        groupCreated: 'Grupo creado exitosamente'
+        groupCreated: 'Grupo creado exitosamente',
+        
+        // Verificación
+        verificationCode: 'Código de verificación',
+        verifyCode: 'Verificar código',
+        codeSent: 'Código enviado correctamente',
+        errorSendingCode: 'Error al enviar el código de verificación',
+        errorVerifyingCode: 'Error al verificar el código'
     },
     en: {
         // Authentication
@@ -136,7 +143,14 @@ const translations = {
         cancel: 'Cancel',
         errorCreateGroup: 'Error creating group',
         errorMinUsers: 'At least 2 participants are needed to create a group',
-        groupCreated: 'Group successfully created'
+        groupCreated: 'Group successfully created',
+        
+        // Verification
+        verificationCode: 'Verification code',
+        verifyCode: 'Verify code',
+        codeSent: 'Code sent successfully',
+        errorSendingCode: 'Error sending verification code',
+        errorVerifyingCode: 'Error verifying code'
     },
     it: {
         // Autenticazione
@@ -205,7 +219,14 @@ const translations = {
         cancel: 'Annulla',
         errorCreateGroup: 'Errore durante la creazione del gruppo',
         errorMinUsers: 'Sono necessari almeno 2 partecipanti per creare un gruppo',
-        groupCreated: 'Gruppo creato con successo'
+        groupCreated: 'Gruppo creato con successo',
+        
+        // Verifica
+        verificationCode: 'Codice di verifica',
+        verifyCode: 'Verifica codice',
+        codeSent: 'Codice inviato con successo',
+        errorSendingCode: 'Errore nell\'invio del codice di verifica',
+        errorVerifyingCode: 'Errore nella verifica del codice'
     }
 };
 
