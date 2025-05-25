@@ -3,8 +3,8 @@ const translations = {
         // Autenticación
         appTitle: 'TraduChat',
         email: 'Correo electrónico',
+        username: 'Nombre de usuario',
         password: 'Contraseña',
-        phoneNumber: 'Número de teléfono',
         loginRegister: 'Registrar/Iniciar Sesión',
         selectLanguage: 'Seleccionar idioma',
         loading: 'Cargando...',
@@ -18,12 +18,13 @@ const translations = {
         errorPassword: 'La contraseña debe tener al menos 6 caracteres',
         errorInvalidEmail: 'Email inválido',
         errorEmailInUse: 'Este email ya está registrado',
+        errorUsernameInUse: 'Este nombre de usuario ya está en uso',
         errorNetwork: 'Error de conexión. Verifica tu conexión a internet',
         errorGeneric: 'Ha ocurrido un error',
         
         // Interfaz principal
         newChat: '+',
-        search: 'Buscar o iniciar nuevo chat',
+        search: 'Buscar por nombre de usuario',
         selectChat: 'Selecciona un chat para comenzar',
         writeMessage: 'Escribe un mensaje...',
         send: 'Enviar',
@@ -37,8 +38,8 @@ const translations = {
         changeLanguage: 'Cambiar idioma',
         
         // Búsqueda y chats
-        searchInstruction: 'Escribe un email o número de teléfono para buscar usuarios',
-        searchPlaceholder: 'Buscar por email o teléfono...',
+        searchInstruction: 'Escribe un nombre de usuario para buscar',
+        searchPlaceholder: 'Buscar por nombre de usuario...',
         noUsersFound: 'No se encontraron usuarios',
         startChat: 'Iniciar chat',
         errorSearch: 'Error al buscar usuarios',
@@ -73,8 +74,8 @@ const translations = {
         // Authentication
         appTitle: 'TraduChat',
         email: 'Email',
+        username: 'Username',
         password: 'Password',
-        phoneNumber: 'Phone number',
         loginRegister: 'Login/Register',
         selectLanguage: 'Select language',
         loading: 'Loading...',
@@ -87,12 +88,13 @@ const translations = {
         errorPassword: 'Password must be at least 6 characters long',
         errorInvalidEmail: 'Invalid email',
         errorEmailInUse: 'This email is already registered',
+        errorUsernameInUse: 'This username is already taken',
         errorNetwork: 'Connection error. Check your internet connection',
         errorGeneric: 'An error has occurred',
         
         // Main interface
         newChat: '+',
-        search: 'Search or start new chat',
+        search: 'Search by username',
         selectChat: 'Select a chat to start',
         writeMessage: 'Write a message...',
         send: 'Send',
@@ -106,8 +108,8 @@ const translations = {
         changeLanguage: 'Change language',
         
         // Search and chats
-        searchInstruction: 'Type an email or phone number to search users',
-        searchPlaceholder: 'Search by email or phone...',
+        searchInstruction: 'Type a username to search',
+        searchPlaceholder: 'Search by username...',
         noUsersFound: 'No users found',
         startChat: 'Start chat',
         errorSearch: 'Error searching users',
