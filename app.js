@@ -25,7 +25,7 @@ import {
 
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
-import { auth } from './firebase-config.js';
+import { auth, initializeRecaptcha } from './firebase-config.js';
 
 // Verificar inicialización de Firebase
 console.log('Verificando inicialización de Firebase...');
@@ -191,7 +191,12 @@ languageSelectMain.addEventListener('change', (e) => {
 // Función para iniciar la autenticación por teléfono
 async function startPhoneAuth(phoneNumber) {
     try {
+        // Inicializar reCAPTCHA antes de usarlo
+        initializeRecaptcha();
         const appVerifier = window.recaptchaVerifier;
+        if (!appVerifier) {
+            throw new Error('reCAPTCHA no está inicializado');
+        }
         const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         window.confirmationResult = confirmationResult;
         // Mostrar el campo para ingresar el código
