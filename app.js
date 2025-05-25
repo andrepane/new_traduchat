@@ -22,7 +22,9 @@ import {
     setDoc,
     updateDoc,
     initializeFirestore,
-    getFirestore
+    getFirestore,
+    limit,
+    startAfter
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import {
@@ -89,6 +91,12 @@ let isGroupCreationMode = false;
 // Variables para grabación de audio
 let recognition = null;
 let isRecording = false;
+
+// Variables para paginación
+const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
+let isLoadingMore = false;
+let allMessagesLoaded = false;
+let lastVisibleMessage = null;
 
 // Función para generar un código aleatorio de 6 dígitos
 function generateVerificationCode() {
@@ -180,7 +188,9 @@ function showError(errorKey) {
 // Función para actualizar la información del usuario
 function updateUserInfo(user) {
     if (userInfo) {
-        userInfo.textContent = user.username || user.email;
+        // Priorizar el nombre de usuario sobre el email
+        const displayName = user.username || user.email.split('@')[0];
+        userInfo.textContent = displayName;
     }
     if (currentChatInfo) {
         currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
@@ -309,11 +319,11 @@ async function updateUserData(user, username, isNewUser) {
         
         if (userDoc.exists()) {
             const currentData = userDoc.data();
-            if (currentData.username !== username.toLowerCase()) {
+            if (currentData.username !== username) {
                 // Verificar si el nuevo nombre de usuario está disponible
                 const usernameQuery = query(
                     collection(db, 'users'),
-                    where('username', '==', username.toLowerCase())
+                    where('username', '==', username)
                 );
                 const usernameSnapshot = await getDocs(usernameQuery);
                 
@@ -329,7 +339,7 @@ async function updateUserData(user, username, isNewUser) {
         const userData = {
             uid: user.uid,
             email: user.email.toLowerCase(),
-            username: username.toLowerCase(),
+            username: username,
             language: userLanguage,
             lastUpdated: serverTimestamp()
         };
@@ -399,49 +409,56 @@ document.addEventListener('DOMContentLoaded', () => {
     // Manejar cambios en el estado de autenticación
     onAuthStateChanged(auth, async (user) => {
         try {
-        if (user) {
-            console.log('Usuario autenticado:', user.email);
-            console.log('User ID:', user.uid);
+            if (user) {
+                console.log('Usuario autenticado:', user.email);
+                console.log('User ID:', user.uid);
                 
                 // Limpiar cualquier estado anterior
                 resetChatState();
-            
-            try {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
                 
-                if (!userDoc.exists()) {
-                    console.log('Creando documento de usuario...');
-                    await setDoc(userDocRef, {
+                try {
+                    const userDocRef = doc(db, 'users', user.uid);
+                    const userDoc = await getDoc(userDocRef);
+                    
+                    let userData = {
                         uid: user.uid,
                         email: user.email.toLowerCase(),
-                        language: userLanguage,
-                        createdAt: serverTimestamp(),
-                        lastUpdated: serverTimestamp()
-                    });
-                    console.log('Documento de usuario creado exitosamente');
-            }
+                    };
 
-                    // Actualizar el estado del usuario actual
-                    currentUser = user;
+                    if (userDoc.exists()) {
+                        userData = { ...userData, ...userDoc.data() };
+                    } else {
+                        console.log('Creando documento de usuario...');
+                        await setDoc(userDocRef, {
+                            uid: user.uid,
+                            email: user.email.toLowerCase(),
+                            language: userLanguage,
+                            createdAt: serverTimestamp(),
+                            lastUpdated: serverTimestamp()
+                        });
+                        console.log('Documento de usuario creado exitosamente');
+                    }
+
+                    // Actualizar el estado del usuario actual con los datos completos
+                    currentUser = userData;
                     
-                    // Mostrar la pantalla principal
-            hideLoadingScreen();
-            showMainScreen();
-            updateUserInfo(user);
-            setupRealtimeChats();
+                    // Mostrar la pantalla principal con el nombre de usuario
+                    hideLoadingScreen();
+                    showMainScreen();
+                    updateUserInfo(userData);
+                    setupRealtimeChats();
                 } catch (error) {
                     console.error('Error al verificar/crear documento de usuario:', error);
                     showError('errorGeneric');
                 }
-        } else {
-            console.log('No hay usuario autenticado');
+            } else {
+                console.log('No hay usuario autenticado');
                 // Limpiar el estado
                 currentUser = null;
                 resetChatState();
                 
-            hideLoadingScreen();
-            showAuthScreen();
+                hideLoadingScreen();
+                showAuthScreen();
             }
         } catch (error) {
             console.error('Error en el manejo de autenticación:', error);
@@ -610,11 +627,11 @@ async function setupRealtimeChats() {
 
                     chatElement.innerHTML = `
                         <div class="chat-info">
-                            <div class="chat-name">${chatName}</div>
-                            <div class="last-message-container">
+                            <div class="chat-details">
+                                <div class="chat-name">${chatName}</div>
                                 <div class="last-message">${chat.lastMessage || ''}</div>
-                                <div class="last-message-time">${lastMessageTime}</div>
                             </div>
+                            <div class="last-message-time">${lastMessageTime}</div>
                         </div>
                     `;
 
@@ -693,28 +710,32 @@ async function searchUsers(searchTerm) {
         const currentUserUid = auth.currentUser.uid;
         console.log('Usuario actual:', currentUserUid);
         
-        // Buscar usuarios por nombre de usuario
-        const searchQuery = query(
-            usersRef,
-            where('username', '>=', searchTerm.toLowerCase()),
-            where('username', '<=', searchTerm.toLowerCase() + '\uf8ff')
-        );
-        
-        const snapshot = await getDocs(searchQuery);
+        // Obtener todos los usuarios
+        const snapshot = await getDocs(usersRef);
         console.log('Total de usuarios encontrados:', snapshot.size);
         
         const users = [];
+        const searchTermLower = searchTerm.toLowerCase();
+        
         snapshot.forEach(doc => {
             const userData = doc.data();
+            // No incluir al usuario actual en los resultados
             if (userData.uid !== currentUserUid) {
-                users.push({
-                    id: userData.uid,
-                    username: userData.username,
-                    email: userData.email
-                });
+                // Buscar en username y email
+                const username = (userData.username || '').toLowerCase();
+                const email = (userData.email || '').toLowerCase();
+                
+                if (username.includes(searchTermLower) || email.includes(searchTermLower)) {
+                    users.push({
+                        id: userData.uid,
+                        username: userData.username || email.split('@')[0],
+                        email: userData.email
+                    });
+                }
             }
         });
 
+        console.log('Usuarios filtrados:', users);
         displaySearchResults(users);
     } catch (error) {
         console.error('Error detallado al buscar usuarios:', error);
@@ -766,7 +787,7 @@ function displaySearchResults(users) {
         username.className = 'user-name';
         username.textContent = user.username;
 
-        // Email del usuario (como información secundaria)
+        // Email del usuario
         const userEmail = document.createElement('div');
         userEmail.className = 'user-email';
         userEmail.textContent = user.email;
@@ -778,10 +799,13 @@ function displaySearchResults(users) {
         const startChatBtn = document.createElement('button');
         startChatBtn.className = 'start-chat-btn';
         startChatBtn.setAttribute('data-userid', user.id);
-        startChatBtn.setAttribute('data-translate', 'startChat');
-        startChatBtn.textContent = getTranslation('startChat', userLanguage);
+        startChatBtn.innerHTML = `
+            <i class="fas fa-comment"></i>
+            <span data-translate="startChat">${getTranslation('startChat', userLanguage)}</span>
+        `;
 
-        startChatBtn.addEventListener('click', () => {
+        startChatBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Evitar que el clic se propague al elemento padre
             console.log('Iniciando chat con usuario:', user.id);
             createChat(user.id);
         });
@@ -805,39 +829,45 @@ async function createChat(otherUserId) {
         }
 
         console.log('Verificando chat existente...');
-        // Verificar si ya existe un chat entre estos usuarios
+        // Verificar si ya existe un chat individual entre estos usuarios
         const chatsRef = collection(db, 'chats');
-        const q = query(chatsRef, 
+        const q = query(
+            chatsRef, 
             where('participants', 'array-contains', currentUser.uid)
         );
         
         const querySnapshot = await getDocs(q);
         let existingChat = null;
 
+        // Buscar un chat individual existente
         querySnapshot.forEach(doc => {
             const chatData = doc.data();
-            if (chatData.participants.includes(otherUserId)) {
-                console.log('Chat existente encontrado:', doc.id);
+            // Verificar que sea un chat individual (2 participantes y no sea grupo)
+            if (chatData.participants.length === 2 && 
+                chatData.participants.includes(otherUserId) && 
+                (!chatData.type || chatData.type === 'individual')) {
+                console.log('Chat individual existente encontrado:', doc.id);
                 existingChat = { id: doc.id, ...chatData };
             }
         });
 
         if (existingChat) {
-            console.log('Abriendo chat existente:', existingChat.id);
+            console.log('Abriendo chat individual existente:', existingChat.id);
             openChat(existingChat.id);
             return;
         }
 
-        console.log('Creando nuevo chat...');
-        // Si no existe, crear nuevo chat
+        console.log('Creando nuevo chat individual...');
+        // Si no existe, crear nuevo chat individual
         const newChatRef = await addDoc(collection(db, 'chats'), {
             participants: [currentUser.uid, otherUserId],
+            type: 'individual',
             createdAt: serverTimestamp(),
             lastMessage: null,
             lastMessageTime: null
         });
 
-        console.log('Nuevo chat creado:', newChatRef.id);
+        console.log('Nuevo chat individual creado:', newChatRef.id);
         openChat(newChatRef.id);
         
         // En móvil, ocultar la lista de chats y mostrar el chat
@@ -938,13 +968,24 @@ async function displayMessage(messageData) {
     const chatData = chatDoc.exists() ? chatDoc.data() : null;
     const isGroupChat = chatData && chatData.type === 'group';
     
-    // Si es un chat grupal, mostrar el email del remitente
-    let senderEmail = '';
-    if (isGroupChat && !isSentByMe) {
+    // Obtener el nombre del remitente para chats grupales
+    let senderName = '';
+    if (isGroupChat) {
         try {
-            const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
-            if (senderDoc.exists()) {
-                senderEmail = senderDoc.data().email;
+            if (isSentByMe) {
+                // Si es mi mensaje, obtener mi nombre de usuario
+                const myDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (myDoc.exists()) {
+                    const myData = myDoc.data();
+                    senderName = myData.username || myData.email.split('@')[0];
+                }
+            } else {
+                // Si es mensaje de otro, obtener su nombre
+                const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+                if (senderDoc.exists()) {
+                    const senderData = senderDoc.data();
+                    senderName = senderData.username || senderData.email.split('@')[0];
+                }
             }
         } catch (error) {
             console.error('Error al obtener información del remitente:', error);
@@ -953,7 +994,7 @@ async function displayMessage(messageData) {
 
     if (messageData.type === 'audio') {
         messageElement.innerHTML = `
-            ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
+            ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="audio-message">
                 <button class="play-button">
                     <span class="material-icons">play_arrow</span>
@@ -983,49 +1024,23 @@ async function displayMessage(messageData) {
             playButton.querySelector('.material-icons').textContent = 'play_arrow';
         });
     } else {
-    messageElement.innerHTML = `
-        ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
-        <span class="message-flag">${flag}</span>
-        <span class="message-text">${messageText}</span>
-        <span class="message-time">${timeString}</span>
-    `;
+        messageElement.innerHTML = `
+            ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
+            <div class="message-content">
+                <span class="message-flag">${flag}</span>
+                <span class="message-text">${messageText}</span>
+                <span class="message-time">${timeString}</span>
+            </div>
+        `;
     }
 
-    // Añadir estilos para el remitente si no existen
-    if (!document.querySelector('#message-sender-styles')) {
-        const style = document.createElement('style');
-        style.id = 'message-sender-styles';
-        style.textContent = `
-            .message-sender {
-                display: block;
-                font-size: 0.8em;
-                color: #666;
-                margin-bottom: 2px;
-                font-weight: bold;
-            }
-            .message.sent .message-sender {
-                display: none;
-            }
-            .message.received {
-                margin-top: 8px;
-            }
-            .message.received + .message.received {
-                margin-top: 2px;
-            }
-            .message.received + .message.received .message-sender {
-                display: none;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-    
     if (messagesList) {
         // Verificar si el mensaje anterior es del mismo remitente
         const previousMessage = messagesList.lastElementChild;
         if (previousMessage && 
             previousMessage.classList.contains('message') && 
             previousMessage.getAttribute('data-sender-id') === messageData.senderId) {
-            messageElement.querySelector('.message-sender')?.remove();
+            messageElement.setAttribute('data-same-sender', 'true');
         }
 
         // Guardar el ID del remitente para comparaciones futuras
@@ -1053,6 +1068,11 @@ async function openChat(chatId) {
         unsubscribeMessages();
     }
 
+    // Resetear variables de paginación
+    isLoadingMore = false;
+    allMessagesLoaded = false;
+    lastVisibleMessage = null;
+
     currentChat = chatId;
     
     try {
@@ -1070,109 +1090,243 @@ async function openChat(chatId) {
         // Limpiar mensajes anteriores
         if (messagesList) {
             messagesList.innerHTML = '';
+            
+            // Añadir el loader al inicio de la lista
+            const loaderDiv = document.createElement('div');
+            loaderDiv.id = 'messages-loader';
+            loaderDiv.className = 'messages-loader';
+            loaderDiv.style.display = 'none';
+            loaderDiv.innerHTML = '<div class="loader-spinner"></div>';
+            messagesList.appendChild(loaderDiv);
+
+            // Añadir observer para detectar cuando se llega arriba
+            const observer = new IntersectionObserver(async (entries) => {
+                if (entries[0].isIntersecting && !isLoadingMore && !allMessagesLoaded) {
+                    await loadMoreMessages(chatId);
+                }
+            }, { threshold: 0.1 });
+
+            observer.observe(loaderDiv);
+
+            // Añadir estilos para el loader si no existen
+            if (!document.querySelector('#loader-styles')) {
+                const style = document.createElement('style');
+                style.id = 'loader-styles';
+                style.textContent = `
+                    .messages-loader {
+                        text-align: center;
+                        padding: 10px;
+                    }
+                    .loader-spinner {
+                        width: 20px;
+                        height: 20px;
+                        border: 2px solid #f3f3f3;
+                        border-top: 2px solid #3498db;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin: 0 auto;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
         }
         
+        // Configurar la interfaz según el tipo de chat
         if (chatData.type === 'group') {
-            // Es un chat grupal
-            console.log('Abriendo chat grupal:', chatData.name);
-            
-            // Obtener información de todos los participantes
-            const participantsInfo = await Promise.all(
-                chatData.participants.map(async (userId) => {
-                    const userDoc = await getDoc(doc(db, 'users', userId));
-                    return userDoc.exists() ? userDoc.data() : { email: 'Usuario desconocido' };
-                })
-            );
-
-            // Crear elemento para mostrar información del grupo
-            const groupInfoElement = document.createElement('div');
-            groupInfoElement.className = 'group-info';
-            groupInfoElement.innerHTML = `
-                <div class="group-name">${chatData.name}</div>
-                <div class="group-participants">
-                    ${participantsInfo.map(user => user.email).join(', ')}
-                </div>
-            `;
-
-            // Actualizar la interfaz
-            if (currentChatInfo) {
-                currentChatInfo.innerHTML = '';
-                currentChatInfo.appendChild(groupInfoElement);
-            }
-
-            // Añadir estilos para la información del grupo
-            const style = document.createElement('style');
-            style.textContent = `
-                .group-info {
-                    padding: 10px;
-                    border-bottom: 1px solid #ddd;
-                }
-                .group-name {
-                    font-weight: bold;
-                    font-size: 1.1em;
-                    margin-bottom: 5px;
-                }
-                .group-participants {
-                    font-size: 0.9em;
-                    color: #666;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            `;
-            document.head.appendChild(style);
+            await setupGroupChatInterface(chatData);
         } else {
-            // Es un chat individual
-            const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
-            if (!otherUserId) {
-                console.error('No se encontró el otro participante');
-                return;
-            }
-
-            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-            if (!otherUserDoc.exists()) {
-                console.error('Usuario no encontrado:', otherUserId);
-                return;
-            }
-
-            const otherUserData = otherUserDoc.data();
-            if (currentChatInfo) {
-                currentChatInfo.textContent = otherUserData.email;
-            }
+            await setupIndividualChatInterface(chatData, currentUser);
         }
 
         // Cambiar a la vista del chat
         toggleChatList(false);
 
+        // Cargar mensajes iniciales
+        await loadInitialMessages(chatId);
+
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
-        const q = query(messagesRef, orderBy('timestamp', 'asc'));
-        
-        unsubscribeMessages = onSnapshot(q, (snapshot) => {
-            snapshot.docChanges().forEach(change => {
+        const newMessagesQuery = query(
+            messagesRef,
+            orderBy('timestamp', 'desc'),
+            limit(1)
+        );
+
+        unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
+            snapshot.docChanges().forEach(async change => {
                 if (change.type === 'added') {
                     const messageData = change.doc.data();
-                    console.log('Nuevo mensaje recibido:', messageData);
+                    const messageTime = messageData.timestamp?.toDate?.() || new Date(messageData.timestamp) || new Date();
                     
-                    // Manejar mensajes de sistema de manera especial
-                    if (messageData.type === 'system') {
-                        displaySystemMessage(messageData);
-                    } else {
-                        displayMessage(messageData);
+                    // Solo mostrar si es un mensaje nuevo
+                    if (messageTime > (lastVisibleMessage?.timestamp?.toDate() || new Date(0))) {
+                        if (messageData.type === 'system') {
+                            displaySystemMessage(messageData);
+                        } else {
+                            await displayMessage(messageData);
+                        }
+                        // Scroll al último mensaje para nuevos mensajes
+                        if (messagesList) {
+                            messagesList.scrollTop = messagesList.scrollHeight;
+                        }
                     }
                 }
             });
-            
-            // Scroll al último mensaje
-            if (messagesList) {
-                messagesList.scrollTop = messagesList.scrollHeight;
-            }
         }, (error) => {
             console.error('Error en la suscripción a mensajes:', error);
         });
     } catch (error) {
         console.error('Error al abrir chat:', error);
         showError('errorOpenChat');
+    }
+}
+
+// Función para cargar los mensajes iniciales
+async function loadInitialMessages(chatId) {
+    const db = window.db;
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+    const q = query(
+        messagesRef,
+        orderBy('timestamp', 'desc'),
+        limit(MESSAGES_PER_BATCH)
+    );
+
+    try {
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            allMessagesLoaded = true;
+            return;
+        }
+
+        const messages = [];
+        snapshot.forEach(doc => {
+            messages.push({ ...doc.data(), id: doc.id });
+        });
+
+        // Guardar referencia al último mensaje visible
+        lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
+
+        // Mostrar mensajes en orden cronológico
+        messages.reverse().forEach(async messageData => {
+            if (messageData.type === 'system') {
+                displaySystemMessage(messageData);
+            } else {
+                await displayMessage(messageData);
+            }
+        });
+
+        // Scroll al último mensaje
+        if (messagesList) {
+            messagesList.scrollTop = messagesList.scrollHeight;
+        }
+    } catch (error) {
+        console.error('Error al cargar mensajes iniciales:', error);
+    }
+}
+
+// Función para cargar más mensajes antiguos
+async function loadMoreMessages(chatId) {
+    if (isLoadingMore || allMessagesLoaded) return;
+
+    isLoadingMore = true;
+    const loaderDiv = document.getElementById('messages-loader');
+    if (loaderDiv) loaderDiv.style.display = 'block';
+
+    try {
+        const db = window.db;
+        const messagesRef = collection(db, 'chats', chatId, 'messages');
+        const q = query(
+            messagesRef,
+            orderBy('timestamp', 'desc'),
+            startAfter(lastVisibleMessage),
+            limit(MESSAGES_PER_BATCH)
+        );
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            allMessagesLoaded = true;
+            if (loaderDiv) loaderDiv.style.display = 'none';
+            return;
+        }
+
+        const messages = [];
+        snapshot.forEach(doc => {
+            messages.push({ ...doc.data(), id: doc.id });
+        });
+
+        // Actualizar referencia al último mensaje
+        lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
+
+        // Guardar la posición actual del scroll
+        const scrollHeight = messagesList.scrollHeight;
+        const scrollTop = messagesList.scrollTop;
+
+        // Mostrar mensajes en orden cronológico al inicio de la lista
+        messages.reverse().forEach(async messageData => {
+            const messageElement = document.createElement('div');
+            if (messageData.type === 'system') {
+                await displaySystemMessage(messageData, messageElement);
+            } else {
+                await displayMessage(messageData, messageElement);
+            }
+            messagesList.insertBefore(messageElement, messagesList.firstChild);
+        });
+
+        // Mantener la posición del scroll
+        messagesList.scrollTop = messagesList.scrollHeight - scrollHeight + scrollTop;
+    } catch (error) {
+        console.error('Error al cargar más mensajes:', error);
+    } finally {
+        isLoadingMore = false;
+        if (loaderDiv) loaderDiv.style.display = 'none';
+    }
+}
+
+// Funciones auxiliares para la interfaz
+async function setupGroupChatInterface(chatData) {
+    const participantsInfo = await Promise.all(
+        chatData.participants.map(async (userId) => {
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            return userDoc.exists() ? userDoc.data() : { email: 'Usuario desconocido' };
+        })
+    );
+
+    const groupInfoElement = document.createElement('div');
+    groupInfoElement.className = 'group-info';
+    groupInfoElement.innerHTML = `
+        <div class="group-name">${chatData.name}</div>
+        <div class="group-participants">
+            ${participantsInfo.map(user => user.username || user.email.split('@')[0]).join(', ')}
+        </div>
+    `;
+
+    if (currentChatInfo) {
+        currentChatInfo.innerHTML = '';
+        currentChatInfo.appendChild(groupInfoElement);
+    }
+}
+
+async function setupIndividualChatInterface(chatData, currentUser) {
+    const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
+    if (!otherUserId) {
+        console.error('No se encontró el otro participante');
+        return;
+    }
+
+    const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+    if (!otherUserDoc.exists()) {
+        console.error('Usuario no encontrado:', otherUserId);
+        return;
+    }
+
+    const otherUserData = otherUserDoc.data();
+    if (currentChatInfo) {
+        currentChatInfo.textContent = otherUserData.email;
     }
 }
 
@@ -1190,30 +1344,6 @@ function displaySystemMessage(messageData) {
             ''
         }</span>
     `;
-
-    // Añadir estilos para mensajes del sistema si no existen
-    if (!document.querySelector('#system-message-styles')) {
-        const style = document.createElement('style');
-        style.id = 'system-message-styles';
-        style.textContent = `
-            .system-message {
-                text-align: center;
-                margin: 10px 0;
-                padding: 5px 10px;
-                background-color: #f8f9fa;
-                border-radius: 15px;
-                font-style: italic;
-                color: #6c757d;
-                font-size: 0.9em;
-            }
-            .system-message .message-time {
-                font-size: 0.8em;
-                margin-left: 5px;
-                color: #adb5bd;
-            }
-        `;
-        document.head.appendChild(style);
-    }
 
     messagesList.appendChild(messageElement);
     messagesList.scrollTop = messagesList.scrollHeight;
@@ -1304,12 +1434,29 @@ async function sendMessage(text) {
         for (const targetLang of targetLanguages) {
             try {
                 const translation = await translateText(text, targetLang);
-                await updateDoc(doc(messagesRef, docRef.id), {
-                    [`translations.${targetLang}`]: translation
-                });
-                console.log(`Traducción guardada para ${targetLang}`);
+                if (translation === 'LIMIT_EXCEEDED') {
+                    // Si se alcanzó el límite, guardar el mensaje original
+                    await updateDoc(doc(messagesRef, docRef.id), {
+                        [`translations.${targetLang}`]: text,
+                        translationStatus: 'limit_exceeded'
+                    });
+                    // Mostrar mensaje al usuario
+                    const limitMessage = getTranslation('translationLimitExceeded', userLanguage);
+                    alert(limitMessage);
+                    break; // Salir del bucle de traducciones
+                } else {
+                    await updateDoc(doc(messagesRef, docRef.id), {
+                        [`translations.${targetLang}`]: translation
+                    });
+                    console.log(`Traducción guardada para ${targetLang}`);
+                }
             } catch (translationError) {
                 console.error('Error al traducir al', targetLang, translationError);
+                // En caso de error, guardar el mensaje original
+                await updateDoc(doc(messagesRef, docRef.id), {
+                    [`translations.${targetLang}`]: text,
+                    translationError: true
+                });
             }
         }
     } catch (error) {
