@@ -233,13 +233,21 @@ body {
 
 /* Ajustes para móvil */
 @media screen and (max-width: 768px) {
-  /* Estructura principal */
+  /* Estructura base */
+  body {
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
   #mainScreen {
     height: 100vh;
     overflow: hidden;
+    position: relative;
   }
 
-  /* Sidebar y lista de chats */
+  /* Sidebar */
   .sidebar {
     width: 100%;
     height: 100vh;
@@ -247,10 +255,12 @@ body {
     top: 0;
     left: 0;
     z-index: 1000;
-    background-color: #fff;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Header */
+  /* Header y búsqueda */
   .user-header {
     position: fixed;
     top: 0;
@@ -258,19 +268,20 @@ body {
     width: 100%;
     height: 60px;
     padding: 10px;
-    background-color: #fff;
+    background: #fff;
     z-index: 1002;
     border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
   }
 
-  /* Contenedor de búsqueda */
   .search-container {
     position: fixed;
     top: 60px;
     left: 0;
     width: 100%;
     padding: 10px;
-    background-color: #fff;
+    background: #fff;
     z-index: 1001;
     border-bottom: 1px solid #dee2e6;
   }
@@ -282,7 +293,7 @@ body {
     border: 1px solid #dee2e6;
     border-radius: 20px;
     font-size: 16px;
-    background-color: #f8f9fa;
+    background: #f8f9fa;
   }
 
   /* Lista de chats */
@@ -291,7 +302,6 @@ body {
     height: calc(100vh - 110px);
     overflow-y: auto;
     padding-bottom: env(safe-area-inset-bottom);
-    background-color: #fff;
   }
 
   /* Contenedor del chat */
@@ -304,7 +314,11 @@ body {
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background: #fff;
+  }
+
+  .chat-container.active {
+    display: flex;
   }
 
   /* Header del chat */
@@ -315,9 +329,11 @@ body {
     width: 100%;
     height: 60px;
     padding: 10px;
-    background-color: #fff;
+    background: #fff;
     z-index: 1002;
     border-bottom: 1px solid #dee2e6;
+    display: flex;
+    align-items: center;
   }
 
   /* Lista de mensajes */
@@ -331,14 +347,14 @@ body {
   }
 
   /* Input container */
-  .message-input {
+  .input-container {
     position: fixed;
     bottom: 0;
     left: 0;
     width: 100%;
     min-height: 60px;
     padding: 10px;
-    background-color: #fff;
+    background: #fff;
     border-top: 1px solid #dee2e6;
     z-index: 1002;
     display: flex;
@@ -355,7 +371,8 @@ body {
     border: 1px solid #dee2e6;
     border-radius: 20px;
     font-size: 16px;
-    background-color: #f8f9fa;
+    background: #f8f9fa;
+    margin: 0;
   }
 
   /* Botones de micrófono y enviar */
@@ -369,7 +386,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-primary);
+    background: var(--color-primary);
     color: white;
     flex-shrink: 0;
   }
@@ -380,7 +397,7 @@ body {
 
   /* Ajustes para iPhone con notch */
   @supports (padding: max(0px)) {
-    .message-input {
+    .input-container {
       padding-bottom: max(10px, env(safe-area-inset-bottom));
     }
 
@@ -406,12 +423,10 @@ body {
 
     .chat-list {
       margin-top: 100px;
-      height: calc(100vh - 100px);
     }
 
     .messages-list {
       margin-top: 50px;
-      height: calc(100vh - 110px);
     }
 
     #messageInput,
@@ -424,6 +439,48 @@ body {
     #sendMessage {
       width: 36px;
     }
+  }
+}
+
+/* Ajustes generales para inputs y botones en móvil */
+@media screen and (max-width: 768px) {
+  input,
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    font-size: 16px; /* Previene zoom en iOS */
+  }
+
+  /* Prevenir zoom en inputs */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  textarea {
+    font-size: 16px;
+  }
+
+  /* Mejorar la interactividad táctil */
+  button,
+  .icon-button,
+  .chat-item {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  /* Ajustes para el teclado virtual */
+  .input-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: #fff;
+    padding: 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    border-top: 1px solid #dee2e6;
+    z-index: 1002;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 }
 
