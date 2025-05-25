@@ -366,37 +366,71 @@ loginBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Validar formato del número de teléfono
-    phoneNumber = validatePhoneNumber(phoneNumber);
-    if (!phoneNumber) {
-        showError('errorInvalidPhone');
-        return;
-    }
-
     try {
+        // Deshabilitar el botón durante el proceso
+        loginBtn.disabled = true;
+        loginBtn.textContent = getTranslation('loading', userLanguage);
+
         // Primero autenticar con email/password
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         currentUser = userCredential.user;
         
-        // Guardar el número de teléfono en localStorage
-        localStorage.setItem('userPhone', phoneNumber);
+        // Configurar reCAPTCHA en el botón de login
+        setupRecaptcha('loginBtn');
         
-        // Luego iniciar la verificación por teléfono
-        await startPhoneAuth(phoneNumber);
+        // Validar y formatear el número de teléfono
+        phoneNumber = validatePhoneNumber(phoneNumber);
+        if (!phoneNumber) {
+            showError('errorInvalidPhone');
+            return;
+        }
+
+        try {
+            // Intentar enviar el código de verificación
+            const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+            window.confirmationResult = confirmationResult;
+            
+            // Mostrar sección de verificación
+            document.getElementById('verificationCodeSection').style.display = 'block';
+            alert(getTranslation('codeSent', userLanguage));
+            
+            // Guardar el número de teléfono
+            localStorage.setItem('userPhone', phoneNumber);
+        } catch (error) {
+            console.error('Error al enviar código:', error);
+            if (error.code === 'auth/invalid-phone-number') {
+                showError('errorInvalidPhone');
+            } else if (error.code === 'auth/too-many-requests') {
+                showError('errorTooManyAttempts');
+            } else {
+                showError('errorSendingCode');
+            }
+        }
     } catch (error) {
-        console.error('Error en la autenticación:', error);
+        console.error('Error en autenticación:', error);
         showError('errorAuth');
+    } finally {
+        // Restaurar el botón
+        loginBtn.disabled = false;
+        loginBtn.textContent = getTranslation('loginRegister', userLanguage);
     }
 });
 
-// Añadir el manejador para el botón de verificación de código
+// Verificar el código
 document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
     const code = document.getElementById('verificationCode').value.trim();
     if (!code) {
         showError('errorEmptyCode');
         return;
     }
-    await verifyPhoneCode(code);
+
+    try {
+        await window.confirmationResult.confirm(code);
+        showMainScreen();
+    } catch (error) {
+        console.error('Error al verificar código:', error);
+        showError('errorVerifyingCode');
+    }
 });
 
 // Función para mostrar la pantalla principal
