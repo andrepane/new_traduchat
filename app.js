@@ -34,6 +34,9 @@ if (!auth) {
     console.error('Auth no está inicializado!');
 }
 
+// Hacer db disponible globalmente de manera segura
+window.db = db;
+
 // Referencias a elementos del DOM
 const authScreen = document.getElementById('authScreen');
 const mainScreen = document.getElementById('mainScreen');
@@ -1084,7 +1087,6 @@ async function openChat(chatId) {
     currentChat = chatId;
     
     try {
-        const db = window.db;
         // Obtener información del chat
         const chatDoc = await getDoc(doc(db, 'chats', chatId));
         if (!chatDoc.exists()) {
@@ -1127,28 +1129,6 @@ async function openChat(chatId) {
                 currentChatInfo.innerHTML = '';
                 currentChatInfo.appendChild(groupInfoElement);
             }
-
-            // Añadir estilos para la información del grupo
-            const style = document.createElement('style');
-            style.textContent = `
-                .group-info {
-                    padding: 10px;
-                    border-bottom: 1px solid #ddd;
-                }
-                .group-name {
-                    font-weight: bold;
-                    font-size: 1.1em;
-                    margin-bottom: 5px;
-                }
-                .group-participants {
-                    font-size: 0.9em;
-                    color: #666;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            `;
-            document.head.appendChild(style);
         } else {
             // Es un chat individual
             const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
@@ -1197,6 +1177,7 @@ async function openChat(chatId) {
             }
         }, (error) => {
             console.error('Error en la suscripción a mensajes:', error);
+            showError('errorLoadingMessages');
         });
     } catch (error) {
         console.error('Error al abrir chat:', error);
