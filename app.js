@@ -236,103 +236,53 @@ loginBtn.addEventListener('click', async () => {
             await setPersistence(auth, browserLocalPersistence);
         } catch (persistenceError) {
             console.warn('Error al configurar persistencia:', persistenceError);
-            // Continuar aunque falle la persistencia
         }
-        
-        // Verificar si el nombre de usuario ya existe
-        const usernameQuery = query(
-            collection(db, 'users'),
-            where('username', '==', username.toLowerCase())
-        );
-        
-        let userCredential;
-        let isNewUser = false;
-        
-        try {
-            const usernameSnapshot = await getDocs(usernameQuery);
-            
-            if (!usernameSnapshot.empty && 
-                usernameSnapshot.docs[0].data().email.toLowerCase() !== email.toLowerCase()) {
-                showError('errorUsernameInUse');
-                return;
-            }
 
+        // Primero intentar iniciar sesión
+        try {
+            console.log('Intentando iniciar sesión...');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            console.log('Login exitoso:', userCredential.user.uid);
+            
+            // Actualizar el nombre de usuario si es necesario
+            await updateUserData(userCredential.user, username, false);
+            return;
+        } catch (loginError) {
+            console.log('Error en login:', loginError.code);
+            
+            if (loginError.code !== 'auth/user-not-found') {
+                // Si el error no es porque el usuario no existe, propagar el error
+                throw loginError;
+            }
+            
+            // Si el usuario no existe, intentar registro
+            console.log('Usuario no encontrado, intentando registro...');
             try {
-                console.log('Intentando crear nuevo usuario:', email);
-                userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                isNewUser = true;
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                 console.log('Usuario creado exitosamente:', userCredential.user.uid);
-            } catch (error) {
-                console.log('Error en creación:', error.code);
-                if (error.code === 'auth/email-already-in-use') {
-                    console.log('Email en uso, intentando login...');
-                    userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    console.log('Login exitoso:', userCredential.user.uid);
-                } else {
-                    throw error;
-                }
+                
+                // Crear documento de usuario para el nuevo registro
+                await updateUserData(userCredential.user, username, true);
+            } catch (registrationError) {
+                console.error('Error en registro:', registrationError);
+                throw registrationError;
             }
-        } catch (error) {
-            if (error.code === 'permission-denied') {
-                console.error('Error de permisos al verificar usuario:', error);
-                // Intentar login directo si hay error de permisos
-                userCredential = await signInWithEmailAndPassword(auth, email, password);
-            } else {
-                throw error;
-            }
-        }
-
-        const user = userCredential.user;
-        console.log('Guardando datos en Firestore para usuario:', user.uid);
-
-        try {
-            // Crear o actualizar el documento del usuario
-            const userDocRef = doc(db, 'users', user.uid);
-            const userData = {
-                uid: user.uid,
-                email: email.toLowerCase(),
-                username: username.toLowerCase(),
-                language: userLanguage,
-                lastUpdated: serverTimestamp()
-            };
-
-            // Si es nuevo registro, añadir createdAt
-            if (isNewUser) {
-                userData.createdAt = serverTimestamp();
-            }
-
-            console.log('Datos a guardar:', userData);
-            await setDoc(userDocRef, userData, { merge: true });
-            console.log('Datos guardados exitosamente en Firestore');
-
-            // Verificar que se guardó correctamente
-            const savedDoc = await getDoc(userDocRef);
-            if (!savedDoc.exists()) {
-                throw new Error('No se pudo verificar el documento del usuario');
-            }
-            console.log('Documento guardado:', savedDoc.data());
-
-            localStorage.setItem('userLanguage', userLanguage);
-            
-            showMainScreen();
-            updateUserInfo({...user, username});
-            setupRealtimeChats();
-        } catch (firestoreError) {
-            console.error('Error al guardar datos en Firestore:', firestoreError);
-            // Si falla Firestore pero la autenticación fue exitosa, continuar
-            showMainScreen();
-            updateUserInfo({...user, username});
-            setupRealtimeChats();
         }
     } catch (error) {
         console.error('Error completo:', error);
         
         switch (error.code) {
+            case 'auth/wrong-password':
+                showError('errorPassword');
+                break;
             case 'auth/weak-password':
                 showError('errorPassword');
                 break;
             case 'auth/invalid-email':
                 showError('errorInvalidEmail');
+                break;
+            case 'auth/email-already-in-use':
+                showError('errorEmailInUse');
                 break;
             case 'auth/network-request-failed':
                 showError('errorNetwork');
@@ -347,6 +297,78 @@ loginBtn.addEventListener('click', async () => {
         }
     }
 });
+
+// Función auxiliar para actualizar datos de usuario
+async function updateUserData(user, username, isNewUser) {
+    const db = window.db;
+    
+    try {
+        // Verificar si el nombre de usuario está disponible
+        const userDocRef = doc(db, 'users', user.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+            const currentData = userDoc.data();
+            if (currentData.username !== username.toLowerCase()) {
+                // Verificar si el nuevo nombre de usuario está disponible
+                const usernameQuery = query(
+                    collection(db, 'users'),
+                    where('username', '==', username.toLowerCase())
+                );
+                const usernameSnapshot = await getDocs(usernameQuery);
+                
+                if (!usernameSnapshot.empty) {
+                    await signOut(auth); // Cerrar sesión si el nombre de usuario no está disponible
+                    showError('errorUsernameInUse');
+                    return;
+                }
+            }
+        }
+
+        // Preparar datos del usuario
+        const userData = {
+            uid: user.uid,
+            email: user.email.toLowerCase(),
+            username: username.toLowerCase(),
+            language: userLanguage,
+            lastUpdated: serverTimestamp()
+        };
+
+        if (isNewUser) {
+            userData.createdAt = serverTimestamp();
+        }
+
+        console.log('Guardando datos en Firestore para usuario:', user.uid);
+        console.log('Datos a guardar:', userData);
+        
+        // Guardar datos del usuario
+        await setDoc(userDocRef, userData, { merge: true });
+        console.log('Datos guardados exitosamente en Firestore');
+
+        // Verificar que se guardó correctamente
+        const savedDoc = await getDoc(userDocRef);
+        if (!savedDoc.exists()) {
+            throw new Error('No se pudo verificar el documento del usuario');
+        }
+        console.log('Documento guardado:', savedDoc.data());
+
+        // Actualizar la interfaz
+        localStorage.setItem('userLanguage', userLanguage);
+        showMainScreen();
+        updateUserInfo({...user, username});
+        setupRealtimeChats();
+    } catch (error) {
+        console.error('Error al actualizar datos del usuario:', error);
+        if (error.code === 'permission-denied') {
+            // Si es un error de permisos pero el usuario está autenticado, continuar
+            showMainScreen();
+            updateUserInfo({...user, username});
+            setupRealtimeChats();
+        } else {
+            throw error;
+        }
+    }
+}
 
 // Función para mostrar la pantalla de autenticación
 function showAuthScreen() {
@@ -377,49 +399,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // Manejar cambios en el estado de autenticación
     onAuthStateChanged(auth, async (user) => {
         try {
-            if (user) {
-                console.log('Usuario autenticado:', user.email);
-                console.log('User ID:', user.uid);
+        if (user) {
+            console.log('Usuario autenticado:', user.email);
+            console.log('User ID:', user.uid);
                 
                 // Limpiar cualquier estado anterior
                 resetChatState();
+            
+            try {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
                 
-                try {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    
-                    if (!userDoc.exists()) {
-                        console.log('Creando documento de usuario...');
-                        await setDoc(userDocRef, {
-                            uid: user.uid,
-                            email: user.email.toLowerCase(),
-                            language: userLanguage,
-                            createdAt: serverTimestamp(),
-                            lastUpdated: serverTimestamp()
-                        });
-                        console.log('Documento de usuario creado exitosamente');
-                    }
+                if (!userDoc.exists()) {
+                    console.log('Creando documento de usuario...');
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        email: user.email.toLowerCase(),
+                        language: userLanguage,
+                        createdAt: serverTimestamp(),
+                        lastUpdated: serverTimestamp()
+                    });
+                    console.log('Documento de usuario creado exitosamente');
+            }
 
                     // Actualizar el estado del usuario actual
                     currentUser = user;
                     
                     // Mostrar la pantalla principal
-                    hideLoadingScreen();
-                    showMainScreen();
-                    updateUserInfo(user);
-                    setupRealtimeChats();
+            hideLoadingScreen();
+            showMainScreen();
+            updateUserInfo(user);
+            setupRealtimeChats();
                 } catch (error) {
                     console.error('Error al verificar/crear documento de usuario:', error);
                     showError('errorGeneric');
                 }
-            } else {
-                console.log('No hay usuario autenticado');
+        } else {
+            console.log('No hay usuario autenticado');
                 // Limpiar el estado
                 currentUser = null;
                 resetChatState();
                 
-                hideLoadingScreen();
-                showAuthScreen();
+            hideLoadingScreen();
+            showAuthScreen();
             }
         } catch (error) {
             console.error('Error en el manejo de autenticación:', error);
@@ -536,82 +558,82 @@ async function setupRealtimeChats() {
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
             try {
-                console.log('Actualización de chats detectada');
-                chatList.innerHTML = '';
-                
-                if (snapshot.empty) {
-                    chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
-                    return;
-                }
+            console.log('Actualización de chats detectada');
+            chatList.innerHTML = '';
+            
+            if (snapshot.empty) {
+                chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
+                return;
+            }
 
-                // Obtener todos los chats y ordenarlos manualmente
-                const chats = [];
-                for (const doc of snapshot.docs) {
-                    const chatData = doc.data();
-                    chats.push({
-                        id: doc.id,
-                        ...chatData,
-                        lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
-                    });
-                }
+            // Obtener todos los chats y ordenarlos manualmente
+            const chats = [];
+            for (const doc of snapshot.docs) {
+                const chatData = doc.data();
+                chats.push({
+                    id: doc.id,
+                    ...chatData,
+                    lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
+                });
+            }
 
-                // Ordenar chats por lastMessageTime
-                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+            // Ordenar chats por lastMessageTime
+            chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
 
-                for (const chat of chats) {
-                    try {
-                        const chatElement = document.createElement('div');
-                        chatElement.className = 'chat-item';
-                        if (chat.type === 'group') {
-                            chatElement.classList.add('group-chat');
-                        }
-                        if (chat.id === currentChat) {
-                            chatElement.classList.add('active');
-                        }
+            for (const chat of chats) {
+                try {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    if (chat.type === 'group') {
+                        chatElement.classList.add('group-chat');
+                    }
+                    if (chat.id === currentChat) {
+                        chatElement.classList.add('active');
+                    }
 
-                        let chatName = '';
-                        if (chat.type === 'group') {
-                            chatName = chat.name;
-                        } else {
-                            const otherUserId = chat.participants.find(id => id !== currentUser.uid);
-                            if (otherUserId) {
-                                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                                if (otherUserDoc.exists()) {
-                                    const otherUserData = otherUserDoc.data();
+                    let chatName = '';
+                    if (chat.type === 'group') {
+                        chatName = chat.name;
+                    } else {
+                        const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+                        if (otherUserId) {
+                            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                            if (otherUserDoc.exists()) {
+                                const otherUserData = otherUserDoc.data();
                                     chatName = otherUserData.username || otherUserData.email.split('@')[0];
-                                }
                             }
                         }
-
-                        const lastMessageTime = chat.lastMessageTime ? 
-                            chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-                        chatElement.innerHTML = `
-                            <div class="chat-info">
-                                <div class="chat-name">${chatName}</div>
-                                <div class="last-message-container">
-                                    <div class="last-message">${chat.lastMessage || ''}</div>
-                                    <div class="last-message-time">${lastMessageTime}</div>
-                                </div>
-                            </div>
-                        `;
-
-                        if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
-                            chatElement.classList.add('chat-updated');
-                            setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
-                        }
-
-                        chatElement.addEventListener('click', () => {
-                            console.log('Abriendo chat:', chat.id);
-                            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-                            chatElement.classList.add('active');
-                            openChat(chat.id);
-                        });
-
-                        chatList.appendChild(chatElement);
-                    } catch (error) {
-                        console.error('Error al procesar chat individual:', error);
                     }
+
+                    const lastMessageTime = chat.lastMessageTime ? 
+                        chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    chatElement.innerHTML = `
+                        <div class="chat-info">
+                            <div class="chat-name">${chatName}</div>
+                            <div class="last-message-container">
+                                <div class="last-message">${chat.lastMessage || ''}</div>
+                                <div class="last-message-time">${lastMessageTime}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
+                        chatElement.classList.add('chat-updated');
+                        setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
+                    }
+
+                    chatElement.addEventListener('click', () => {
+                        console.log('Abriendo chat:', chat.id);
+                        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+                        chatElement.classList.add('active');
+                        openChat(chat.id);
+                    });
+
+                    chatList.appendChild(chatElement);
+                } catch (error) {
+                    console.error('Error al procesar chat individual:', error);
+                }
                 }
             } catch (error) {
                 console.error('Error al procesar actualización de chats:', error);
@@ -623,7 +645,7 @@ async function setupRealtimeChats() {
             if (error.code === 'permission-denied') {
                 handleLogout();
             } else {
-                chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
             }
         });
 
@@ -961,12 +983,12 @@ async function displayMessage(messageData) {
             playButton.querySelector('.material-icons').textContent = 'play_arrow';
         });
     } else {
-        messageElement.innerHTML = `
-            ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
-            <span class="message-flag">${flag}</span>
-            <span class="message-text">${messageText}</span>
-            <span class="message-time">${timeString}</span>
-        `;
+    messageElement.innerHTML = `
+        ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
+        <span class="message-flag">${flag}</span>
+        <span class="message-text">${messageText}</span>
+        <span class="message-time">${timeString}</span>
+    `;
     }
 
     // Añadir estilos para el remitente si no existen
@@ -1712,7 +1734,7 @@ async function createGroupChat(groupName, participants) {
         console.error('Error al crear grupo:', error);
         showError('errorCreateGroup');
     }
-}
+} 
 
 // Función para inicializar el reconocimiento de voz
 function initializeSpeechRecognition() {
