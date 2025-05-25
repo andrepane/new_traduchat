@@ -84,11 +84,8 @@ let selectedUsers = new Set();
 let isGroupCreationMode = false;
 
 // Variables para grabación de audio
-let mediaRecorder = null;
-let audioChunks = [];
-let isRecording = false;
 let recognition = null;
-let finalTranscript = '';
+let isRecording = false;
 
 // Función para generar un código aleatorio de 6 dígitos
 function generateVerificationCode() {
@@ -1821,217 +1818,67 @@ function initializeSpeechRecognition() {
     
     recognition.onresult = (event) => {
         let interimTranscript = '';
-        finalTranscript = ''; // Reiniciar la transcripción final
+        let finalTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i][0].transcript;
             if (event.results[i].isFinal) {
-                finalTranscript = transcript; // Guardar solo la última transcripción final
+                finalTranscript = transcript;
+                // Cuando tenemos la transcripción final, la enviamos como mensaje
+                if (finalTranscript.trim()) {
+                    messageInput.value = finalTranscript;
+                    sendMessage(finalTranscript);
+                    stopRecording();
+                }
             } else {
                 interimTranscript += transcript;
+                messageInput.value = interimTranscript;
             }
         }
-        
-        // Mostrar la transcripción en el input de mensaje
-        messageInput.value = finalTranscript || interimTranscript;
-        console.log('Transcripción final:', finalTranscript);
-        console.log('Transcripción intermedia:', interimTranscript);
     };
     
     recognition.onerror = (event) => {
         console.error('Error en reconocimiento de voz:', event.error);
+        stopRecording();
+    };
+    
+    recognition.onend = () => {
+        stopRecording();
     };
     
     return recognition;
 }
 
-// Función para inicializar el grabador de audio
-async function initializeAudioRecorder() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-        
-        mediaRecorder.ondataavailable = (event) => {
-            audioChunks.push(event.data);
-        };
-        
-        mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            
-            // Obtener la transcripción final
-            if (recognition) {
-                recognition.stop();
-            }
-            
-            // Enviar el mensaje con la transcripción
-            await sendAudioMessage(audioBlob, finalTranscript || '[Audio]');
-            
-            // Limpiar
-            audioChunks = [];
-            finalTranscript = '';
-        };
-        
-        return true;
-    } catch (error) {
-        console.error('Error accediendo al micrófono:', error);
-        showError('errorMicAccess');
-        return false;
+// Función para detener la grabación
+function stopRecording() {
+    if (recognition) {
+        recognition.stop();
     }
+    isRecording = false;
+    micButton.classList.remove('recording');
 }
 
 // Evento para el botón de micrófono
 const micButton = document.getElementById('micButton');
 
-micButton.addEventListener('click', async () => {
+micButton.addEventListener('click', () => {
     if (!currentChat) {
         showError('errorNoChat');
         return;
     }
 
     if (isRecording) {
-        // Detener grabación
-        mediaRecorder.stop();
-        if (recognition) {
-            recognition.stop();
-        }
-        micButton.classList.remove('recording');
-        isRecording = false;
+        stopRecording();
     } else {
         // Iniciar grabación
-        if (!mediaRecorder) {
-            const initialized = await initializeAudioRecorder();
-            if (!initialized) {
-                showError('errorMicAccess');
-                return;
-            }
-        }
-        
-        // Inicializar reconocimiento de voz
         if (!recognition) {
             recognition = initializeSpeechRecognition();
         }
         
-        audioChunks = [];
-        mediaRecorder.start();
         recognition.start();
         micButton.classList.add('recording');
         isRecording = true;
+        messageInput.value = '';
+        messageInput.placeholder = getTranslation('listening', userLanguage);
     }
-});
-
-// Función para enviar mensaje de audio
-async function sendAudioMessage(audioBlob, transcription) {
-    if (!currentChat) {
-        console.error('No hay chat activo');
-        return;
-    }
-
-    try {
-        const db = window.db;
-        const user = auth.currentUser;
-        
-        if (!user) {
-            console.error('No hay usuario autenticado');
-            return;
-        }
-
-        // Subir audio a Firebase Storage
-        const storage = getStorage();
-        const audioRef = storageRef(storage, `audios/${currentChat}/${Date.now()}.wav`);
-        await uploadBytes(audioRef, audioBlob);
-        const audioUrl = await getDownloadURL(audioRef);
-
-        // Crear el mensaje
-        const messageData = {
-            type: 'audio',
-            audioUrl: audioUrl,
-            text: transcription,
-            senderId: user.uid,
-            senderEmail: user.email,
-            timestamp: serverTimestamp(),
-            language: userLanguage,
-            translations: {}
-        };
-
-        // Enviar el mensaje
-        const messagesRef = collection(db, 'chats', currentChat, 'messages');
-        const docRef = await addDoc(messagesRef, messageData);
-        
-        // Actualizar último mensaje del chat
-        const chatRef = doc(db, 'chats', currentChat);
-        await updateDoc(chatRef, {
-            lastMessage: '🎤 ' + transcription,
-            lastMessageTime: serverTimestamp()
-        });
-
-        // Traducir el mensaje para otros participantes
-        const chatDoc = await getDoc(chatRef);
-        const chatData = chatDoc.data();
-        const targetLanguages = new Set();
-
-        if (chatData.type === 'group') {
-            const participantsData = await Promise.all(
-                chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
-            );
-            
-            participantsData.forEach(participantDoc => {
-                if (participantDoc.exists()) {
-                    const participantLang = participantDoc.data().language || 'en';
-                    if (participantLang !== userLanguage) {
-                        targetLanguages.add(participantLang);
-                    }
-                }
-            });
-        } else {
-            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
-            if (otherUserId) {
-                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                if (otherUserDoc.exists()) {
-                    const otherUserLang = otherUserDoc.data().language || 'en';
-                    if (otherUserLang !== userLanguage) {
-                        targetLanguages.add(otherUserLang);
-                    }
-                }
-            }
-        }
-
-        // Realizar traducciones
-        for (const targetLang of targetLanguages) {
-            try {
-                const translation = await translateText(transcription, targetLang);
-                await updateDoc(doc(messagesRef, docRef.id), {
-                    [`translations.${targetLang}`]: translation
-                });
-            } catch (error) {
-                console.error('Error traduciendo al', targetLang, error);
-            }
-        }
-    } catch (error) {
-        console.error('Error enviando mensaje de audio:', error);
-        showError('errorAudio');
-    }
-}
-
-// Añadir traducciones para mensajes de audio
-const audioTranslations = {
-    es: {
-        errorAudio: 'Error al procesar el audio',
-        errorMicAccess: 'No se pudo acceder al micrófono',
-        errorNoChat: 'Selecciona un chat antes de grabar'
-    },
-    it: {
-        errorAudio: 'Errore durante l\'elaborazione dell\'audio',
-        errorMicAccess: 'Impossibile accedere al microfono',
-        errorNoChat: 'Seleziona una chat prima di registrare'
-    },
-    en: {
-        errorAudio: 'Error processing audio',
-        errorMicAccess: 'Could not access microphone',
-        errorNoChat: 'Select a chat before recording'
-    }
-};
-
-// Actualizar las traducciones existentes
-Object.keys(translations).forEach(lang => {
-    translations[lang] = { ...translations[lang], ...audioTranslations[lang] };
 }); 
