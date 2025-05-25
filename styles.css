@@ -158,6 +158,7 @@ body {
   border-bottom: 1px solid #dee2e6;
   transition: background-color 0.2s ease;
   cursor: pointer;
+  justify-content: space-between;
 }
 
 .chat-item:hover {
@@ -165,6 +166,15 @@ body {
 }
 
 .chat-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.chat-details {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -180,25 +190,84 @@ body {
   white-space: nowrap;
 }
 
-.last-message-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 .last-message {
   color: #667781;
   font-size: 0.85rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
 }
 
 .last-message-time {
-  color: #667781;
   font-size: 0.75rem;
+  color: #667781;
   white-space: nowrap;
+  align-self: flex-start;
+  margin-top: 2px;
+}
+
+/* Estilos para resultados de búsqueda */
+.user-info {
+  flex: 1;
+  min-width: 0;
+  padding-right: 15px;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-email {
+  color: #667781;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.start-chat-btn {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  min-width: auto;
+  flex-shrink: 0;
+  max-width: 120px;
+}
+
+.start-chat-btn:hover {
+  background-color: var(--color-primary-dark);
+  transform: translateY(-1px);
+}
+
+/* Estilo para el botón de crear grupo */
+.create-group {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid var(--color-primary-light);
+  margin-bottom: 10px;
+}
+
+.group-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-primary-dark);
+  font-weight: 500;
+}
+
+.group-button i {
+  font-size: 1.2rem;
 }
 
 /* Estilos para chats grupales */
