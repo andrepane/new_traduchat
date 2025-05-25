@@ -1318,47 +1318,4 @@ html {
     .modal h2 {
         font-size: 1.25rem;
     }
-}
-
-.auth-button:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-}
-
-#verification-code-container {
-    margin-top: 1rem;
-}
-
-#verification-code-container.hidden {
-    display: none;
-}
-
-#verification-code {
-    width: 100%;
-    padding: 1rem;
-    margin-bottom: 0.5rem;
-    font-size: 1.2rem;
-    text-align: center;
-    letter-spacing: 0.2rem;
-    border: 2px solid var(--color-border);
-    border-radius: 12px;
-}
-
-#verification-code:focus {
-    border-color: var(--color-primary);
-    outline: none;
-    background-color: var(--color-bg-alt);
-}
-
-/* Ajustes responsivos para la autenticación */
-@media (max-width: 768px) {
-    .auth-button {
-        padding: 0.9rem 1rem;
-        font-size: 1rem;
-    }
-
-    #verification-code {
-        padding: 0.8rem;
-        font-size: 1.1rem;
-    }
 } 
