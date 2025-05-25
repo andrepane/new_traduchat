@@ -20,20 +20,17 @@ import {
     orderBy,
     setDoc,
     updateDoc,
-    initializeFirestore,
     getFirestore
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
+import { auth } from './firebase-config.js';
 
 // Verificar inicialización de Firebase
 console.log('Verificando inicialización de Firebase...');
-if (!window.db) {
-    console.log('Inicializando Firestore...');
-    window.db = getFirestore();
-}
-if (!window.auth) {
+const db = getFirestore();
+if (!auth) {
     console.error('Auth no está inicializado!');
 }
 
@@ -275,9 +272,6 @@ document.addEventListener('DOMContentLoaded', () => {
     translateInterface(userLanguage);
     setTimeout(animateTitleWave, 100);
 
-    const auth = window.auth;
-    const db = window.db;
-    
     if (!auth || !db) {
         console.error('Auth o Firestore no están inicializados');
         hideLoadingScreen();
@@ -517,7 +511,6 @@ async function setupRealtimeChats() {
         unsubscribeChats();
     }
 
-    const db = window.db;
     const currentUser = auth.currentUser;
 
     if (!db || !currentUser) {
@@ -663,7 +656,6 @@ async function searchUsers(searchTerm) {
 
     try {
         console.log('Iniciando búsqueda con término:', searchTerm);
-        const db = window.db;
         const usersRef = collection(db, 'users');
         const currentUserUid = auth.currentUser.uid;
         console.log('Usuario actual:', currentUserUid);
@@ -850,7 +842,6 @@ function displaySearchResults(users) {
 async function createChat(otherUserId) {
     console.log('Creando chat con usuario:', otherUserId);
     try {
-        const db = window.db;
         const currentUser = auth.currentUser;
 
         if (!currentUser || !otherUserId) {
@@ -987,7 +978,6 @@ async function displayMessage(messageData) {
     }
 
     // Obtener el tipo de chat actual
-    const db = window.db;
     const chatDoc = await getDoc(doc(db, 'chats', currentChat));
     const chatData = chatDoc.exists() ? chatDoc.data() : null;
     const isGroupChat = chatData && chatData.type === 'group';
