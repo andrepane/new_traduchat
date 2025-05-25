@@ -87,6 +87,8 @@ let isGroupCreationMode = false;
 let mediaRecorder = null;
 let audioChunks = [];
 let isRecording = false;
+let recognition = null;
+let finalTranscript = '';
 
 // Función para generar un código aleatorio de 6 dígitos
 function generateVerificationCode() {
@@ -1809,6 +1811,37 @@ async function createGroupChat(groupName, participants) {
     }
 }
 
+// Función para inicializar el reconocimiento de voz
+function initializeSpeechRecognition() {
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = userLanguage === 'es' ? 'es-ES' : 
+                      userLanguage === 'it' ? 'it-IT' : 'en-US';
+    
+    recognition.onresult = (event) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        console.log('Transcripción final:', finalTranscript);
+        console.log('Transcripción intermedia:', interimTranscript);
+    };
+    
+    recognition.onerror = (event) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+    };
+    
+    return recognition;
+}
+
 // Función para inicializar el grabador de audio
 async function initializeAudioRecorder() {
     try {
@@ -1821,35 +1854,18 @@ async function initializeAudioRecorder() {
         
         mediaRecorder.onstop = async () => {
             const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-            const audioUrl = URL.createObjectURL(audioBlob);
             
-            try {
-                // Convertir audio a texto usando la Web Speech API
-                const recognition = new webkitSpeechRecognition();
-                recognition.lang = userLanguage === 'es' ? 'es-ES' : 
-                                 userLanguage === 'it' ? 'it-IT' : 'en-US';
-                
-                recognition.onresult = async (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    console.log('Transcripción:', transcript);
-                    await sendAudioMessage(audioBlob, transcript);
-                };
-                
-                recognition.onerror = async (error) => {
-                    console.error('Error en reconocimiento de voz:', error);
-                    // Si hay error en la transcripción, enviar el audio sin texto
-                    await sendAudioMessage(audioBlob, '[Audio]');
-                };
-                
-                recognition.start();
-            } catch (error) {
-                console.error('Error procesando audio:', error);
-                await sendAudioMessage(audioBlob, '[Audio]');
+            // Obtener la transcripción final
+            if (recognition) {
+                recognition.stop();
             }
+            
+            // Enviar el mensaje con la transcripción
+            await sendAudioMessage(audioBlob, finalTranscript || '[Audio]');
             
             // Limpiar
             audioChunks = [];
-            URL.revokeObjectURL(audioUrl);
+            finalTranscript = '';
         };
         
         return true;
@@ -1872,6 +1888,9 @@ micButton.addEventListener('click', async () => {
     if (isRecording) {
         // Detener grabación
         mediaRecorder.stop();
+        if (recognition) {
+            recognition.stop();
+        }
         micButton.classList.remove('recording');
         isRecording = false;
     } else {
@@ -1884,8 +1903,14 @@ micButton.addEventListener('click', async () => {
             }
         }
         
+        // Inicializar reconocimiento de voz
+        if (!recognition) {
+            recognition = initializeSpeechRecognition();
+        }
+        
         audioChunks = [];
         mediaRecorder.start();
+        recognition.start();
         micButton.classList.add('recording');
         isRecording = true;
     }
