@@ -32,6 +32,16 @@ service cloud.firestore {
              chat.data.participants.hasAny([request.auth.uid]);
     }
 
+    // Función para validar la estructura del chat
+    function isValidChat() {
+      let chat = request.resource.data;
+      return chat.keys().hasAll(['participants', 'type', 'createdAt', 'lastMessage', 'lastMessageTime', 'createdBy']) &&
+        chat.participants is list &&
+        chat.participants.size() >= 2 &&
+        chat.type in ['individual', 'group'] &&
+        chat.createdBy == request.auth.uid;
+    }
+
     // Reglas para la colección de usuarios
     match /users/{userId} {
       allow read: if isAuthenticated();
@@ -40,16 +50,20 @@ service cloud.firestore {
 
     // Reglas para la colección de chats
     match /chats/{chatId} {
-      // Permitir lectura si el usuario es participante
-      allow read: if isAuthenticated() && isParticipant(chatId);
+      // Permitir lectura de chats donde el usuario es participante
+      allow read: if isAuthenticated() && (
+        resource == null || // Permitir verificar si el chat existe
+        resource.data.participants.hasAny([request.auth.uid])
+      );
       
       // Permitir crear nuevos chats
       allow create: if isAuthenticated() && 
+        isValidChat() &&
         request.resource.data.participants.hasAny([request.auth.uid]);
       
       // Permitir actualizar solo ciertos campos
       allow update: if isAuthenticated() && 
-        isParticipant(chatId) &&
+        resource.data.participants.hasAny([request.auth.uid]) &&
         request.resource.data.participants == resource.data.participants;
 
       // Reglas para la subcolección de mensajes
