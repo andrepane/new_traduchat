@@ -21,6 +21,8 @@ const translations = {
         errorNetwork: 'Error de conexión. Verifica tu conexión a internet',
         errorGeneric: 'Ha ocurrido un error',
         errorRecaptcha: "Error al inicializar la verificación de seguridad. Por favor, recarga la página e intenta de nuevo.",
+        errorTooManyAttempts: 'Demasiados intentos. Por favor, espera unos minutos antes de intentarlo de nuevo.',
+        errorInvalidPhone: 'El número de teléfono no es válido. Por favor, verifica el formato.',
         
         // Interfaz principal
         newChat: '+',
@@ -98,6 +100,8 @@ const translations = {
         errorNetwork: 'Connection error. Check your internet connection',
         errorGeneric: 'An error has occurred',
         errorRecaptcha: "Error initializing security verification. Please reload the page and try again.",
+        errorTooManyAttempts: 'Too many attempts. Please wait a few minutes before trying again.',
+        errorInvalidPhone: 'The phone number is not valid. Please check the format.',
         
         // Main interface
         newChat: '+',
@@ -175,6 +179,8 @@ const translations = {
         errorNetwork: 'Errore di connessione. Verifica la tua connessione internet',
         errorGeneric: 'Si è verificato un errore',
         errorRecaptcha: "Errore durante l'inizializzazione della verifica di sicurezza. Ricarica la pagina e riprova.",
+        errorTooManyAttempts: 'Troppi tentativi. Attendi qualche minuto prima di riprovare.',
+        errorInvalidPhone: 'Il numero di telefono non è valido. Verifica il formato.',
         
         // Interfaccia principale
         newChat: '+',
