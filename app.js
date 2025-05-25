@@ -209,9 +209,6 @@ function ensureRecaptchaContainer() {
 // Función para inicializar reCAPTCHA
 async function initializeRecaptchaVerifier() {
     try {
-        // Asegurarse de que el contenedor existe
-        ensureRecaptchaContainer();
-        
         // Limpiar instancia anterior si existe
         if (window.recaptchaVerifier) {
             try {
@@ -221,31 +218,20 @@ async function initializeRecaptchaVerifier() {
             }
         }
         
-        // Crear nueva instancia
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            'size': 'normal',
-            'callback': (response) => {
-                console.log('reCAPTCHA verificado');
-                // Habilitar el botón de login cuando se verifica reCAPTCHA
-                const loginBtn = document.getElementById('loginBtn');
-                if (loginBtn) loginBtn.disabled = false;
+        // Crear nueva instancia invisible
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'loginBtn', {
+            'size': 'invisible',
+            'callback': () => {
+                console.log('reCAPTCHA verificado automáticamente');
             },
             'expired-callback': () => {
                 console.log('reCAPTCHA expirado');
-                // Deshabilitar el botón de login cuando expira reCAPTCHA
-                const loginBtn = document.getElementById('loginBtn');
-                if (loginBtn) loginBtn.disabled = true;
-                // Reinicializar reCAPTCHA
                 initializeRecaptchaVerifier();
             }
         });
-
-        // Renderizar el widget
-        await window.recaptchaVerifier.render();
         
-        // Deshabilitar el botón de login hasta que se verifique reCAPTCHA
-        const loginBtn = document.getElementById('loginBtn');
-        if (loginBtn) loginBtn.disabled = true;
+        // No es necesario renderizar explícitamente ya que es invisible
+        console.log('reCAPTCHA invisible inicializado');
         
     } catch (error) {
         console.error('Error al inicializar reCAPTCHA:', error);
@@ -259,9 +245,9 @@ function showAuthScreen() {
     document.getElementById('authScreen').classList.add('active');
     document.body.classList.remove('in-chat');
     
-    // Configurar reCAPTCHA
+    // Inicializar reCAPTCHA invisible
     try {
-        setupRecaptcha('loginBtn');
+        initializeRecaptchaVerifier();
     } catch (error) {
         console.error('Error al configurar reCAPTCHA:', error);
     }
