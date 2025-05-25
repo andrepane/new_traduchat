@@ -1,38 +1,31 @@
-// Configuración de Firebase
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAuth, RecaptchaVerifier } from "firebase/auth";
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
-    authDomain: "traduchat-2.firebaseapp.com",
-    databaseURL: "https://traduchat-2-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "traduchat-2",
-    storageBucket: "traduchat-2.firebasestorage.app",
-    messagingSenderId: "304746474467",
-    appId: "1:304746474467:web:a0496a8d1d891cec170ed6"
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.FIREBASE_PROJECT_ID
 };
 
-// Inicializar Firebase
-try {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-        console.log('Firebase inicializado correctamente');
-        
-        // Configurar Firestore para una sola pestaña
-        firebase.firestore().settings({
-            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-        });
-        
-        // Habilitar persistencia offline solo si es necesario
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            firebase.firestore().enablePersistence({
-                synchronizeTabs: true // Permitir sincronización entre pestañas
-            }).catch((err) => {
-                if (err.code == 'failed-precondition') {
-                    console.warn('La persistencia requiere una sola pestaña abierta');
-                } else if (err.code == 'unimplemented') {
-                    console.warn('El navegador no soporta persistencia');
-                }
-            });
-        }
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Initialize Firebase Authentication
+const auth = getAuth(app);
+
+// Configure reCAPTCHA Verifier
+window.recaptchaVerifier = new RecaptchaVerifier(auth, 'sign-in-button', {
+    'size': 'invisible',
+    'callback': (response) => {
+        // reCAPTCHA solved, allow signInWithPhoneNumber.
+        console.log("reCAPTCHA verified");
+    },
+    'expired-callback': () => {
+        // Response expired. Ask user to solve reCAPTCHA again.
+        console.log("reCAPTCHA expired");
     }
-} catch (error) {
-    console.error('Error al inicializar Firebase:', error);
-} 
+});
+
+export { auth }; 
