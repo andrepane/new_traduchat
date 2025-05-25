@@ -134,53 +134,78 @@ body {
 
 .chat-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 8px 15px;
-  border-bottom: 1px solid #e9ecef;
-  cursor: pointer;
+  padding: 12px 15px;
+  border-bottom: 1px solid #dee2e6;
   transition: background-color 0.2s ease;
-  min-height: 50px;
 }
 
 .chat-item:hover {
+  background-color: #f8f9fa;
+}
+
+.chat-item.create-group {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.chat-item.create-group:hover {
   background-color: #e9ecef;
 }
 
-.chat-info {
-  flex: 1;
-  min-width: 0;
-  margin-right: 10px;
-}
-
-.chat-name {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #212529;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.last-message-container {
+.group-button {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  font-size: 0.8rem;
-  color: #6c757d;
+  gap: 10px;
 }
 
-.last-message {
-  white-space: nowrap;
+.group-button i {
+  font-size: 20px;
+  color: #007bff;
+}
+
+.group-button span {
+  font-weight: 500;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.user-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: #212529;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 70%;
+  white-space: nowrap;
 }
 
-.last-message-time {
-  font-size: 0.75rem;
-  color: #adb5bd;
+.user-email {
+  font-size: 0.875rem;
+  color: #6c757d;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.start-chat-btn {
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: background-color 0.2s ease;
+}
+
+.start-chat-btn:hover {
+  background-color: #0056b3;
 }
 
 /* Estilos para chats grupales */
@@ -312,6 +337,23 @@ body {
     height: 36px;
     padding: 0 10px;
     font-size: 14px;
+  }
+
+  .chat-item {
+    padding: 10px 12px;
+  }
+
+  .start-chat-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .user-name {
+    font-size: 0.9rem;
+  }
+
+  .user-email {
+    font-size: 0.8rem;
   }
 }
 
