@@ -191,23 +191,65 @@ languageSelectMain.addEventListener('change', (e) => {
     translateInterface(userLanguage);
 });
 
+// Función para inicializar reCAPTCHA
+async function initializeRecaptchaVerifier() {
+    try {
+        // Limpiar instancia anterior si existe
+        if (window.recaptchaVerifier) {
+            await window.recaptchaVerifier.clear();
+        }
+        
+        // Crear nueva instancia
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+            'size': 'normal',
+            'callback': (response) => {
+                console.log('reCAPTCHA verificado');
+            },
+            'expired-callback': () => {
+                console.log('reCAPTCHA expirado');
+                // Reinicializar reCAPTCHA
+                initializeRecaptchaVerifier();
+            }
+        });
+
+        // Renderizar el widget
+        await window.recaptchaVerifier.render();
+    } catch (error) {
+        console.error('Error al inicializar reCAPTCHA:', error);
+        showError('errorRecaptcha');
+    }
+}
+
 // Función para iniciar la autenticación por teléfono
 async function startPhoneAuth(phoneNumber) {
     try {
-        // Inicializar reCAPTCHA antes de usarlo
-        initializeRecaptcha();
+        // Asegurarse de que reCAPTCHA esté inicializado
+        if (!window.recaptchaVerifier) {
+            await initializeRecaptchaVerifier();
+        }
+        
         const appVerifier = window.recaptchaVerifier;
         if (!appVerifier) {
             throw new Error('reCAPTCHA no está inicializado');
         }
+
         const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
         window.confirmationResult = confirmationResult;
+        
         // Mostrar el campo para ingresar el código
         document.getElementById('verificationCodeSection').style.display = 'block';
         alert(getTranslation('codeSent', userLanguage));
     } catch (error) {
         console.error('Error al enviar el código:', error);
-        alert(getTranslation('errorSendingCode', userLanguage));
+        
+        // Reinicializar reCAPTCHA en caso de error
+        await initializeRecaptchaVerifier();
+        
+        if (error.code === 'auth/invalid-phone-number') {
+            showError('errorInvalidPhone');
+        } else {
+            showError('errorSendingCode');
+        }
     }
 }
 
@@ -230,14 +272,39 @@ async function verifyPhoneCode(code) {
     }
 }
 
+// Función para validar el formato del número de teléfono
+function validatePhoneNumber(phoneNumber) {
+    // Eliminar espacios y caracteres no numéricos excepto + al inicio
+    phoneNumber = phoneNumber.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+    
+    // Asegurarse de que comience con +
+    if (!phoneNumber.startsWith('+')) {
+        phoneNumber = '+' + phoneNumber;
+    }
+    
+    // Verificar longitud mínima (código de país + número)
+    if (phoneNumber.length < 8) {
+        return null;
+    }
+    
+    return phoneNumber;
+}
+
 // Actualizar el manejador del botón de login
 loginBtn.addEventListener('click', async () => {
     const email = emailInput.value.trim();
     const password = passwordInput.value;
-    const phoneNumber = countrySelect.value + phoneInput.value.trim();
+    let phoneNumber = countrySelect.value + phoneInput.value.trim();
 
     if (!email || !password || !phoneNumber) {
         showError('errorEmptyFields');
+        return;
+    }
+
+    // Validar formato del número de teléfono
+    phoneNumber = validatePhoneNumber(phoneNumber);
+    if (!phoneNumber) {
+        showError('errorInvalidPhone');
         return;
     }
 
@@ -245,6 +312,9 @@ loginBtn.addEventListener('click', async () => {
         // Primero autenticar con email/password
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         currentUser = userCredential.user;
+        
+        // Guardar el número de teléfono en localStorage
+        localStorage.setItem('userPhone', phoneNumber);
         
         // Luego iniciar la verificación por teléfono
         await startPhoneAuth(phoneNumber);
@@ -1341,12 +1411,28 @@ window.addEventListener('load', () => {
 // Mejorar la función de cerrar sesión
 async function handleLogout() {
     try {
-        await signOut(auth);
+        // Primero cancelar todas las suscripciones
+        if (unsubscribeMessages) {
+            unsubscribeMessages();
+            unsubscribeMessages = null;
+        }
+        if (unsubscribeChats) {
+            unsubscribeChats();
+            unsubscribeChats = null;
+        }
+
+        // Limpiar el estado de la UI
         resetChatState();
-        showAuthScreen();
         
+        // Cerrar sesión en Firebase
+        await signOut(auth);
+        
+        // Limpiar localStorage
         localStorage.removeItem('userLanguage');
         localStorage.removeItem('userPhone');
+        
+        // Mostrar pantalla de autenticación
+        showAuthScreen();
         
         alert(getTranslation('logoutSuccess', userLanguage));
     } catch (error) {
