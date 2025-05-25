@@ -23,6 +23,13 @@ import {
     getFirestore
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+import {
+    getStorage,
+    ref as storageRef,
+    uploadBytes,
+    getDownloadURL
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
+
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
@@ -75,6 +82,11 @@ let unsubscribeChats = null;
 // Variables para grupos
 let selectedUsers = new Set();
 let isGroupCreationMode = false;
+
+// Variables para grabación de audio
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
 
 // Función para generar un código aleatorio de 6 dígitos
 function generateVerificationCode() {
@@ -1031,12 +1043,45 @@ async function displayMessage(messageData) {
         }
     }
 
-    messageElement.innerHTML = `
-        ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
-        <span class="message-flag">${flag}</span>
-        <span class="message-text">${messageText}</span>
-        <span class="message-time">${timeString}</span>
-    `;
+    if (messageData.type === 'audio') {
+        messageElement.innerHTML = `
+            ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
+            <div class="audio-message">
+                <button class="play-button">
+                    <span class="material-icons">play_arrow</span>
+                </button>
+                <div class="waveform"></div>
+                <audio src="${messageData.audioUrl}" preload="none"></audio>
+                <div class="transcription">${messageText}</div>
+            </div>
+            <span class="message-time">${timeString}</span>
+        `;
+
+        // Añadir evento para reproducir audio
+        const playButton = messageElement.querySelector('.play-button');
+        const audio = messageElement.querySelector('audio');
+        
+        playButton.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playButton.querySelector('.material-icons').textContent = 'pause';
+            } else {
+                audio.pause();
+                playButton.querySelector('.material-icons').textContent = 'play_arrow';
+            }
+        });
+
+        audio.addEventListener('ended', () => {
+            playButton.querySelector('.material-icons').textContent = 'play_arrow';
+        });
+    } else {
+        messageElement.innerHTML = `
+            ${isGroupChat && !isSentByMe ? `<span class="message-sender">${senderEmail}</span>` : ''}
+            <span class="message-flag">${flag}</span>
+            <span class="message-text">${messageText}</span>
+            <span class="message-time">${timeString}</span>
+        `;
+    }
 
     // Añadir estilos para el remitente si no existen
     if (!document.querySelector('#message-sender-styles')) {
@@ -1762,4 +1807,213 @@ async function createGroupChat(groupName, participants) {
         console.error('Error al crear grupo:', error);
         showError('errorCreateGroup');
     }
-} 
+}
+
+// Función para inicializar el grabador de audio
+async function initializeAudioRecorder() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioUrl = URL.createObjectURL(audioBlob);
+            
+            try {
+                // Convertir audio a texto usando la Web Speech API
+                const transcription = await transcribeAudio(audioBlob);
+                console.log('Transcripción:', transcription);
+                
+                // Enviar mensaje con audio y transcripción
+                await sendAudioMessage(audioBlob, transcription);
+                
+                // Limpiar
+                audioChunks = [];
+                URL.revokeObjectURL(audioUrl);
+            } catch (error) {
+                console.error('Error procesando audio:', error);
+                showError('errorAudio');
+            }
+        };
+        
+        return true;
+    } catch (error) {
+        console.error('Error accediendo al micrófono:', error);
+        return false;
+    }
+}
+
+// Función para transcribir audio usando Web Speech API
+function transcribeAudio(audioBlob) {
+    return new Promise((resolve, reject) => {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = userLanguage === 'es' ? 'es-ES' : 
+                          userLanguage === 'it' ? 'it-IT' : 'en-US';
+        
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            resolve(transcript);
+        };
+        
+        recognition.onerror = (error) => {
+            reject(error);
+        };
+        
+        // Convertir Blob a audio y reproducirlo para la transcripción
+        const audio = new Audio(URL.createObjectURL(audioBlob));
+        audio.play();
+        recognition.start();
+    });
+}
+
+// Función para enviar mensaje de audio
+async function sendAudioMessage(audioBlob, transcription) {
+    if (!currentChat) {
+        console.error('No hay chat activo');
+        return;
+    }
+
+    try {
+        const db = window.db;
+        const user = auth.currentUser;
+        
+        if (!user) {
+            console.error('No hay usuario autenticado');
+            return;
+        }
+
+        // Subir audio a Firebase Storage
+        const storage = getStorage();
+        const audioRef = ref(storage, `audios/${currentChat}/${Date.now()}.wav`);
+        await uploadBytes(audioRef, audioBlob);
+        const audioUrl = await getDownloadURL(audioRef);
+
+        // Crear el mensaje
+        const messageData = {
+            type: 'audio',
+            audioUrl: audioUrl,
+            text: transcription,
+            senderId: user.uid,
+            senderEmail: user.email,
+            timestamp: serverTimestamp(),
+            language: userLanguage,
+            translations: {}
+        };
+
+        // Enviar el mensaje
+        const messagesRef = collection(db, 'chats', currentChat, 'messages');
+        const docRef = await addDoc(messagesRef, messageData);
+        
+        // Actualizar último mensaje del chat
+        const chatRef = doc(db, 'chats', currentChat);
+        await updateDoc(chatRef, {
+            lastMessage: '🎤 ' + transcription,
+            lastMessageTime: serverTimestamp()
+        });
+
+        // Traducir el mensaje para otros participantes
+        const chatDoc = await getDoc(chatRef);
+        const chatData = chatDoc.data();
+        const targetLanguages = new Set();
+
+        if (chatData.type === 'group') {
+            const participantsData = await Promise.all(
+                chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
+            );
+            
+            participantsData.forEach(participantDoc => {
+                if (participantDoc.exists()) {
+                    const participantLang = participantDoc.data().language || 'en';
+                    if (participantLang !== userLanguage) {
+                        targetLanguages.add(participantLang);
+                    }
+                }
+            });
+        } else {
+            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
+            if (otherUserId) {
+                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                if (otherUserDoc.exists()) {
+                    const otherUserLang = otherUserDoc.data().language || 'en';
+                    if (otherUserLang !== userLanguage) {
+                        targetLanguages.add(otherUserLang);
+                    }
+                }
+            }
+        }
+
+        // Realizar traducciones
+        for (const targetLang of targetLanguages) {
+            try {
+                const translation = await translateText(transcription, targetLang);
+                await updateDoc(doc(messagesRef, docRef.id), {
+                    [`translations.${targetLang}`]: translation
+                });
+            } catch (error) {
+                console.error('Error traduciendo al', targetLang, error);
+            }
+        }
+    } catch (error) {
+        console.error('Error enviando mensaje de audio:', error);
+        showError('errorAudio');
+    }
+}
+
+// Evento para el botón de micrófono
+const micButton = document.getElementById('micButton');
+
+micButton.addEventListener('click', async () => {
+    if (!currentChat) {
+        showError('errorNoChat');
+        return;
+    }
+
+    if (isRecording) {
+        // Detener grabación
+        mediaRecorder.stop();
+        micButton.classList.remove('recording');
+        isRecording = false;
+    } else {
+        // Iniciar grabación
+        if (!mediaRecorder) {
+            const initialized = await initializeAudioRecorder();
+            if (!initialized) {
+                showError('errorMicAccess');
+                return;
+            }
+        }
+        
+        audioChunks = [];
+        mediaRecorder.start();
+        micButton.classList.add('recording');
+        isRecording = true;
+    }
+});
+
+// Añadir traducciones para mensajes de audio
+const audioTranslations = {
+    es: {
+        errorAudio: 'Error al procesar el audio',
+        errorMicAccess: 'No se pudo acceder al micrófono',
+        errorNoChat: 'Selecciona un chat antes de grabar'
+    },
+    it: {
+        errorAudio: 'Errore durante l\'elaborazione dell\'audio',
+        errorMicAccess: 'Impossibile accedere al microfono',
+        errorNoChat: 'Seleziona una chat prima di registrare'
+    },
+    en: {
+        errorAudio: 'Error processing audio',
+        errorMicAccess: 'Could not access microphone',
+        errorNoChat: 'Select a chat before recording'
+    }
+};
+
+// Actualizar las traducciones existentes
+Object.keys(translations).forEach(lang => {
+    translations[lang] = { ...translations[lang], ...audioTranslations[lang] };
+}); 
