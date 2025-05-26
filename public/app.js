@@ -323,7 +323,6 @@ loginBtn.addEventListener('click', async () => {
 
     try {
         console.log('Iniciando proceso de registro/login...');
-        
         // Configurar persistencia local
         try {
             await setPersistence(auth, browserLocalPersistence);
@@ -331,34 +330,33 @@ loginBtn.addEventListener('click', async () => {
             console.warn('Error al configurar persistencia:', persistenceError);
         }
 
-        // Primero intentar iniciar sesión
-// Primero intentar iniciar sesión
-try {
-    console.log('Intentando iniciar sesión...');
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log('Login exitoso:', userCredential.user.uid);
-    
-    await updateUserData(userCredential.user, username, false);
-    return;
-} catch (loginError) {
-    console.log('Error en login:', loginError.code);
+        // Intentar iniciar sesión
+        try {
+            console.log('Intentando iniciar sesión...');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            console.log('Login exitoso:', userCredential.user.uid);
+            await updateUserData(userCredential.user, username, false);
+            return;
+        } catch (loginError) {
+            console.log('Error en login:', loginError.code);
 
-    if (loginError.code === 'auth/user-not-found') {
-        console.log('Usuario no encontrado, intentando registro...');
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        console.log('Usuario creado exitosamente:', userCredential.user.uid);
+            // Cambia aquí: si el error es user-not-found O invalid-credential, intenta crear la cuenta
+            if (
+                loginError.code === 'auth/user-not-found' ||
+                loginError.code === 'auth/invalid-credential'
+            ) {
+                console.log('Usuario no encontrado o credencial inválida, intentando registro...');
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('Usuario creado exitosamente:', userCredential.user.uid);
+                await updateUserData(userCredential.user, username, true);
+                return;
+            }
 
-        await updateUserData(userCredential.user, username, true);
-        return;
-    }
-
-    // Otros errores: como contraseña incorrecta
-    throw loginError;
-}
-
-        } catch (error) {
+            // Otros errores (como contraseña incorrecta)
+            throw loginError;
+        }
+    } catch (error) {
         console.error('Error completo:', error);
-        
         switch (error.code) {
             case 'auth/wrong-password':
                 showError('errorPassword');
