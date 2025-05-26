@@ -205,12 +205,24 @@ languageSelect.addEventListener('change', (e) => {
     userLanguage = e.target.value;
     languageSelectMain.value = userLanguage;
     translateInterface(userLanguage);
+    
+    // Reiniciar el reconocimiento de voz con el nuevo idioma
+    if (recognition) {
+        recognition.stop();
+        recognition = null;
+    }
 });
 
 languageSelectMain.addEventListener('change', (e) => {
     userLanguage = e.target.value;
     languageSelect.value = userLanguage;
     translateInterface(userLanguage);
+    
+    // Reiniciar el reconocimiento de voz con el nuevo idioma
+    if (recognition) {
+        recognition.stop();
+        recognition = null;
+    }
 });
 
 // Función de login/registro
@@ -939,7 +951,8 @@ async function displayMessage(messageData) {
             messageText = messageData.translations[userLanguage];
         } else {
             try {
-                messageText = await translateText(messageText, userLanguage);
+                // Pasar el idioma de origen del mensaje
+                messageText = await translateText(messageText, userLanguage, messageData.language);
             } catch (error) {
                 console.error('Error al traducir mensaje:', error);
                 messageText = messageData.text + ' [Error de traducción]';
@@ -1881,11 +1894,28 @@ async function createGroupChat(groupName, participants) {
 
 // Función para inicializar el reconocimiento de voz
 function initializeSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        console.error('El reconocimiento de voz no está soportado en este navegador');
+        return null;
+    }
+
     recognition = new webkitSpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = userLanguage === 'es' ? 'es-ES' : 
-                      userLanguage === 'it' ? 'it-IT' : 'en-US';
+
+    // Mapeo de idiomas para el reconocimiento de voz
+    const languageMapping = {
+        'es': 'es-ES',
+        'en': 'en-US',
+        'it': 'it-IT',
+        'fr': 'fr-FR',
+        'de': 'de-DE',
+        'pt': 'pt-PT'
+    };
+
+    // Establecer el idioma correcto basado en el idioma del usuario
+    recognition.lang = languageMapping[userLanguage] || 'en-US';
+    console.log('Idioma de reconocimiento de voz establecido a:', recognition.lang);
     
     recognition.onresult = (event) => {
         let interimTranscript = '';
@@ -1906,6 +1936,7 @@ function initializeSpeechRecognition() {
     recognition.onerror = (event) => {
         console.error('Error en reconocimiento de voz:', event.error);
         stopRecording();
+        showError('errorVoiceRecognition');
     };
     
     recognition.onend = () => {
