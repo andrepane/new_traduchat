@@ -2172,20 +2172,3 @@ html {
     }
 } 
 
-.delete-chat-btn {
-    display: none;
-    background: none;
-    border: none;
-    color: #d32f2f;
-    cursor: pointer;
-    margin-left: 8px;
-    font-size: 18px;
-}
-.chat-item:hover .delete-chat-btn {
-    display: inline-block;
-}
-@media (max-width: 768px) {
-    .delete-chat-btn {
-        display: none !important; /* Oculto por defecto en móvil */
-    }
-}
