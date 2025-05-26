@@ -702,15 +702,55 @@ async function setupRealtimeChats() {
                         chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
                     chatElement.innerHTML = `
-                        <div class="chat-info">
-                            <div class="chat-details">
-                            <div class="chat-name">${chatName}</div>
-                                <div class="last-message">${chat.lastMessage || ''}</div>
-                            </div>
-                                <div class="last-message-time">${lastMessageTime}</div>
-                        </div>
-                    `;
+    <div class="chat-info">
+        <div class="chat-details">
+            <div class="chat-name">${chatName}</div>
+            <div class="last-message">${chat.lastMessage || ''}</div>
+        </div>
+        <div class="last-message-time">${lastMessageTime}</div>
+        <button class="delete-chat-btn" title="Borrar chat" data-chatid="${chat.id}">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+`;
+                    const deleteBtn = chatElement.querySelector('.delete-chat-btn');
+if (deleteBtn) {
+    deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation(); // Evita abrir el chat al borrar
+        if (!confirm("¿Seguro que quieres borrar este chat?")) return;
+        try {
+            const db = window.db;
+            const userId = auth.currentUser.uid;
+            const chatDocRef = doc(db, 'chats', chat.id);
+            const chatData = (await getDoc(chatDocRef)).data();
+            if (chatData.type === 'individual' || (chatData.type === 'group' && chatData.participants.length === 1)) {
+                await deleteDoc(chatDocRef);
+            } else if (chatData.type === 'group') {
+                await updateDoc(chatDocRef, {
+                    participants: chatData.participants.filter(uid => uid !== userId)
+                });
+            }
+            setupRealtimeChats();
+        } catch (err) {
+            alert("Error al borrar el chat");
+        }
+    });
+}
 
+                    if (window.innerWidth <= 768) {
+    let startX = 0;
+    chatElement.addEventListener('touchstart', (e) => {
+        startX = e.touches[0].clientX;
+    });
+    chatElement.addEventListener('touchend', (e) => {
+        const diff = startX - e.changedTouches[0].clientX;
+        if (diff > 50) { // swipe left
+            chatElement.querySelector('.delete-chat-btn').style.display = 'inline-block';
+        } else if (diff < -50) { // swipe right
+            chatElement.querySelector('.delete-chat-btn').style.display = 'none';
+        }
+    });
+}
                     if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
                         chatElement.classList.add('chat-updated');
                         setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
