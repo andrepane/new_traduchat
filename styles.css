@@ -692,10 +692,10 @@ body {
   gap: 0.5rem;
 }
 
-/* Input de mensajes */
+/* Input container para mensajes */
 .message-input {
   position: fixed;
-  bottom: 0;
+  bottom: env(safe-area-inset-bottom);
   left: 0;
   right: 0;
   min-height: var(--footer-height);
@@ -706,7 +706,7 @@ body {
   align-items: center;
   gap: 8px;
   padding: 10px 15px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  padding-bottom: 10px;
 }
 
 .message-input input {
