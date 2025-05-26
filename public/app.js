@@ -332,35 +332,30 @@ loginBtn.addEventListener('click', async () => {
         }
 
         // Primero intentar iniciar sesión
-        try {
-            console.log('Intentando iniciar sesión...');
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            console.log('Login exitoso:', userCredential.user.uid);
-            
-            // Actualizar el nombre de usuario si es necesario
-            await updateUserData(userCredential.user, username, false);
-            return;
-        } catch (loginError) {
-            console.log('Error en login:', loginError.code);
-            
-            if (loginError.code !== 'auth/user-not-found') {
-                // Si el error no es porque el usuario no existe, propagar el error
-                throw loginError;
-            }
-            
-            // Si el usuario no existe, intentar registro
-            console.log('Usuario no encontrado, intentando registro...');
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-            console.log('Usuario creado exitosamente:', userCredential.user.uid);
-                
-                // Crear documento de usuario para el nuevo registro
-                await updateUserData(userCredential.user, username, true);
-            } catch (registrationError) {
-                console.error('Error en registro:', registrationError);
-                throw registrationError;
-            }
-        }
+// Primero intentar iniciar sesión
+try {
+    console.log('Intentando iniciar sesión...');
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log('Login exitoso:', userCredential.user.uid);
+    
+    await updateUserData(userCredential.user, username, false);
+    return;
+} catch (loginError) {
+    console.log('Error en login:', loginError.code);
+
+    if (loginError.code === 'auth/user-not-found') {
+        console.log('Usuario no encontrado, intentando registro...');
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log('Usuario creado exitosamente:', userCredential.user.uid);
+
+        await updateUserData(userCredential.user, username, true);
+        return;
+    }
+
+    // Otros errores: como contraseña incorrecta
+    throw loginError;
+}
+
         } catch (error) {
         console.error('Error completo:', error);
         
