@@ -34,17 +34,28 @@ import {
     getDownloadURL
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js';
 
+import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
 // Verificar inicialización de Firebase
 console.log('Verificando inicialización de Firebase...');
 if (!window.db) {
-    console.log('Inicializando Firestore...');
-    window.db = getFirestore();
+    console.error('Firestore no está inicializado!');
 }
 if (!window.auth) {
     console.error('Auth no está inicializado!');
+}
+
+// Obtener la instancia de Firebase Messaging
+let messaging;
+try {
+    messaging = window.messaging;
+    console.log('Firebase Messaging obtenido correctamente');
+} catch (error) {
+    console.log('Firebase Messaging no está soportado en este navegador');
 }
 
 // Referencias a elementos del DOM
@@ -97,6 +108,66 @@ const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
 let isLoadingMore = false;
 let allMessagesLoaded = false;
 let lastVisibleMessage = null;
+
+// Función para solicitar permiso y obtener el token FCM
+async function initializeNotifications() {
+    try {
+        if (!messaging) return;
+
+        // Solicitar permiso
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            console.log('Permiso de notificación denegado');
+            return;
+        }
+
+        // Obtener token FCM
+        const token = await getToken(messaging, {
+            vapidKey: 'BHOz-BX2_ZDpjjQEvZ03bfRVTWyMgBd6CcZ5HgpLAJnKre2UbZYd4vMmCTVVF1MY17nJJTEb7nPiAJ9M5xIXTeY'
+        });
+
+        // Guardar el token en Firestore para el usuario actual
+        const userId = auth.currentUser?.uid;
+        if (userId && token) {
+            await setDoc(doc(db, 'users', userId), {
+                fcmToken: token,
+                lastTokenUpdate: serverTimestamp()
+            }, { merge: true });
+        }
+
+        console.log('Token FCM obtenido:', token);
+    } catch (error) {
+        console.error('Error al inicializar notificaciones:', error);
+    }
+}
+
+// Manejar mensajes en primer plano
+if (messaging) {
+    onMessage(messaging, (payload) => {
+        console.log('Mensaje recibido en primer plano:', payload);
+        
+        // Mostrar notificación aunque la app esté abierta
+        const notificationTitle = payload.notification.title;
+        const notificationOptions = {
+            body: payload.notification.body,
+            icon: '/images/icon-192x192.png'
+        };
+
+        new Notification(notificationTitle, notificationOptions);
+    });
+}
+
+// Llamar a la función cuando el usuario inicie sesión
+const auth = window.auth;
+if (auth) {
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            initializeNotifications();
+        }
+    });
+} else {
+    console.error('Auth no está inicializado');
+}
 
 // Función para generar un código aleatorio de 6 dígitos
 function generateVerificationCode() {
