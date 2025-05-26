@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const path = require('path');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 require('dotenv').config();
 
 const app = express();
@@ -12,6 +13,30 @@ app.use(bodyParser.json());
 
 // Servir archivos estáticos desde el directorio public
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Endpoint para enviar notificación push FCM
+app.post('/send-notification', async (req, res) => {
+    const { token, title, body } = req.body;
+
+    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+        method: 'POST',
+        headers: {
+            'Authorization': `key=${process.env.FCM_SERVER_KEY}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            to: token,
+            notification: {
+                title,
+                body,
+                icon: '/images/icon-192x192.png'
+            }
+        })
+    });
+
+    const result = await response.json();
+    res.json(result);
+});
 
 // Servir index.html para todas las rutas
 app.get('*', (req, res) => {
