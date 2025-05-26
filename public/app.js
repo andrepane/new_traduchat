@@ -996,8 +996,10 @@ function debounce(func, wait) {
 
 // Función para mostrar mensajes
 async function displayMessage(messageData) {
-    console.log('Mostrando mensaje:', messageData);
-    
+    // Control de duplicados: solo mostrar si NO existe ya en el DOM
+    if (!messageData.id) return;
+    if (messagesList.querySelector(`[data-message-id="${messageData.id}"]`)) return;
+
     const currentUser = auth.currentUser;
     if (!currentUser) {
         console.error('No hay usuario autenticado al mostrar mensaje');
@@ -1005,8 +1007,11 @@ async function displayMessage(messageData) {
     }
 
     const messageElement = document.createElement('div');
+    messageElement.setAttribute('data-message-id', messageData.id); // <<--- IMPORTANTE
     const isSentByMe = messageData.senderId === currentUser.uid;
     messageElement.className = `message ${isSentByMe ? 'sent' : 'received'}`;
+    // ... el resto de tu código original de displayMessage
+}
     
     let messageText = messageData.text;
     if (messageData.language !== userLanguage) {
