@@ -115,6 +115,7 @@
             indexedDBLocalPersistence
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getFirestore, initializeFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getMessaging } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
@@ -139,6 +140,14 @@
                 useFetchStreams: false
             });
 
+            // Inicializar Firebase Messaging
+            try {
+                window.messaging = getMessaging(app);
+                console.log('Firebase Messaging inicializado correctamente');
+            } catch (error) {
+                console.log('Firebase Messaging no está soportado en este navegador');
+            }
+
             console.log('Firebase inicializado correctamente');
         } catch (error) {
             console.error('Error al inicializar Firebase:', error);
@@ -146,5 +155,18 @@
     </script>
     <script type="module" src="translations.js"></script>
     <script type="module" src="app.js"></script>
+    
+    <!-- Registro del Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/firebase-messaging-sw.js')
+                .then(function(registration) {
+                    console.log('Service Worker registrado con éxito:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('Error al registrar el Service Worker:', error);
+                });
+        }
+    </script>
 </body>
 </html> 
