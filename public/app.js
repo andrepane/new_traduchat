@@ -1006,13 +1006,6 @@ async function displayMessage(messageData) {
         return;
     }
 
-    const messageElement = document.createElement('div');
-    messageElement.setAttribute('data-message-id', messageData.id); // <<--- IMPORTANTE
-    const isSentByMe = messageData.senderId === currentUser.uid;
-    messageElement.className = `message ${isSentByMe ? 'sent' : 'received'}`;
-    // ... el resto de tu código original de displayMessage
-}
-    
     let messageText = messageData.text;
     if (messageData.language !== userLanguage) {
         console.log('Traduciendo mensaje al idioma del usuario:', userLanguage);
@@ -1028,14 +1021,14 @@ async function displayMessage(messageData) {
             }
         }
     }
-    
+
     const flag = getFlagEmoji(messageData.language);
     let timeString = '';
-    
+
     try {
-        const timestamp = messageData.timestamp ? 
-            (typeof messageData.timestamp.toDate === 'function' ? 
-                messageData.timestamp.toDate() : 
+        const timestamp = messageData.timestamp ?
+            (typeof messageData.timestamp.toDate === 'function' ?
+                messageData.timestamp.toDate() :
                 new Date(messageData.timestamp)
             ) : new Date();
         timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1049,12 +1042,12 @@ async function displayMessage(messageData) {
     const chatDoc = await getDoc(doc(db, 'chats', currentChat));
     const chatData = chatDoc.exists() ? chatDoc.data() : null;
     const isGroupChat = chatData && chatData.type === 'group';
-    
+
     // Obtener el nombre del remitente para chats grupales
     let senderName = '';
     if (isGroupChat) {
         try {
-            if (isSentByMe) {
+            if (messageData.senderId === currentUser.uid) {
                 // Si es mi mensaje, obtener mi nombre de usuario
                 const myDoc = await getDoc(doc(db, 'users', currentUser.uid));
                 if (myDoc.exists()) {
@@ -1063,8 +1056,8 @@ async function displayMessage(messageData) {
                 }
             } else {
                 // Si es mensaje de otro, obtener su nombre
-            const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
-            if (senderDoc.exists()) {
+                const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+                if (senderDoc.exists()) {
                     const senderData = senderDoc.data();
                     senderName = senderData.username || senderData.email.split('@')[0];
                 }
@@ -1074,8 +1067,13 @@ async function displayMessage(messageData) {
         }
     }
 
+    const messageElement = document.createElement('div');
+    messageElement.setAttribute('data-message-id', messageData.id); // <<--- IMPORTANTE
+    const isSentByMe = messageData.senderId === currentUser.uid;
+    messageElement.className = `message ${isSentByMe ? 'sent' : 'received'}`;
+
     if (messageData.type === 'audio') {
-    messageElement.innerHTML = `
+        messageElement.innerHTML = `
             ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="audio-message">
                 <button class="play-button">
@@ -1085,13 +1083,13 @@ async function displayMessage(messageData) {
                 <audio src="${messageData.audioUrl}" preload="none"></audio>
                 <div class="transcription">${messageText}</div>
             </div>
-        <span class="message-time">${timeString}</span>
-    `;
+            <span class="message-time">${timeString}</span>
+        `;
 
         // Añadir evento para reproducir audio
         const playButton = messageElement.querySelector('.play-button');
         const audio = messageElement.querySelector('audio');
-        
+
         playButton.addEventListener('click', () => {
             if (audio.paused) {
                 audio.play();
@@ -1115,19 +1113,21 @@ async function displayMessage(messageData) {
             </div>
         `;
     }
-    
+
     if (messagesList) {
         // Verificar si el mensaje anterior es del mismo remitente
         const previousMessage = messagesList.lastElementChild;
-        if (previousMessage && 
-            previousMessage.classList.contains('message') && 
-            previousMessage.getAttribute('data-sender-id') === messageData.senderId) {
+        if (
+            previousMessage &&
+            previousMessage.classList.contains('message') &&
+            previousMessage.getAttribute('data-sender-id') === messageData.senderId
+        ) {
             messageElement.setAttribute('data-same-sender', 'true');
         }
 
         // Guardar el ID del remitente para comparaciones futuras
         messageElement.setAttribute('data-sender-id', messageData.senderId);
-        
+
         messagesList.appendChild(messageElement);
         messagesList.scrollTop = messagesList.scrollHeight;
     } else {
