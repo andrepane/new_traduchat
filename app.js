@@ -269,7 +269,7 @@ loginBtn.addEventListener('click', async () => {
             console.log('Usuario no encontrado, intentando registro...');
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                console.log('Usuario creado exitosamente:', userCredential.user.uid);
+            console.log('Usuario creado exitosamente:', userCredential.user.uid);
                 
                 // Crear documento de usuario para el nuevo registro
                 await updateUserData(userCredential.user, username, true);
@@ -278,7 +278,7 @@ loginBtn.addEventListener('click', async () => {
                 throw registrationError;
             }
         }
-    } catch (error) {
+        } catch (error) {
         console.error('Error completo:', error);
         
         switch (error.code) {
@@ -409,17 +409,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Manejar cambios en el estado de autenticación
     onAuthStateChanged(auth, async (user) => {
         try {
-            if (user) {
-                console.log('Usuario autenticado:', user.email);
-                console.log('User ID:', user.uid);
+        if (user) {
+            console.log('Usuario autenticado:', user.email);
+            console.log('User ID:', user.uid);
                 
                 // Limpiar cualquier estado anterior
                 resetChatState();
+            
+            try {
+                const userDocRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userDocRef);
                 
-                try {
-                    const userDocRef = doc(db, 'users', user.uid);
-                    const userDoc = await getDoc(userDocRef);
-                    
                     let userData = {
                         uid: user.uid,
                         email: user.email.toLowerCase(),
@@ -428,37 +428,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (userDoc.exists()) {
                         userData = { ...userData, ...userDoc.data() };
                     } else {
-                        console.log('Creando documento de usuario...');
-                        await setDoc(userDocRef, {
-                            uid: user.uid,
-                            email: user.email.toLowerCase(),
-                            language: userLanguage,
-                            createdAt: serverTimestamp(),
-                            lastUpdated: serverTimestamp()
-                        });
-                        console.log('Documento de usuario creado exitosamente');
-                    }
+                    console.log('Creando documento de usuario...');
+                    await setDoc(userDocRef, {
+                        uid: user.uid,
+                        email: user.email.toLowerCase(),
+                        language: userLanguage,
+                        createdAt: serverTimestamp(),
+                        lastUpdated: serverTimestamp()
+                    });
+                    console.log('Documento de usuario creado exitosamente');
+            }
 
                     // Actualizar el estado del usuario actual con los datos completos
                     currentUser = userData;
                     
                     // Mostrar la pantalla principal con el nombre de usuario
-                    hideLoadingScreen();
-                    showMainScreen();
+            hideLoadingScreen();
+            showMainScreen();
                     updateUserInfo(userData);
-                    setupRealtimeChats();
+            setupRealtimeChats();
                 } catch (error) {
                     console.error('Error al verificar/crear documento de usuario:', error);
                     showError('errorGeneric');
                 }
-            } else {
-                console.log('No hay usuario autenticado');
+        } else {
+            console.log('No hay usuario autenticado');
                 // Limpiar el estado
                 currentUser = null;
                 resetChatState();
                 
-                hideLoadingScreen();
-                showAuthScreen();
+            hideLoadingScreen();
+            showAuthScreen();
             }
         } catch (error) {
             console.error('Error en el manejo de autenticación:', error);
@@ -628,10 +628,10 @@ async function setupRealtimeChats() {
                     chatElement.innerHTML = `
                         <div class="chat-info">
                             <div class="chat-details">
-                                <div class="chat-name">${chatName}</div>
+                            <div class="chat-name">${chatName}</div>
                                 <div class="last-message">${chat.lastMessage || ''}</div>
                             </div>
-                            <div class="last-message-time">${lastMessageTime}</div>
+                                <div class="last-message-time">${lastMessageTime}</div>
                         </div>
                     `;
 
@@ -981,8 +981,8 @@ async function displayMessage(messageData) {
                 }
             } else {
                 // Si es mensaje de otro, obtener su nombre
-                const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
-                if (senderDoc.exists()) {
+            const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+            if (senderDoc.exists()) {
                     const senderData = senderDoc.data();
                     senderName = senderData.username || senderData.email.split('@')[0];
                 }
@@ -993,7 +993,7 @@ async function displayMessage(messageData) {
     }
 
     if (messageData.type === 'audio') {
-        messageElement.innerHTML = `
+    messageElement.innerHTML = `
             ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="audio-message">
                 <button class="play-button">
@@ -1003,8 +1003,8 @@ async function displayMessage(messageData) {
                 <audio src="${messageData.audioUrl}" preload="none"></audio>
                 <div class="transcription">${messageText}</div>
             </div>
-            <span class="message-time">${timeString}</span>
-        `;
+        <span class="message-time">${timeString}</span>
+    `;
 
         // Añadir evento para reproducir audio
         const playButton = messageElement.querySelector('.play-button');
@@ -1033,7 +1033,7 @@ async function displayMessage(messageData) {
             </div>
         `;
     }
-
+    
     if (messagesList) {
         // Verificar si el mensaje anterior es del mismo remitente
         const previousMessage = messagesList.lastElementChild;
@@ -1110,12 +1110,12 @@ async function openChat(chatId) {
 
             // Añadir estilos para el loader si no existen
             if (!document.querySelector('#loader-styles')) {
-                const style = document.createElement('style');
+            const style = document.createElement('style');
                 style.id = 'loader-styles';
-                style.textContent = `
+            style.textContent = `
                     .messages-loader {
                         text-align: center;
-                        padding: 10px;
+                    padding: 10px;
                     }
                     .loader-spinner {
                         width: 20px;
@@ -1129,9 +1129,9 @@ async function openChat(chatId) {
                     @keyframes spin {
                         0% { transform: rotate(0deg); }
                         100% { transform: rotate(360deg); }
-                    }
-                `;
-                document.head.appendChild(style);
+                }
+            `;
+            document.head.appendChild(style);
             }
         }
         
@@ -1160,19 +1160,15 @@ async function openChat(chatId) {
             snapshot.docChanges().forEach(async change => {
                 if (change.type === 'added') {
                     const messageData = change.doc.data();
-                    const messageTime = messageData.timestamp?.toDate?.() || new Date(messageData.timestamp) || new Date();
                     
-                    // Solo mostrar si es un mensaje nuevo
-                    if (messageTime > (lastVisibleMessage?.timestamp?.toDate() || new Date(0))) {
-                        if (messageData.type === 'system') {
-                            displaySystemMessage(messageData);
-                        } else {
-                            await displayMessage(messageData);
-                        }
-                        // Scroll al último mensaje para nuevos mensajes
-                        if (messagesList) {
-                            messagesList.scrollTop = messagesList.scrollHeight;
-                        }
+                    if (messageData.type === 'system') {
+                        displaySystemMessage(messageData);
+                    } else {
+                        await displayMessage(messageData);
+                    }
+                    // Scroll al último mensaje para nuevos mensajes
+                    if (messagesList) {
+                        messagesList.scrollTop = messagesList.scrollHeight;
                     }
                 }
             });
@@ -1445,10 +1441,10 @@ async function sendMessage(text) {
                     alert(limitMessage);
                     break; // Salir del bucle de traducciones
                 } else {
-                    await updateDoc(doc(messagesRef, docRef.id), {
-                        [`translations.${targetLang}`]: translation
-                    });
-                    console.log(`Traducción guardada para ${targetLang}`);
+                await updateDoc(doc(messagesRef, docRef.id), {
+                    [`translations.${targetLang}`]: translation
+                });
+                console.log(`Traducción guardada para ${targetLang}`);
                 }
             } catch (translationError) {
                 console.error('Error al traducir al', targetLang, translationError);
@@ -1955,4 +1951,80 @@ micButton.addEventListener('click', () => {
             messageInput.placeholder = getTranslation('listening', userLanguage);
         }
     }
-}); 
+});
+
+// Manejo del teclado en iOS
+function handleKeyboard() {
+    const visualViewport = window.visualViewport;
+    if (!visualViewport) return;
+
+    let keyboardHeight = 0;
+    const body = document.body;
+    const mainScreen = document.getElementById('mainScreen');
+    const messagesList = document.querySelector('.messages-list');
+    const messageInput = document.querySelector('.message-input');
+
+    visualViewport.addEventListener('resize', () => {
+        // Calcular la altura del teclado
+        const newKeyboardHeight = window.innerHeight - visualViewport.height;
+        
+        if (newKeyboardHeight > 0) {
+            // El teclado está abierto
+            keyboardHeight = newKeyboardHeight;
+            document.documentElement.style.setProperty('--keyboard-height', `${keyboardHeight}px`);
+            
+            body.classList.add('keyboard-open');
+            mainScreen.classList.add('keyboard-open');
+            messagesList.classList.add('keyboard-open');
+            messageInput.classList.add('keyboard-open');
+
+            // Asegurar que el último mensaje sea visible
+            setTimeout(() => {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }, 100);
+        } else {
+            // El teclado está cerrado
+            keyboardHeight = 0;
+            document.documentElement.style.setProperty('--keyboard-height', '0px');
+            
+            body.classList.remove('keyboard-open');
+            mainScreen.classList.remove('keyboard-open');
+            messagesList.classList.remove('keyboard-open');
+            messageInput.classList.remove('keyboard-open');
+        }
+    });
+}
+
+// Inicializar el manejo del teclado si estamos en iOS
+if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+    handleKeyboard();
+}
+
+// Asegurar que el scroll funcione correctamente después de que se cierre el teclado
+document.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 50);
+    }
+});
+
+// Prevenir el zoom en inputs en iOS
+document.addEventListener('gesturestart', (e) => {
+    e.preventDefault();
+});
+
+// Asegurar que el scroll funcione correctamente al abrir el chat
+function adjustScrollAfterKeyboard() {
+    const messagesList = document.querySelector('.messages-list');
+    if (messagesList) {
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+}
+
+// Llamar a la función cuando se abre un chat
+const originalOpenChat = openChat;
+openChat = async function(...args) {
+    await originalOpenChat.apply(this, args);
+    adjustScrollAfterKeyboard();
+}; 
