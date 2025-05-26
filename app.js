@@ -1,6 +1,6 @@
- // Firebase imports
+// Firebase imports
 import { 
-    signInWithEmailAndPassword,
+    signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
     onAuthStateChanged,
     signOut,
