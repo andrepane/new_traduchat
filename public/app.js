@@ -1316,16 +1316,6 @@ async function loadInitialMessages(chatId) {
 
 
 
-
-        // Scroll al último mensaje
-        if (messagesList) {
-            messagesList.scrollTop = messagesList.scrollHeight;
-        }
-    } catch (error) {
-        console.error('Error al cargar mensajes iniciales:', error);
-    }
-}
-
 // Función para cargar más mensajes antiguos
 async function loadMoreMessages(chatId) {
     if (isLoadingMore || allMessagesLoaded) return;
