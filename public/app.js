@@ -1298,11 +1298,14 @@ async function loadInitialMessages(chatId) {
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
         // ✅ Ordenar por timestamp o usar 0 si no hay timestamp
-        messages.sort((a, b) => {
-            const timeA = a.timestamp?.toMillis?.() || 0;
-            const timeB = b.timestamp?.toMillis?.() || 0;
-            return timeA - timeB;
-        });
+       messages.sort((a, b) => {
+  const timeA = a.timestamp?.toMillis?.()
+             || new Date(a.timestampClient || 0).getTime();
+  const timeB = b.timestamp?.toMillis?.()
+             || new Date(b.timestampClient || 0).getTime();
+  return timeA - timeB;
+});
+
 
         // ✅ Mostrar mensajes
         await Promise.all(messages.map(async (messageData) => {
