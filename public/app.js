@@ -369,7 +369,19 @@ loginBtn.addEventListener('click', async () => {
                     
                     // Crear el usuario porque el username es válido y libre
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    await updateUserData(userCredential.user, username, true);
+
+// Esperar a que Firebase actualice el estado del usuario autenticado
+await new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+            unsubscribe();
+            resolve();
+        }
+    });
+});
+
+await updateUserData(userCredential.user, username, true);
+
                     console.log('Usuario creado exitosamente:', userCredential.user.uid);
                     return;
 
