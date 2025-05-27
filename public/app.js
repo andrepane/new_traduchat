@@ -2169,17 +2169,3 @@ document.addEventListener('gesturestart', (e) => {
     e.preventDefault();
 });
 
-// Asegurar que el scroll funcione correctamente al abrir el chat
-function adjustScrollAfterKeyboard() {
-    const messagesList = document.querySelector('.messages-list');
-    if (messagesList) {
-        messagesList.scrollTop = messagesList.scrollHeight;
-    }
-}
-
-// Llamar a la función cuando se abre un chat
-const originalOpenChat = openChat;
-openChat = async function(...args) {
-    await originalOpenChat.apply(this, args);
-    adjustScrollAfterKeyboard();
-};
