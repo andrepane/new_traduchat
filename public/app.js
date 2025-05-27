@@ -354,10 +354,25 @@ loginBtn.addEventListener('click', async () => {
                 loginError.code === 'auth/invalid-credential') {
                 try {
                     console.log('Usuario no encontrado, intentando registro...');
+
+                    // Verificar si el username ya está en uso
+                    const usernameQuery = query(
+                        collection(db, 'users'),
+                        where('username', '==', username)
+                    );
+                    const usernameSnapshot = await getDocs(usernameQuery);
+                    
+                    if (!usernameSnapshot.empty) {
+                        showError('errorUsernameInUse');
+                        return;
+                    }
+                    
+                    // Crear el usuario porque el username es válido y libre
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    await updateUserData(userCredential.user, username, true); // 👈 con esto ya basta
-                    console.log('Usuario creado exitosamente:', userCredential.user.uid);                    
+                    await updateUserData(userCredential.user, username, true);
+                    console.log('Usuario creado exitosamente:', userCredential.user.uid);
                     return;
+
                 } catch (registrationError) {
                     console.error('Error en registro:', registrationError);
                     if (registrationError.code === 'auth/email-already-in-use') {
