@@ -1029,11 +1029,11 @@ if (exists) {
     let timeString = '';
 
     try {
-        const timestamp = messageData.timestamp ?
-            (typeof messageData.timestamp.toDate === 'function' ?
-                messageData.timestamp.toDate() :
-                new Date(messageData.timestamp)
-            ) : new Date();
+        const timestamp = messageData.timestamp?.toDate?.() ||
+                  (typeof messageData.timestamp === 'number' ? new Date(messageData.timestamp) : null) ||
+                  messageData.timestampClient ||
+                  new Date();
+
         timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch (error) {
         console.error('Error al formatear timestamp:', error);
@@ -1461,20 +1461,30 @@ async function sendMessage(text) {
 
         console.log('Preparando mensaje para enviar...');
         // Crear el mensaje
-        const messageData = {
-            text: text.trim(),
-            senderId: user.uid,
-            senderEmail: user.email,
-            timestamp: serverTimestamp(),
-            language: userLanguage,
-            translations: {}
-        };
+       const timestampClient = new Date(); // hora provisional visible al instante
+
+const messageData = {
+    text: text.trim(),
+    senderId: user.uid,
+    senderEmail: user.email,
+    timestamp: serverTimestamp(),    // Firebase la sobrescribirá
+    timestampClient,                 // nuestro respaldo inmediato
+    language: userLanguage,
+    translations: {}
+};
+
 
         console.log('Enviando mensaje a Firestore...');
         // Enviar el mensaje
         const messagesRef = collection(db, 'chats', currentChat, 'messages');
         const docRef = await addDoc(messagesRef, messageData);
         console.log('Mensaje enviado con ID:', docRef.id);
+        await displayMessage({
+    ...messageData,
+    id: docRef.id,
+    timestamp: timestampClient  // mostramos ya el mensaje sin esperar a Firestore
+});
+
         
         // Actualizar último mensaje del chat
         const chatRef = doc(db, 'chats', currentChat);
