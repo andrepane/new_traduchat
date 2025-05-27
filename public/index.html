@@ -128,21 +128,24 @@
         };
 
         try {
+            // Inicializar Firebase
             const app = initializeApp(firebaseConfig);
             
             // Inicializar Auth con persistencia local
-            window.auth = initializeAuth(app, {
+            const auth = initializeAuth(app, {
                 persistence: [indexedDBLocalPersistence, browserLocalPersistence]
             });
+            window.auth = auth;
 
             // Configurar Firestore
-            window.db = initializeFirestore(app, {
+            const db = initializeFirestore(app, {
                 experimentalForceLongPolling: true,
                 useFetchStreams: false
             });
+            window.db = db;
 
             // Habilitar persistencia offline de Firestore
-            enableIndexedDbPersistence(window.db).catch((err) => {
+            enableIndexedDbPersistence(db).catch((err) => {
                 if (err.code == 'failed-precondition') {
                     console.warn('La persistencia offline falló, múltiples pestañas abiertas');
                 } else if (err.code == 'unimplemented') {
@@ -150,24 +153,13 @@
                 }
             });
 
-            // Configurar persistencia de autenticación
-            setPersistence(window.auth, browserLocalPersistence).catch((error) => {
-                console.error('Error al configurar persistencia de auth:', error);
-            });
-
-            // Verificar estado de autenticación inicial
-            onAuthStateChanged(window.auth, (user) => {
-                if (user) {
-                    console.log('Usuario autenticado:', user.uid);
-                } else {
-                    console.log('Usuario no autenticado');
-                }
-            });
-
-            // Inicializar Messaging si está disponible
-            if ('Notification' in window) {
+            // Inicializar Messaging
+            try {
                 window.messaging = getMessaging(app);
+            } catch (error) {
+                console.warn('Firebase Messaging no está soportado en este navegador');
             }
+
         } catch (error) {
             console.error('Error al inicializar Firebase:', error);
         }
