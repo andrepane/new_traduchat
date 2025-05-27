@@ -1029,11 +1029,11 @@ if (exists) {
     let timeString = '';
 
     try {
-        const timestamp = messageData.timestamp?.toDate?.() ||
-                  (typeof messageData.timestamp === 'number' ? new Date(messageData.timestamp) : null) ||
-                  messageData.timestampClient ||
-                  new Date();
-
+        const timestamp = messageData.timestamp ?
+            (typeof messageData.timestamp.toDate === 'function' ?
+                messageData.timestamp.toDate() :
+                new Date(messageData.timestamp)
+            ) : new Date();
         timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch (error) {
         console.error('Error al formatear timestamp:', error);
@@ -1298,14 +1298,11 @@ async function loadInitialMessages(chatId) {
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
         // ✅ Ordenar por timestamp o usar 0 si no hay timestamp
-       messages.sort((a, b) => {
-  const timeA = a.timestamp?.toMillis?.()
-             || new Date(a.timestampClient || 0).getTime();
-  const timeB = b.timestamp?.toMillis?.()
-             || new Date(b.timestampClient || 0).getTime();
-  return timeA - timeB;
-});
-
+        messages.sort((a, b) => {
+            const timeA = a.timestamp?.toMillis?.() || 0;
+            const timeB = b.timestamp?.toMillis?.() || 0;
+            return timeA - timeB;
+        });
 
         // ✅ Mostrar mensajes
         await Promise.all(messages.map(async (messageData) => {
@@ -1464,30 +1461,20 @@ async function sendMessage(text) {
 
         console.log('Preparando mensaje para enviar...');
         // Crear el mensaje
-       const timestampClient = new Date(); // hora provisional visible al instante
-
-const messageData = {
-    text: text.trim(),
-    senderId: user.uid,
-    senderEmail: user.email,
-    timestamp: serverTimestamp(),    // Firebase la sobrescribirá
-    timestampClient,                 // nuestro respaldo inmediato
-    language: userLanguage,
-    translations: {}
-};
-
+        const messageData = {
+            text: text.trim(),
+            senderId: user.uid,
+            senderEmail: user.email,
+            timestamp: serverTimestamp(),
+            language: userLanguage,
+            translations: {}
+        };
 
         console.log('Enviando mensaje a Firestore...');
         // Enviar el mensaje
         const messagesRef = collection(db, 'chats', currentChat, 'messages');
         const docRef = await addDoc(messagesRef, messageData);
         console.log('Mensaje enviado con ID:', docRef.id);
-        await displayMessage({
-    ...messageData,
-    id: docRef.id,
-    timestamp: timestampClient  // mostramos ya el mensaje sin esperar a Firestore
-});
-
         
         // Actualizar último mensaje del chat
         const chatRef = doc(db, 'chats', currentChat);
@@ -2167,3 +2154,32 @@ openChat = async function(...args) {
     await originalOpenChat.apply(this, args);
     adjustScrollAfterKeyboard();
 }; 
+
+// Asegurar que el scroll funcione correctamente después de que se cierre el teclado
+document.addEventListener('focusout', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        setTimeout(() => {
+            window.scrollTo(0, 0);
+        }, 50);
+    }
+});
+
+// Prevenir el zoom en inputs en iOS
+document.addEventListener('gesturestart', (e) => {
+    e.preventDefault();
+});
+
+// Asegurar que el scroll funcione correctamente al abrir el chat
+function adjustScrollAfterKeyboard() {
+    const messagesList = document.querySelector('.messages-list');
+    if (messagesList) {
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+}
+
+// Llamar a la función cuando se abre un chat
+const originalOpenChat = openChat;
+openChat = async function(...args) {
+    await originalOpenChat.apply(this, args);
+    adjustScrollAfterKeyboard();
+};
