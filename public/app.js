@@ -328,7 +328,6 @@ loginBtn.addEventListener('click', async () => {
     try {
         console.log('Iniciando proceso de login/registro...');
 
-        // Intentar iniciar sesión
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             console.log('Login exitoso:', userCredential.user.uid);
@@ -342,39 +341,12 @@ loginBtn.addEventListener('click', async () => {
 
             return;
         } catch (loginError) {
-            console.warn('Fallo al iniciar sesión:', loginError.code);
+            console.log('Fallo al iniciar sesión:', loginError.code);
 
             if (loginError.code === 'auth/user-not-found' || loginError.code === 'auth/invalid-credential') {
-                // Crear usuario
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-                // Esperar a que Firebase confirme la autenticación
-                await new Promise((resolve) => {
-                    const unsubscribe = onAuthStateChanged(auth, (user) => {
-                        if (user) {
-                            unsubscribe();
-                            resolve();
-                        }
-                    });
-                });
-
-                // Comprobar si el username ya existe
-                const usernameQuery = query(
-                    collection(db, 'users'),
-                    where('username', '==', username)
-                );
-                const usernameSnapshot = await getDocs(usernameQuery);
-
-                if (!usernameSnapshot.empty) {
-                    console.warn('Username ya en uso. Eliminando usuario recién creado...');
-                    await deleteUser(auth.currentUser);
-                    showError('errorUsernameInUse');
-                    return;
-                }
-
-                // Guardar datos del nuevo usuario
-                await updateUserData(auth.currentUser, username, true);
-                console.log('Usuario creado correctamente:', auth.currentUser.uid);
+                await updateUserData(userCredential.user, username, true);
+                console.log('Usuario creado correctamente:', userCredential.user.uid);
                 return;
             } else if (loginError.code === 'auth/wrong-password') {
                 showError('errorPassword');
@@ -385,6 +357,9 @@ loginBtn.addEventListener('click', async () => {
     } catch (error) {
         console.error('Error completo:', error);
         switch (error.code) {
+            case 'auth/email-already-in-use':
+                showError('errorEmailInUse');
+                break;
             case 'auth/invalid-email':
                 showError('errorInvalidEmail');
                 break;
@@ -399,6 +374,7 @@ loginBtn.addEventListener('click', async () => {
         }
     }
 });
+
 
 
 // Función auxiliar para actualizar datos de usuario
