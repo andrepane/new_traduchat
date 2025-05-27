@@ -1264,7 +1264,7 @@ async function openChat(chatId) {
         unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
             snapshot.docChanges().forEach(async change => {
                 if (change.type === 'added') {
-                    const messageData = change.doc.data();
+                    const messageData = { ...change.doc.data(), id: change.doc.id };
                     
                     if (messageData.type === 'system') {
                         displaySystemMessage(messageData);
@@ -1277,8 +1277,6 @@ async function openChat(chatId) {
                     }
                 }
             });
-        }, (error) => {
-            console.error('Error en la suscripción a mensajes:', error);
         });
     } catch (error) {
         console.error('Error al abrir chat:', error);
@@ -1292,7 +1290,7 @@ async function loadInitialMessages(chatId) {
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     const q = query(
         messagesRef,
-        orderBy('timestamp', 'asc'),
+        orderBy('timestamp', 'desc'),
         limit(MESSAGES_PER_BATCH)
     );
 
@@ -1311,8 +1309,8 @@ async function loadInitialMessages(chatId) {
         // Guardar referencia al último mensaje visible
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
-        // Mostrar mensajes en orden cronológico (ya están ordenados)
-        messages.forEach(async messageData => {
+        // Mostrar mensajes en orden cronológico
+        messages.reverse().forEach(async messageData => {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
             } else {
