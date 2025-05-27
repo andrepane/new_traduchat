@@ -298,7 +298,7 @@ languageSelectMain.addEventListener('change', (e) => {
 
 // Función de login/registro
 loginBtn.addEventListener('click', async () => {
-    const email = emailInput.value.trim().toLowerCase(); // Convertir a minúsculas
+    const email = emailInput.value.trim().toLowerCase();
     const username = usernameInput.value.trim();
     const password = passwordInput.value;
 
@@ -321,46 +321,30 @@ loginBtn.addEventListener('click', async () => {
         return;
     }
 
-    // Validar nombre de usuario (solo letras, números y guiones)
+    // Validar nombre de usuario
     const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
     if (!usernameRegex.test(username)) {
         alert('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos, y debe tener entre 3 y 20 caracteres');
         return;
     }
 
-    const auth = window.auth;
-    const db = window.db;
-    
-    if (!auth || !db) {
-        console.error('Auth o Firestore no están inicializados');
-        showError('errorGeneric');
-        return;
-    }
-
     try {
         console.log('Iniciando proceso de registro/login...');
         
-        // Verificar si el nombre de usuario ya existe
-        const usernameQuery = query(
-            collection(db, 'users'),
-            where('username', '==', username)
-        );
-        const usernameSnapshot = await getDocs(usernameQuery);
-        
-        if (!usernameSnapshot.empty) {
-            const existingUser = usernameSnapshot.docs[0].data();
-            if (existingUser.email !== email) {
-                showError('errorUsernameInUse');
-                return;
-            }
-        }
-
         // Intentar iniciar sesión primero
         try {
             console.log('Intentando iniciar sesión...');
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             console.log('Login exitoso:', userCredential.user.uid);
-            await updateUserData(userCredential.user, username, false);
+            
+            // Actualizar datos del usuario después del login
+            const userDocRef = doc(db, 'users', userCredential.user.uid);
+            await setDoc(userDocRef, {
+                email: email.toLowerCase(),
+                username: username,
+                lastLogin: serverTimestamp()
+            }, { merge: true });
+            
             return;
         } catch (loginError) {
             console.log('Error en login:', loginError.code);
@@ -372,7 +356,18 @@ loginBtn.addEventListener('click', async () => {
                     console.log('Usuario no encontrado, intentando registro...');
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     console.log('Usuario creado exitosamente:', userCredential.user.uid);
-                    await updateUserData(userCredential.user, username, true);
+                    
+                    // Crear documento del usuario después del registro
+                    const userDocRef = doc(db, 'users', userCredential.user.uid);
+                    await setDoc(userDocRef, {
+                        uid: userCredential.user.uid,
+                        email: email.toLowerCase(),
+                        username: username,
+                        language: userLanguage,
+                        createdAt: serverTimestamp(),
+                        lastLogin: serverTimestamp()
+                    });
+                    
                     return;
                 } catch (registrationError) {
                     console.error('Error en registro:', registrationError);
