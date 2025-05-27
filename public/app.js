@@ -1257,14 +1257,14 @@ async function openChat(chatId) {
         const messagesRef = collection(db, 'chats', chatId, 'messages');
         const newMessagesQuery = query(
             messagesRef,
-            orderBy('timestamp', 'asc'),
-            where('timestamp', '>', serverTimestamp())
+            orderBy('timestamp', 'desc'),
+            limit(1)
         );
 
         unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
             snapshot.docChanges().forEach(async change => {
                 if (change.type === 'added') {
-                    const messageData = { ...change.doc.data(), id: change.doc.id };
+                    const messageData = change.doc.data();
                     
                     if (messageData.type === 'system') {
                         displaySystemMessage(messageData);
