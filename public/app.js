@@ -355,19 +355,8 @@ loginBtn.addEventListener('click', async () => {
                 try {
                     console.log('Usuario no encontrado, intentando registro...');
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                    console.log('Usuario creado exitosamente:', userCredential.user.uid);
-                    
-                    // Crear documento del usuario después del registro
-                    const userDocRef = doc(db, 'users', userCredential.user.uid);
-                    await setDoc(userDocRef, {
-                        uid: userCredential.user.uid,
-                        email: email.toLowerCase(),
-                        username: username,
-                        language: userLanguage,
-                        createdAt: serverTimestamp(),
-                        lastLogin: serverTimestamp()
-                    });
-                    
+                    await updateUserData(userCredential.user, username, true); // 👈 con esto ya basta
+                    console.log('Usuario creado exitosamente:', userCredential.user.uid);                    
                     return;
                 } catch (registrationError) {
                     console.error('Error en registro:', registrationError);
@@ -446,7 +435,7 @@ async function updateUserData(user, username, isNewUser) {
         console.log('Datos a guardar:', userData);
         
         // Guardar datos del usuario
-        await setDoc(userDocRef, userData, { merge: true });
+        await setDoc(userDocRef, userData, { merge: true });  
         console.log('Datos guardados exitosamente en Firestore');
 
         // Verificar que se guardó correctamente
