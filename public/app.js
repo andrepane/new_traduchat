@@ -1848,13 +1848,15 @@ async function searchUsersForGroup(searchTerm) {
         const users = [];
         snapshot.forEach(doc => {
             const userData = doc.data();
-            if (userData.uid !== currentUser.uid && 
+            if (
+                userData.uid &&
+                typeof userData.email === 'string' &&
+                userData.uid !== currentUser.uid && 
                 userData.email.toLowerCase().includes(searchTerm.toLowerCase()) &&
                 !Array.from(selectedUsers).some(u => u.id === userData.uid)) {
                 users.push({
                     id: userData.uid,
                     email: userData.email,
-                    phoneNumber: userData.phoneNumber
                 });
             }
         });
