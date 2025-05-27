@@ -1235,29 +1235,37 @@ async function openChat(chatId) {
 
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
-        const newMessagesQuery = query(
-            messagesRef,
-            orderBy('timestamp', 'desc'),
-            limit(1)
-        );
+const newMessagesQuery = query(
+    messagesRef,
+    orderBy('timestamp', 'desc'),
+    limit(1)
+);
 
-        unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
-            snapshot.docChanges().forEach(async change => {
-                if (change.type === 'added') {
-                    const messageData = { ...change.doc.data(), id: change.doc.id };
-                    
-                    if (messageData.type === 'system') {
-                        displaySystemMessage(messageData);
-                    } else {
-                        await displayMessage(messageData);
-                    }
-                    // Scroll al último mensaje para nuevos mensajes
-                    if (messagesList) {
-                        messagesList.scrollTop = messagesList.scrollHeight;
-                    }
-                }
-            });
-        });
+let initialSnapshotSkipped = false;
+
+unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
+    if (!initialSnapshotSkipped) {
+        // Saltar el primer snapshot porque es el que ya se mostró con loadInitialMessages
+        initialSnapshotSkipped = true;
+        return;
+    }
+
+    snapshot.docChanges().forEach(async change => {
+        if (change.type === 'added') {
+            const messageData = { ...change.doc.data(), id: change.doc.id };
+
+            if (messageData.type === 'system') {
+                displaySystemMessage(messageData);
+            } else {
+                await displayMessage(messageData);
+            }
+            if (messagesList) {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+        }
+    });
+});
+
     } catch (error) {
         console.error('Error al abrir chat:', error);
         showError('errorOpenChat');
@@ -1290,13 +1298,13 @@ async function loadInitialMessages(chatId) {
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
         // Mostrar mensajes en orden cronológico
-        messages.reverse().forEach(async messageData => {
-            if (messageData.type === 'system') {
-                displaySystemMessage(messageData);
-            } else {
-                await displayMessage(messageData);
-            }
-        });
+        for (const messageData of messages.reverse()) {
+    if (messageData.type === 'system') {
+        displaySystemMessage(messageData);
+    } else {
+        await displayMessage(messageData);  // Ya controla duplicados
+    }
+}
 
         // Scroll al último mensaje
         if (messagesList) {
