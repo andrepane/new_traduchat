@@ -1298,13 +1298,14 @@ async function loadInitialMessages(chatId) {
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
         // Mostrar mensajes en orden cronológico
-        for (const messageData of messages.reverse()) {
+       await Promise.all(messages.reverse().map(async (messageData) => {
     if (messageData.type === 'system') {
         displaySystemMessage(messageData);
     } else {
-        await displayMessage(messageData);  // Ya controla duplicados
+        await displayMessage(messageData);
     }
-}
+}));
+
 
         // Scroll al último mensaje
         if (messagesList) {
