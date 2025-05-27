@@ -1,65 +1,75 @@
+/* Variables CSS */
 :root {
-  --color-primary: #00b451;
-  --color-primary-dark: #006d34;
-  --color-primary-light: #1ee98e;
-  --color-danger: #ff4d4d;
-  --color-bg: #f6faf7;
-  --color-bg-alt: #ffffffcc;
-  --color-border: #d1e7dd;
-  --color-admin: #006d347;
-  --color-admin-bg: #e8f9ee;
-  --color-admin-border: #b7efc5;
-  --color-system: #98a6a9;
-  --color-system-bg: #f0f8f2cc;
-  --color-user-left: #e6fff4;
-  --color-user-right: #b9f5d8;
-  --color-user-list: #4e5e57;
-  --color-text: #232f2b;
-  --color-text-light: #fff;
-  --font-main: "Poppins", "Segoe UI", system-ui, sans-serif;
-  --radius: 17px;
-  --radius-bubble: 20px;
-  --shadow: 0 8px 32px 0 rgba(60, 100, 60, 0.13);
-  --shadow-glass: 0 4px 24px 0 rgba(0, 180, 81, 0.08);
-  --transition: background 0.25s, color 0.2s, box-shadow 0.2s;
-  --header-height: 60px;
-  --footer-height: 60px;
-  --chat-max-width: 1200px;
+    /* Colores */
+    --color-primary: #00b451;
+    --color-primary-dark: #006d34;
+    --color-primary-light: #1ee98e;
+    --color-danger: #ff4d4d;
+    --color-bg: #f6faf7;
+    --color-bg-alt: #ffffffcc;
+    --color-border: #d1e7dd;
+    --color-admin: #006d347;
+    --color-admin-bg: #e8f9ee;
+    --color-admin-border: #b7efc5;
+    --color-system: #98a6a9;
+    --color-system-bg: #f0f8f2cc;
+    --color-user-left: #e6fff4;
+    --color-user-right: #b9f5d8;
+    --color-user-list: #4e5e57;
+    --color-text: #232f2b;
+    --color-text-light: #fff;
+    
+    /* Tipografía */
+    --font-main: "Poppins", "Segoe UI", system-ui, sans-serif;
+    
+    /* Dimensiones y espaciado */
+    --radius: 17px;
+    --radius-bubble: 20px;
+    --header-height: 60px;
+    --footer-height: 60px;
+    --chat-max-width: 1200px;
+    
+    /* Efectos */
+    --shadow: 0 8px 32px 0 rgba(60, 100, 60, 0.13);
+    --shadow-glass: 0 4px 24px 0 rgba(0, 180, 81, 0.08);
+    --transition: background 0.25s, color 0.2s, box-shadow 0.2s;
+    
+    /* Safe Areas para iOS */
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Tema Oscuro */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #212a24;
-    --color-bg-alt: #232b28cc;
-    --color-border: #295e42;
-    --color-text: #e4ffe9;
-    --color-system-bg: #1d2420cc;
-    --color-user-left: #284c35;
-    --color-user-right: #1bb774;
-    --color-admin-bg: #283a2a;
-    --color-admin-border: #1ee98e;
-  }
-  body {
-    background: linear-gradient(120deg, #212a24 0%, #294233 100%);
-    color: var(--color-text);
-  }
+    :root {
+        --color-bg: #212a24;
+        --color-bg-alt: #232b28cc;
+        --color-border: #295e42;
+        --color-text: #e4ffe9;
+        --color-system-bg: #1d2420cc;
+        --color-user-left: #284c35;
+        --color-user-right: #1bb774;
+        --color-admin-bg: #283a2a;
+        --color-admin-border: #1ee98e;
+    }
 }
 
+/* Reset y Estilos Base */
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
 }
 
 body {
-  font-family: var(--font-main);
-  background: var(--color-bg);
-  color: var(--color-text);
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
+    font-family: var(--font-main);
+    background: var(--color-bg);
+    color: var(--color-text);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
 }
 
 /* Estructura principal */
@@ -306,47 +316,6 @@ body {
 
 /* Ajustes para móvil */
 @media screen and (max-width: 768px) {
-  .chat-item {
-    padding: 8px 12px;
-  }
-
-  .chat-name {
-    font-size: 0.9rem;
-  }
-
-  .last-message {
-    font-size: 0.8rem;
-  }
-
-  .last-message-time {
-    font-size: 0.7rem;
-  }
-}
-
-/* Estilos para chats grupales */
-.chat-item.group-chat .chat-name::before {
-  content: "👥";
-  margin-right: 5px;
-  font-size: 0.9em;
-}
-
-/* Estilos para chat activo */
-.chat-item.active {
-  background-color: #e9edef;
-}
-
-/* Estilos para la animación de nuevo mensaje */
-.chat-updated {
-  animation: highlightChat 2s ease;
-}
-
-@keyframes highlightChat {
-  0% { background-color: #dcf8c6; }
-  100% { background-color: transparent; }
-}
-
-/* Ajustes para móvil */
-@media screen and (max-width: 768px) {
   /* Estructura base */
   body {
     height: 100vh;
@@ -369,200 +338,61 @@ body {
     top: 0;
     left: 0;
     z-index: 1000;
-    background: #fff;
+    background: var(--color-bg);
     display: flex;
     flex-direction: column;
   }
 
-  /* Header y búsqueda */
-  .user-header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    padding: 10px;
-    background: #fff;
-    z-index: 1002;
-    border-bottom: 1px solid #dee2e6;
-    display: flex;
-    align-items: center;
-  }
-
-  .search-container {
-    position: fixed;
-    top: 60px;
-    left: 0;
-    width: 100%;
-    padding: 10px;
-    background: #fff;
-    z-index: 1001;
-    border-bottom: 1px solid #dee2e6;
-  }
-
-  #searchContacts {
-    width: 100%;
-    height: 40px;
-    padding: 8px 12px;
-    border: 1px solid #dee2e6;
-    border-radius: 20px;
-    font-size: 16px;
-    background: #f8f9fa;
-  }
-
-  /* Lista de chats */
-  .chat-list {
-    margin-top: 110px;
-    height: calc(100vh - 110px);
-    overflow-y: auto;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  /* Contenedor del chat */
-  .chat-container {
-    width: 100%;
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-  }
-
-  .chat-container.active {
-    display: flex;
-  }
-
-  /* Header del chat */
+  /* Headers */
+  .user-header,
   .chat-header {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 60px;
-    padding: 10px;
-    background: #fff;
+    height: var(--header-height);
+    padding: 10px 15px;
+    background: var(--color-bg);
     z-index: 1002;
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 1px solid var(--color-border);
     display: flex;
     align-items: center;
+    padding-top: calc(var(--safe-area-top) + 10px);
   }
 
   /* Lista de mensajes */
   .messages-list {
-    margin-top: 60px;
-    height: calc(100vh - 120px);
-    padding: 10px;
-    padding-bottom: 70px;
+    margin-top: calc(var(--header-height) + var(--safe-area-top));
+    height: calc(100vh - var(--header-height) - var(--footer-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    padding: 10px 15px;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Input container */
-  .input-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    min-height: 68px;
-    padding: 10px;
-    background: #fff;
-    border-top: 1px solid #dee2e6;
-    z-index: 1002;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
-  }
-
-  /* Input de mensaje */
-  #messageInput {
-    flex: 1;
-    height: 40px;
+  /* Chat items */
+  .chat-item {
     padding: 8px 12px;
-    border: 1px solid #dee2e6;
-    border-radius: 20px;
-    font-size: 16px;
-    background: #f8f9fa;
-    margin: 0;
   }
 
-  /* Botones de micrófono y enviar */
-  #micButton,
-  #sendMessage {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border-radius: 50%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--color-primary);
-    color: white;
-    flex-shrink: 0;
+  .chat-name {
+    font-size: 0.9rem;
   }
 
-  #micButton {
-    margin-right: 4px;
+  .last-message {
+    font-size: 0.8rem;
   }
 
-  /* Ajustes para iPhone con notch */
-  @supports (padding: max(0px)) {
-    .input-container {
-      padding-bottom: max(10px, env(safe-area-inset-bottom));
-    }
-
-    .chat-list {
-      padding-bottom: max(0px, env(safe-area-inset-bottom));
-    }
-
-    .messages-list {
-      padding-bottom: max(70px, calc(70px + env(safe-area-inset-bottom)));
-    }
+  .last-message-time {
+    font-size: 0.7rem;
   }
 
-  /* Ajustes para pantallas muy pequeñas */
-  @media screen and (max-width: 320px) {
-    .user-header,
-    .chat-header {
-      height: 50px;
-    }
-
-    .search-container {
-      top: 50px;
-    }
-
-    .chat-list {
-      margin-top: 100px;
-    }
-
-    .messages-list {
-      margin-top: 50px;
-    }
-
-    #messageInput,
-    #micButton,
-    #sendMessage {
-      height: 36px;
-    }
-
-    #micButton,
-    #sendMessage {
-      width: 36px;
-    }
-  }
-}
-
-/* Ajustes generales para inputs y botones en móvil */
-@media screen and (max-width: 768px) {
+  /* Inputs y botones */
   input,
   button {
     -webkit-appearance: none;
     appearance: none;
-    font-size: 16px; /* Previene zoom en iOS */
+    font-size: 16px;
   }
 
   /* Prevenir zoom en inputs */
@@ -573,49 +403,29 @@ body {
     font-size: 16px;
   }
 
-  /* Mejorar la interactividad táctil */
+  /* Mejorar interactividad táctil */
   button,
   .icon-button,
   .chat-item {
     cursor: pointer;
     touch-action: manipulation;
   }
-
-  /* Ajustes para el teclado virtual */
-  .input-container {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: #fff;
-    padding: 10px;
-    padding-bottom: max(10px, env(safe-area-inset-bottom));
-    border-top: 1px solid #dee2e6;
-    z-index: 1002;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
 }
 
-/* Ajustes adicionales para pantallas muy pequeñas */
+/* Ajustes para pantallas muy pequeñas */
 @media screen and (max-width: 360px) {
   .user-header {
-    padding: 12px;
-    height: 60px;
+    padding: 6px 8px;
   }
 
-  .chat-list {
-    margin-top: 60px;
-    height: calc(100% - 60px);
+  .header-actions {
+    gap: 4px;
   }
 
-  .messages-list {
-    height: calc(100vh - 120px);
-  }
-
-  .input-container {
-    min-height: 50px;
+  .icon-button {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
   }
 
   #messageInput {
@@ -627,12 +437,6 @@ body {
   #sendMessage {
     width: 36px;
     height: 36px;
-  }
-
-  .icon-button {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
   }
 }
 
@@ -692,13 +496,13 @@ body {
   gap: 0.5rem;
 }
 
-/* Input container para mensajes */
+/* Contenedor de mensajes e input */
 .message-input {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    min-height: 68px; /* Subido de 60px o var(--footer-height) */
+    min-height: 68px;
     background-color: var(--color-bg);
     border-top: 1px solid var(--color-border);
     z-index: 1002;
@@ -706,29 +510,35 @@ body {
     align-items: center;
     gap: 8px;
     padding: 10px 15px;
-    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px)); /* ¡Este cambio es crucial! */
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
 }
 
 .message-input input {
-  flex: 1;
-  padding: 0.8rem 1rem;
-  border-radius: 20px;
-  border: 1.5px solid var(--color-border);
-  font-size: 1rem;
-  background: #fff;
+    flex: 1;
+    min-height: 36px;
+    max-height: 100px;
+    padding: 12px 14px;
+    margin: 0;
+    border-radius: 18px;
+    font-size: 16px;
+    line-height: 20px;
+    background-color: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
 }
 
 .message-input button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: none;
-  background: var(--color-primary);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: var(--color-text-light);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* Estados del chat */
@@ -2171,3 +1981,4 @@ html {
         max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - 40px);
     }
 } 
+
