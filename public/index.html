@@ -112,9 +112,10 @@
             browserLocalPersistence, 
             setPersistence,
             initializeAuth,
-            indexedDBLocalPersistence
+            indexedDBLocalPersistence,
+            onAuthStateChanged
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, initializeFirestore } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, initializeFirestore, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
         import { getMessaging } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
         const firebaseConfig = {
@@ -133,22 +134,40 @@
             window.auth = initializeAuth(app, {
                 persistence: [indexedDBLocalPersistence, browserLocalPersistence]
             });
-            
-            // Configurar Firestore para funcionar sin cookies de terceros
+
+            // Configurar Firestore
             window.db = initializeFirestore(app, {
                 experimentalForceLongPolling: true,
                 useFetchStreams: false
             });
 
-            // Inicializar Firebase Messaging
-            try {
-                window.messaging = getMessaging(app);
-                console.log('Firebase Messaging inicializado correctamente');
-            } catch (error) {
-                console.log('Firebase Messaging no está soportado en este navegador');
-            }
+            // Habilitar persistencia offline de Firestore
+            enableIndexedDbPersistence(window.db).catch((err) => {
+                if (err.code == 'failed-precondition') {
+                    console.warn('La persistencia offline falló, múltiples pestañas abiertas');
+                } else if (err.code == 'unimplemented') {
+                    console.warn('El navegador no soporta persistencia offline');
+                }
+            });
 
-            console.log('Firebase inicializado correctamente');
+            // Configurar persistencia de autenticación
+            setPersistence(window.auth, browserLocalPersistence).catch((error) => {
+                console.error('Error al configurar persistencia de auth:', error);
+            });
+
+            // Verificar estado de autenticación inicial
+            onAuthStateChanged(window.auth, (user) => {
+                if (user) {
+                    console.log('Usuario autenticado:', user.uid);
+                } else {
+                    console.log('Usuario no autenticado');
+                }
+            });
+
+            // Inicializar Messaging si está disponible
+            if ('Notification' in window) {
+                window.messaging = getMessaging(app);
+            }
         } catch (error) {
             console.error('Error al inicializar Firebase:', error);
         }
