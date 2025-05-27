@@ -298,17 +298,33 @@ languageSelectMain.addEventListener('change', (e) => {
 
 // Función de login/registro
 loginBtn.addEventListener('click', async () => {
-    const email = emailInput.value.trim();
+    const email = emailInput.value.trim().toLowerCase(); // Convertir a minúsculas
     const username = usernameInput.value.trim();
     const password = passwordInput.value;
 
+    // Validaciones básicas
     if (!email || !password || !username) {
         showError('errorEmptyFields');
         return;
     }
 
+    // Validar formato de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showError('errorInvalidEmail');
+        return;
+    }
+
+    // Validar longitud de contraseña
     if (password.length < 6) {
         showError('errorPassword');
+        return;
+    }
+
+    // Validar nombre de usuario (solo letras, números y guiones)
+    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+    if (!usernameRegex.test(username)) {
+        alert('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos, y debe tener entre 3 y 20 caracteres');
         return;
     }
 
@@ -323,14 +339,23 @@ loginBtn.addEventListener('click', async () => {
 
     try {
         console.log('Iniciando proceso de registro/login...');
-        // Configurar persistencia local
-        try {
-            await setPersistence(auth, browserLocalPersistence);
-        } catch (persistenceError) {
-            console.warn('Error al configurar persistencia:', persistenceError);
+        
+        // Verificar si el nombre de usuario ya existe
+        const usernameQuery = query(
+            collection(db, 'users'),
+            where('username', '==', username)
+        );
+        const usernameSnapshot = await getDocs(usernameQuery);
+        
+        if (!usernameSnapshot.empty) {
+            const existingUser = usernameSnapshot.docs[0].data();
+            if (existingUser.email !== email) {
+                showError('errorUsernameInUse');
+                return;
+            }
         }
 
-        // Intentar iniciar sesión
+        // Intentar iniciar sesión primero
         try {
             console.log('Intentando iniciar sesión...');
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -340,46 +365,44 @@ loginBtn.addEventListener('click', async () => {
         } catch (loginError) {
             console.log('Error en login:', loginError.code);
 
-            // Cambia aquí: si el error es user-not-found O invalid-credential, intenta crear la cuenta
-            if (
-                loginError.code === 'auth/user-not-found' ||
-                loginError.code === 'auth/invalid-credential'
-            ) {
-                console.log('Usuario no encontrado o credencial inválida, intentando registro...');
-                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                console.log('Usuario creado exitosamente:', userCredential.user.uid);
-                await updateUserData(userCredential.user, username, true);
-                return;
+            // Si el usuario no existe, intentar registrarlo
+            if (loginError.code === 'auth/user-not-found' || 
+                loginError.code === 'auth/invalid-credential') {
+                try {
+                    console.log('Usuario no encontrado, intentando registro...');
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    console.log('Usuario creado exitosamente:', userCredential.user.uid);
+                    await updateUserData(userCredential.user, username, true);
+                    return;
+                } catch (registrationError) {
+                    console.error('Error en registro:', registrationError);
+                    if (registrationError.code === 'auth/email-already-in-use') {
+                        showError('errorEmailInUse');
+                    } else {
+                        throw registrationError;
+                    }
+                }
+            } else if (loginError.code === 'auth/wrong-password') {
+                showError('errorPassword');
+            } else {
+                throw loginError;
             }
-
-            // Otros errores (como contraseña incorrecta)
-            throw loginError;
         }
     } catch (error) {
         console.error('Error completo:', error);
         switch (error.code) {
-            case 'auth/wrong-password':
-                showError('errorPassword');
-                break;
-            case 'auth/weak-password':
-                showError('errorPassword');
-                break;
             case 'auth/invalid-email':
                 showError('errorInvalidEmail');
-                break;
-            case 'auth/email-already-in-use':
-                showError('errorEmailInUse');
                 break;
             case 'auth/network-request-failed':
                 showError('errorNetwork');
                 break;
-            case 'auth/operation-not-allowed':
-            case 'auth/internal-error':
-                showError('errorGeneric');
-                console.error('Error interno de Firebase:', error);
+            case 'auth/too-many-requests':
+                alert('Demasiados intentos fallidos. Por favor, intenta más tarde.');
                 break;
             default:
                 showError('errorGeneric');
+                console.error('Error no manejado:', error);
         }
     }
 });
@@ -1234,14 +1257,14 @@ async function openChat(chatId) {
         const messagesRef = collection(db, 'chats', chatId, 'messages');
         const newMessagesQuery = query(
             messagesRef,
-            orderBy('timestamp', 'desc'),
-            limit(1)
+            orderBy('timestamp', 'asc'),
+            where('timestamp', '>', serverTimestamp())
         );
 
         unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
             snapshot.docChanges().forEach(async change => {
                 if (change.type === 'added') {
-                    const messageData = change.doc.data();
+                    const messageData = { ...change.doc.data(), id: change.doc.id };
                     
                     if (messageData.type === 'system') {
                         displaySystemMessage(messageData);
@@ -1269,7 +1292,7 @@ async function loadInitialMessages(chatId) {
     const messagesRef = collection(db, 'chats', chatId, 'messages');
     const q = query(
         messagesRef,
-        orderBy('timestamp', 'desc'),
+        orderBy('timestamp', 'asc'),
         limit(MESSAGES_PER_BATCH)
     );
 
@@ -1288,8 +1311,8 @@ async function loadInitialMessages(chatId) {
         // Guardar referencia al último mensaje visible
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
-        // Mostrar mensajes en orden cronológico
-        messages.reverse().forEach(async messageData => {
+        // Mostrar mensajes en orden cronológico (ya están ordenados)
+        messages.forEach(async messageData => {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
             } else {
