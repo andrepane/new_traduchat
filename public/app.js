@@ -1273,15 +1273,13 @@ unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
 }
 
 // Función para cargar los mensajes iniciales
-// Función para cargar los mensajes iniciales ordenados correctamente
 async function loadInitialMessages(chatId) {
     const db = window.db;
     const messagesRef = collection(db, 'chats', chatId, 'messages');
 
     const q = query(
         messagesRef,
-        where('timestamp', '!=', null),
-        orderBy('timestamp', 'asc'),
+        orderBy('timestamp', 'desc'),
         limit(MESSAGES_PER_BATCH)
     );
 
@@ -1299,6 +1297,14 @@ async function loadInitialMessages(chatId) {
 
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
+        // ✅ Ordenar por timestamp o usar 0 si no hay timestamp
+        messages.sort((a, b) => {
+            const timeA = a.timestamp?.toMillis?.() || 0;
+            const timeB = b.timestamp?.toMillis?.() || 0;
+            return timeA - timeB;
+        });
+
+        // ✅ Mostrar mensajes
         await Promise.all(messages.map(async (messageData) => {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
@@ -1313,7 +1319,6 @@ async function loadInitialMessages(chatId) {
         showError('errorGeneric');
     }
 }
-
 
 
 // Función para cargar más mensajes antiguos
