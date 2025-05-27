@@ -652,9 +652,11 @@ async function setupRealtimeChats() {
         const chatsRef = collection(db, 'chats');
         
         const q = query(
-            chatsRef,
-            where('participants', 'array-contains', currentUser.uid)
+          collection(db, 'chats'),
+          where('participants', 'array-contains', currentUser.uid),
+          orderBy('lastMessageTime', 'desc')
         );
+
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
             try {
