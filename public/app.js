@@ -380,7 +380,7 @@ await new Promise((resolve) => {
     });
 });
 
-await updateUserData(userCredential.user, username, true);
+await updateUserData(auth.currentUser, username, true);
 
                     console.log('Usuario creado exitosamente:', userCredential.user.uid);
                     return;
