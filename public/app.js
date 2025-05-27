@@ -993,8 +993,15 @@ function debounce(func, wait) {
 // Función para mostrar mensajes
 async function displayMessage(messageData) {
     // Control de duplicados: solo mostrar si NO existe ya en el DOM
-    if (!messageData.id) return;
-    if (messagesList.querySelector(`[data-message-id="${messageData.id}"]`)) return;
+    if (!messageData.id) {
+    console.warn('Mensaje sin ID, posible duplicado evitado:', messageData);
+    return;
+}
+const exists = messagesList.querySelector(`[data-message-id="${messageData.id}"]`);
+if (exists) {
+    console.warn('Mensaje ya existe en el DOM, no se muestra de nuevo:', messageData.id);
+    return;
+}
 
     const currentUser = auth.currentUser;
     if (!currentUser) {
