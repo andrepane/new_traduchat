@@ -1851,12 +1851,17 @@ async function searchUsersForGroup(searchTerm) {
             if (
                 userData.uid &&
                 typeof userData.email === 'string' &&
-                userData.uid !== currentUser.uid && 
-                userData.email.toLowerCase().includes(searchTerm.toLowerCase()) &&
-                !Array.from(selectedUsers).some(u => u.id === userData.uid)) {
+                userData.uid !== currentUser.uid &&
+                (
+                    userData.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (typeof userData.username === 'string' && userData.username.toLowerCase().includes(searchTerm.toLowerCase()))
+                ) &&
+                !Array.from(selectedUsers).some(u => u.id === userData.uid)
+            ) {
                 users.push({
                     id: userData.uid,
                     email: userData.email,
+                    username: userData.username || null
                 });
             }
         });
@@ -1878,7 +1883,11 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
     container.innerHTML = users.map(user => `
         <div class="user-item" data-userid="${user.id}" data-email="${user.email}">
             <i class="fas fa-user"></i>
-            <span>${user.email}</span>
+            <div class="user-info">
+                <div class="user-name">${user.username || user.email.split('@')[0]}</div>
+                <div class="user-email">${user.email}</div>
+            </div>
+
         </div>
     `).join('');
 
