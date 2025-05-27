@@ -1273,12 +1273,15 @@ unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
 }
 
 // Función para cargar los mensajes iniciales
+// Función para cargar los mensajes iniciales ordenados correctamente
 async function loadInitialMessages(chatId) {
     const db = window.db;
     const messagesRef = collection(db, 'chats', chatId, 'messages');
+
     const q = query(
         messagesRef,
-        orderBy('timestamp', 'desc'),
+        where('timestamp', '!=', null),
+        orderBy('timestamp', 'asc'),
         limit(MESSAGES_PER_BATCH)
     );
 
@@ -1289,27 +1292,28 @@ async function loadInitialMessages(chatId) {
             return;
         }
 
-        const messages = [];
-        snapshot.forEach(doc => {
-            messages.push({ ...doc.data(), id: doc.id });
-        });
+        const messages = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
+        }));
 
-        // Guardar referencia al último mensaje visible
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
-        // Mostrar mensajes en orden cronológico
-       messages.sort((a, b) => {
-    if (!a.timestamp || !b.timestamp) return 0;
-    return a.timestamp.toMillis() - b.timestamp.toMillis();
-});
+        await Promise.all(messages.map(async (messageData) => {
+            if (messageData.type === 'system') {
+                displaySystemMessage(messageData);
+            } else {
+                await displayMessage(messageData);
+            }
+        }));
 
-await Promise.all(messages.map(async (messageData) => {
-    if (messageData.type === 'system') {
-        displaySystemMessage(messageData);
-    } else {
-        await displayMessage(messageData);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    } catch (error) {
+        console.error('Error al cargar mensajes iniciales:', error);
+        showError('errorGeneric');
     }
-}));
+}
+
 
 
 
