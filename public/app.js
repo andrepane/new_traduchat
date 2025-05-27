@@ -821,7 +821,7 @@ async function searchUsers(searchTerm) {
         });
 
         console.log('Usuarios filtrados:', users);
-        displaySearchResults(users);
+        displaySearchResults(users, false);
     } catch (error) {
         console.error('Error detallado al buscar usuarios:', error);
         showError('errorSearch');
@@ -829,10 +829,11 @@ async function searchUsers(searchTerm) {
 }
 
 // Función para mostrar resultados de búsqueda
-function displaySearchResults(users) {
+function displaySearchResults(users, showGroupButton = false) {
     chatList.innerHTML = '';
     
     // Añadir botón de crear grupo
+   if (showGroupButton) {
     const createGroupButton = document.createElement('div');
     createGroupButton.className = 'chat-item create-group';
     createGroupButton.innerHTML = `
@@ -848,7 +849,7 @@ function displaySearchResults(users) {
     });
     
     chatList.appendChild(createGroupButton);
-
+   }
     if (users.length === 0) {
         const noUsersMessage = document.createElement('div');
         noUsersMessage.className = 'chat-item';
