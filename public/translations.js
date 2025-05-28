@@ -1,3 +1,6 @@
+import { getUserLanguage } from './modules/state.js';
+
+
 const translations = {
     es: {
         // Autenticación
@@ -212,28 +215,21 @@ const translations = {
 };
 
 // Función para obtener una traducción
-function getTranslation(key, lang) {
+function getTranslation(key, lang = getUserLanguage()) {
     if (!translations[lang] || !translations[lang][key]) {
-        console.warn(`Translation missing for key: ${key} in language: ${lang}`);
-        // Fallback a español si no se encuentra la traducción
+        console.warn(`Falta traducción para "${key}" en idioma "${lang}"`);
         return translations.es[key] || key;
     }
     return translations[lang][key];
 }
 
-// Función para traducir la interfaz
-function translateInterface(lang) {
-    // Guardar el idioma seleccionado
-    localStorage.setItem('userLanguage', lang);
-    
-    // Traducir elementos con atributo data-translate
+function translateInterface(lang = getUserLanguage()) {
     document.querySelectorAll('[data-translate]').forEach(element => {
         const key = element.getAttribute('data-translate');
         if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
             element.placeholder = getTranslation(key, lang);
         } else {
             element.textContent = getTranslation(key, lang);
-            // Si es el título, reactivar la animación
             if (element.id === 'titulo-wave') {
                 animateTitleWave();
             }
@@ -241,7 +237,6 @@ function translateInterface(lang) {
     });
 }
 
-// Función para animar el título
 function animateTitleWave() {
     const h1 = document.getElementById("titulo-wave");
     if (h1) {
@@ -249,10 +244,10 @@ function animateTitleWave() {
         h1.textContent = "";
         [...text].forEach((char) => {
             const span = document.createElement("span");
-            span.textContent = char === ' ' ? '\u00A0' : char; // Usar espacio no rompible para espacios
+            span.textContent = char === ' ' ? '\u00A0' : char;
             h1.appendChild(span);
         });
     }
 }
 
-export { translations, getTranslation, translateInterface, animateTitleWave }; 
+export { translations, getTranslation, translateInterface, animateTitleWave };
