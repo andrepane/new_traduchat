@@ -51,6 +51,8 @@ import {
     getCurrentUser
 } from './modules/state.js';
 
+const userLanguage = getUserLanguage(); // ✅ ahora sí puedes usarla
+
 
 // Antes de llamar a startAuthListener
 
@@ -112,6 +114,7 @@ const currentChatInfo = document.getElementById('currentChatInfo');
 const languageSelect = document.getElementById('languageSelect');
 const languageSelectMain = document.getElementById('languageSelectMain');
 const logoutBtn = document.getElementById('logoutBtn');
+
 
 // Referencias adicionales para móvil
 const backButton = document.getElementById('backToChats');
