@@ -1,4 +1,3 @@
-// modules/state.js
 export const state = {
     currentUser: null,
     currentChat: null,
@@ -17,16 +16,23 @@ export const state = {
     allMessagesLoaded: false,
     lastVisibleMessage: null,
     userLanguage: localStorage.getItem('userLanguage') || 'es'
-  };
-  
+};
 
-  let currentUser = null;
+let currentUser = null;
 
-  export function getCurrentUser() {
-      return currentUser;
-  }
-  
-  export function setCurrentUser(user) {
-      currentUser = user;
-  }
-  
+export function getCurrentUser() {
+    return currentUser;
+}
+
+export function setCurrentUser(user) {
+    currentUser = user;
+}
+
+export function getUserLanguage() {
+    return state.userLanguage;
+}
+
+export function setUserLanguage(lang) {
+    state.userLanguage = lang;
+    localStorage.setItem('userLanguage', lang);
+}
