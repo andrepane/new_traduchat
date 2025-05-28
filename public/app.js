@@ -43,12 +43,19 @@ import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-
 import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
 import { state } from './modules/state.js';
 import { startAuthListener, setUserLanguage } from './modules/auth.js';
-import { getCurrentUser } from './modules/state.js';
 
 import { initializeNotifications } from './modules/notificaciones.js';
 
+import {
+    getUserLanguage,
+    setUserLanguage,
+    getCurrentUser
+} from './modules/state.js';
+
+import { setupRealtimeChats } from './modules/chat.js';
+
+
 // Antes de llamar a startAuthListener
-const userLanguage = localStorage.getItem('userLanguage') || 'es';
 
 setUserLanguage(userLanguage);
 
@@ -243,10 +250,14 @@ function updateUserInfo(user) {
 languageSelect.value = userLanguage;
 languageSelectMain.value = userLanguage;
 
-languageSelect.addEventListener('change', (e) => {
-    userLanguage = e.target.value;
-    languageSelectMain.value = userLanguage;
-    translateInterface(userLanguage);
+if (languageSelect) {
+    languageSelect.addEventListener('change', (e) => {
+        const newLang = e.target.value;
+        setUserLanguage(newLang);
+        if (languageSelectMain) languageSelectMain.value = newLang;
+        updateUITranslations();
+    });
+}
     
     // Reiniciar el reconocimiento de voz con el nuevo idioma
     if (recognition) {
@@ -255,10 +266,14 @@ languageSelect.addEventListener('change', (e) => {
     }
 });
 
-languageSelectMain.addEventListener('change', (e) => {
-    userLanguage = e.target.value;
-    languageSelect.value = userLanguage;
-    translateInterface(userLanguage);
+if (languageSelectMain) {
+    languageSelectMain.addEventListener('change', (e) => {
+        const newLang = e.target.value;
+        setUserLanguage(newLang);
+        if (languageSelect) languageSelect.value = newLang;
+        updateUITranslations();
+    });
+}
     
     // Reiniciar el reconocimiento de voz con el nuevo idioma
     if (recognition) {
@@ -346,6 +361,17 @@ loginBtn.addEventListener('click', async () => {
     }
 });
 
+function updateUITranslations() {
+    const lang = getUserLanguage();
+
+    // Traducir textos fijos
+    translateInterface(lang);
+
+    // Re-traducir zonas dinámicas
+    updateUserInfo(getCurrentUser());
+    setupRealtimeChats();
+}
+
 
 
 // Función auxiliar para actualizar datos de usuario
@@ -430,10 +456,18 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Cargado');
     showLoadingScreen();
 
-    // Inicializar la interfaz con el idioma guardado y activar la animación
-    translateInterface(userLanguage);
+    // 🔄 Obtener el idioma desde el estado centralizado
+    const lang = getUserLanguage();
+
+    // 🔧 Sincronizar los selects visibles de idioma (si existen)
+    if (languageSelect) languageSelect.value = lang;
+    if (languageSelectMain) languageSelectMain.value = lang;
+
+    // 🌐 Traducir interfaz inicial
+    translateInterface(lang);
     setTimeout(animateTitleWave, 100);
 
+    // ⚠️ Comprobar si están disponibles Firebase Auth y Firestore
     if (!auth || !db) {
         console.error('Auth o Firestore no están inicializados');
         hideLoadingScreen();
@@ -441,18 +475,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    // 👤 Escuchar cambios de autenticación
     startAuthListener((user) => {
         if (user) {
             console.log('Usuario autenticado:', user.email);
             console.log('User ID:', user.uid);
-            initializeNotifications(); // ← si usas notificaciones
-            // Lógica adicional que dependía de que el usuario estuviera logueado
+
+            // 🛎️ Inicializar notificaciones si corresponde
+            initializeNotifications();
+
+            // ✅ Aplicar traducciones completas al estar logueado
+            updateUITranslations();
         } else {
             console.log('No hay usuario autenticado');
-            // Mostrar pantalla de login o redirigir
+            showAuthScreen(); // si tienes una función que muestra login
         }
     });
-}); // ← Cierre del addEventListener
+});
 
 
 // Funciones de UI mejoradas
