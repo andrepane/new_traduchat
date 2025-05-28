@@ -1,10 +1,10 @@
 /* Variables CSS */
 :root {
     /* Colores */
-    --color-primary: #00b451;
+    --color-primary: #4caf50;
     --color-primary-dark: #006d34;
     --color-primary-light: #1ee98e;
-    --color-danger: #ff4d4d;
+    --color-danger: #d32f2f;
     --color-bg: #e9f7ef;
     --color-bg-alt: #ffffffcc;
     --color-border: #d1e7dd;
@@ -175,8 +175,8 @@ body {
 .chat-item {
   display: flex;
   align-items: center;
-  padding: 13px 15px;
-  border-bottom: 1px solid var(--color-primary-dark);
+  padding: 15px 15px;
+  border-bottom: 1px dashed var(--color-primary-dark);
   transition: background-color 0.2s ease;
   cursor: pointer;
   justify-content: space-between;
@@ -258,7 +258,7 @@ body {
   border: none;
   border-radius: 20px;
   padding: 8px 16px;
-  font-size: 0.85rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -1346,11 +1346,11 @@ html {
 }
 
 #createGroup {
-    background: #6366f1;
+    background: #2e7d32;
 }
 
 #createGroup:hover {
-    background: #4f46e5;
+    background: #1b5e20;
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
