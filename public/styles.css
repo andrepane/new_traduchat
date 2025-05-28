@@ -1895,12 +1895,22 @@ html {
     }
 
     /* Header actions */
-    .header-actions {
-        margin-right: 15px;
-        padding-top: calc(var(--safe-area-top) * 0.2);
-        display: flex;
-        gap: 8px;
-    }
+      .header-actions {
+        padding-left: 15px;
+        padding-right: calc(env(safe-area-inset-right) + 15px);
+        margin-right: 0;
+        justify-content: flex-end;
+        gap: 12px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+    
+      .icon-button {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+      }
+
 
     /* Contenedor de búsqueda */
     .search-container {
