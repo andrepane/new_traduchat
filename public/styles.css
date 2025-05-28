@@ -137,19 +137,64 @@ body {
 }
 
 /* Contenedor de búsqueda */
+/* =====================
+   SEARCH CONTAINER
+====================== */
 .search-container {
   position: fixed;
   top: calc(var(--header-height) + var(--safe-area-top));
   left: 0;
   right: 0;
-  padding: 10px 15px;
-  background-color: var(--color-bg);
+  padding: 10px calc(15px + env(safe-area-inset-left)) 10px calc(15px + env(safe-area-inset-right));
+  background-color: var(--color-bg-alt);
+  backdrop-filter: saturate(180%) blur(10px);
+  -webkit-backdrop-filter: saturate(180%) blur(10px);
   border-bottom: 1px solid var(--color-border);
   z-index: 99;
-  height: 60px; /* Altura fija para el contenedor de búsqueda */
+  height: 60px;
   display: flex;
   align-items: center;
 }
+
+/* En móvil mantén sticky para mejor UX */
+@media screen and (max-width: 768px) {
+  .search-container {
+    position: sticky;
+    top: calc(var(--header-height) + var(--safe-area-top));
+    z-index: 101; /* un poco más que sidebar */
+  }
+}
+
+/* =====================
+   HEADER ACTIONS
+====================== */
+.header-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: calc(env(safe-area-inset-right) + 15px);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Botones e iconos dentro para mejor experiencia táctil */
+.header-actions button,
+.header-actions .icon-button {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+/* Ajustes para pantallas >= 768px */
+@media screen and (min-width: 768px) {
+  .header-actions {
+    margin-right: 15px;
+    padding-top: calc(var(--safe-area-top) * 0.2);
+  }
+}
+
 
 #searchContacts {
   width: 100%;
@@ -1402,12 +1447,6 @@ html {
         z-index: 2;
     }
 
-    .search-container {
-        flex-shrink: 0;
-        position: sticky;
-        top: var(--header-height);
-        z-index: 1;
-    }
 
     .chat-list {
         flex: 1;
@@ -1906,16 +1945,6 @@ html {
     }
 
     /* Contenedor de búsqueda */
-    .search-container {
-        position: fixed;
-        top: calc(var(--header-height) + var(--safe-area-top));
-        left: 0;
-        right: 0;
-        padding: 10px 15px;
-        background-color: var(--color-bg);
-        border-bottom: 1px solid var(--color-border);
-        z-index: 99;
-    }
 
     /* Lista de chats */
     .chat-list {
