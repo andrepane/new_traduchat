@@ -11,14 +11,10 @@ import {
     serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
+import { setCurrentUser } from './state.js'; // <--- usamos esto en lugar de una variable local
+
 // Esto se puede pasar desde app.js si quieres más flexibilidad
 let userLanguage = 'es';
-
-let currentUser = null;
-
-function getCurrentUser() {
-    return currentUser;
-}
 
 function setUserLanguage(lang) {
     userLanguage = lang;
@@ -28,6 +24,7 @@ async function logout() {
     try {
         await signOut(auth);
         console.log('Sesión cerrada correctamente');
+        setCurrentUser(null); // <- limpiamos el estado al cerrar sesión
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
     }
@@ -59,17 +56,18 @@ function startAuthListener(callback) {
                     console.log('Documento de usuario creado exitosamente');
                 }
 
-                currentUser = userData;
+                setCurrentUser(userData); // <-- actualizamos el estado global
                 callback(userData);
             } catch (error) {
                 console.error('Error al verificar/crear documento de usuario:', error);
+                setCurrentUser(null);
                 callback(null);
             }
         } else {
-            currentUser = null;
+            setCurrentUser(null); // <-- limpiamos el estado
             callback(null);
         }
     });
 }
 
-export { startAuthListener, getCurrentUser, logout, setUserLanguage };
+export { startAuthListener, logout, setUserLanguage };
