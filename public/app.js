@@ -479,18 +479,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // 👤 Escuchar estado de autenticación
-    startAuthListener((user) => {
-        if (user) {
-            console.log('Usuario autenticado:', user.email);
-            console.log('User ID:', user.uid);
+startAuthListener((user) => {
+    if (user) {
+        console.log('Usuario autenticado:', user.email);
+        console.log('User ID:', user.uid);
 
-            initializeNotifications();
-            updateUITranslations();
-        } else {
-            console.log('No hay usuario autenticado');
-            showAuthScreen();
-        }
-    });
+        initializeNotifications();
+        updateUITranslations();
+
+        // ✅ OCULTAR pantalla de carga
+        hideLoadingScreen();
+    } else {
+        console.log('No hay usuario autenticado');
+        showAuthScreen();
+
+        // ✅ TAMBIÉN aquí hay que ocultar la pantalla de carga
+        hideLoadingScreen();
+    }
+});
+
 });
 
 
