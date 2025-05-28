@@ -250,7 +250,7 @@ function updateUserInfo(user) {
 languageSelect.value = userLanguage;
 languageSelectMain.value = userLanguage;
 // Obtener idioma desde state
-const userLanguage = getUserLanguage();
+
 
 // Sincronizar selects de idioma
 if (languageSelect) languageSelect.value = userLanguage;
