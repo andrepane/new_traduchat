@@ -48,7 +48,6 @@ import { initializeNotifications } from './modules/notificaciones.js';
 
 import {
     getUserLanguage,
-    setUserLanguage,
     getCurrentUser
 } from './modules/state.js';
 
