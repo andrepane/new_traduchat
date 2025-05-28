@@ -40,14 +40,12 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
+import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
+import { state } from './modules/state.js';
+
+
+
 // Verificar inicialización de Firebase
-console.log('Verificando inicialización de Firebase...');
-if (!window.db) {
-    console.error('Firestore no está inicializado!');
-}
-if (!window.auth) {
-    console.error('Auth no está inicializado!');
-}
 
 // Obtener la instancia de Firebase Messaging
 let messaging;
@@ -158,16 +156,7 @@ if (messaging) {
 }
 
 // Llamar a la función cuando el usuario inicie sesión
-const auth = window.auth;
-if (auth) {
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            initializeNotifications();
-        }
-    });
-} else {
-    console.error('Auth no está inicializado');
-}
+
 
 // Función para generar un código aleatorio de 6 dígitos
 function generateVerificationCode() {
@@ -379,7 +368,6 @@ loginBtn.addEventListener('click', async () => {
 
 // Función auxiliar para actualizar datos de usuario
 async function updateUserData(user, username, isNewUser) {
-    const db = window.db;
     
     try {
         // Verificar si el nombre de usuario está disponible
@@ -465,8 +453,6 @@ document.addEventListener('DOMContentLoaded', () => {
     translateInterface(userLanguage);
     setTimeout(animateTitleWave, 100);
 
-    const auth = window.auth;
-    const db = window.db;
     
     if (!auth || !db) {
         console.error('Auth o Firestore no están inicializados');
@@ -624,7 +610,6 @@ async function setupRealtimeChats() {
         unsubscribeChats = null;
     }
 
-    const db = window.db;
     const currentUser = auth.currentUser;
 
     if (!db || !currentUser) {
@@ -776,7 +761,6 @@ async function searchUsers(searchTerm) {
 
     try {
         console.log('Iniciando búsqueda con término:', searchTerm);
-        const db = window.db;
         const usersRef = collection(db, 'users');
         const currentUserUid = auth.currentUser.uid;
         console.log('Usuario actual:', currentUserUid);
@@ -892,7 +876,6 @@ function displaySearchResults(users, showGroupButton = false) {
 async function createChat(otherUserId) {
     console.log('Creando chat con usuario:', otherUserId);
     try {
-        const db = window.db;
         const currentUser = auth.currentUser;
 
         if (!currentUser || !otherUserId) {
@@ -1041,7 +1024,6 @@ if (exists) {
     }
 
     // Obtener el tipo de chat actual
-    const db = window.db;
     const chatDoc = await getDoc(doc(db, 'chats', currentChat));
     const chatData = chatDoc.exists() ? chatDoc.data() : null;
     const isGroupChat = chatData && chatData.type === 'group';
@@ -1161,7 +1143,6 @@ async function openChat(chatId) {
     currentChat = chatId;
     
     try {
-        const db = window.db;
         // Obtener información del chat
         const chatDoc = await getDoc(doc(db, 'chats', chatId));
         if (!chatDoc.exists()) {
@@ -1274,7 +1255,6 @@ unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
 
 // Función para cargar los mensajes iniciales
 async function loadInitialMessages(chatId) {
-    const db = window.db;
     const messagesRef = collection(db, 'chats', chatId, 'messages');
 
     const q = query(
@@ -1330,7 +1310,6 @@ async function loadMoreMessages(chatId) {
     if (loaderDiv) loaderDiv.style.display = 'block';
 
     try {
-        const db = window.db;
         const messagesRef = collection(db, 'chats', chatId, 'messages');
         const q = query(
             messagesRef,
@@ -1451,7 +1430,6 @@ async function sendMessage(text) {
     }
 
     try {
-        const db = window.db;
         const user = auth.currentUser;
         
         if (!user) {
@@ -1846,7 +1824,6 @@ function showGroupCreationModal() {
 
 // Función para buscar usuarios para el grupo
 async function searchUsersForGroup(searchTerm) {
-    const db = window.db;
     const currentUser = auth.currentUser;
     
     try {
@@ -1941,7 +1918,6 @@ async function createGroupChat(groupName, participants) {
         return;
     }
 
-    const db = window.db;
     const currentUser = auth.currentUser;
     
     if (!currentUser) {
@@ -2168,4 +2144,3 @@ document.addEventListener('focusout', (e) => {
 document.addEventListener('gesturestart', (e) => {
     e.preventDefault();
 });
-
