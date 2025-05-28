@@ -248,6 +248,12 @@ function updateUserInfo(user) {
 // Manejadores de eventos para el cambio de idioma
 languageSelect.value = userLanguage;
 languageSelectMain.value = userLanguage;
+// Obtener idioma desde state
+const userLanguage = getUserLanguage();
+
+// Sincronizar selects de idioma
+if (languageSelect) languageSelect.value = userLanguage;
+if (languageSelectMain) languageSelectMain.value = userLanguage;
 
 if (languageSelect) {
     languageSelect.addEventListener('change', (e) => {
@@ -255,15 +261,14 @@ if (languageSelect) {
         setUserLanguage(newLang);
         if (languageSelectMain) languageSelectMain.value = newLang;
         updateUITranslations();
+
+        // Reiniciar reconocimiento de voz si existe
+        if (recognition) {
+            recognition.stop();
+            recognition = null;
+        }
     });
 }
-    
-    // Reiniciar el reconocimiento de voz con el nuevo idioma
-    if (recognition) {
-        recognition.stop();
-        recognition = null;
-    }
-});
 
 if (languageSelectMain) {
     languageSelectMain.addEventListener('change', (e) => {
@@ -271,15 +276,15 @@ if (languageSelectMain) {
         setUserLanguage(newLang);
         if (languageSelect) languageSelect.value = newLang;
         updateUITranslations();
+
+        // Reiniciar reconocimiento de voz si existe
+        if (recognition) {
+            recognition.stop();
+            recognition = null;
+        }
     });
 }
-    
-    // Reiniciar el reconocimiento de voz con el nuevo idioma
-    if (recognition) {
-        recognition.stop();
-        recognition = null;
-    }
-});
+
 
 // Función de login/registro
 loginBtn.addEventListener('click', async () => {
