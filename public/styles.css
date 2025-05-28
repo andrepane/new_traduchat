@@ -1356,15 +1356,6 @@ html {
     height: -webkit-fill-available;
 }
 
-/* Header actions */
-.header-actions {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 8px;
-    margin-left: auto;
-}
-
 .icon-button {
     width: 36px;
     height: 36px;
