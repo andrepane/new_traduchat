@@ -83,9 +83,9 @@ body {
 
 /* Sidebar con lista de chats */
 .sidebar {
-  width: 300px;
-  height: 100vh;
-  background-color: var(--color-bg);
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg);
   display: flex;
   flex-direction: column;
   position: absolute;
@@ -94,20 +94,21 @@ body {
   transform: translateX(0);
   transition: transform 0.3s ease;
   z-index: 20;
-  border-right: 1px solid var(--color-border);
+  border-right: 1px solid #dee2e6;
+  background-color: white;
+  width: 300px;
 }
 
 /* Header del sidebar */
 .user-header {
   height: var(--header-height);
   padding: 12px 15px;
-  background-color: var(--color-bg-alt);
-  border-bottom: 1px solid var(--color-border);
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  flex-shrink: 0;
 }
 
 .user-info {
@@ -137,64 +138,19 @@ body {
 }
 
 /* Contenedor de búsqueda */
-/* =====================
-   SEARCH CONTAINER
-====================== */
 .search-container {
   position: fixed;
   top: calc(var(--header-height) + var(--safe-area-top));
   left: 0;
   right: 0;
-  padding: 10px calc(15px + env(safe-area-inset-left)) 10px calc(15px + env(safe-area-inset-right));
-  background-color: var(--color-bg-alt);
-  backdrop-filter: saturate(180%) blur(10px);
-  -webkit-backdrop-filter: saturate(180%) blur(10px);
+  padding: 10px 15px;
+  background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   z-index: 99;
-  height: 60px;
+  height: 60px; /* Altura fija para el contenedor de búsqueda */
   display: flex;
   align-items: center;
 }
-
-/* En móvil mantén sticky para mejor UX */
-@media screen and (max-width: 768px) {
-  .search-container {
-    position: sticky;
-    top: calc(var(--header-height) + var(--safe-area-top));
-    z-index: 101; /* un poco más que sidebar */
-  }
-}
-
-/* =====================
-   HEADER ACTIONS
-====================== */
-.header-actions {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-  padding-right: calc(env(safe-area-inset-right) + 15px);
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Botones e iconos dentro para mejor experiencia táctil */
-.header-actions button,
-.header-actions .icon-button {
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  cursor: pointer;
-}
-
-/* Ajustes para pantallas >= 768px */
-@media screen and (min-width: 768px) {
-  .header-actions {
-    margin-right: 15px;
-    padding-top: calc(var(--safe-area-top) * 0.2);
-  }
-}
-
 
 #searchContacts {
   width: 100%;
@@ -208,8 +164,9 @@ body {
 
 /* Lista de chats */
 .chat-list {
-  flex: 1;
-  padding-top: 10px;
+  margin-top: calc(var(--header-height) + var(--safe-area-top) + 60px); /* Ajustado para considerar la altura del search container */
+  padding-top: 10px; /* Añadir padding superior */
+  height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(var(--safe-area-bottom) + 20px);
@@ -219,19 +176,15 @@ body {
 .chat-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 10px 15px;
-  border-bottom: 1px solid var(--color-border);
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  border-bottom: 1px solid #dee2e6;
+  transition: background-color 0.2s ease;
   cursor: pointer;
-  outline-offset: 2px;
+  justify-content: space-between;
 }
 
-.chat-item:hover,
-.chat-item:focus-visible {
-  background-color: var(--color-primary-light);
-  box-shadow: 0 2px 6px rgba(0, 180, 81, 0.15);
-  outline: none;
+.chat-item:hover {
+  background-color: #f0f2f5;
 }
 
 .chat-info {
@@ -1356,6 +1309,43 @@ html {
     height: -webkit-fill-available;
 }
 
+/* Header actions */
+.header-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.icon-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px; /* Evita que los botones se encojan */
+    border-radius: 50%;
+    border: none;
+    background: var(--color-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 180, 81, 0.2);
+}
+
+.icon-button i {
+    font-size: 18px;
+}
+
+.icon-button:hover {
+    transform: scale(1.05);
+    background: var(--color-primary-dark);
+    box-shadow: 0 4px 12px rgba(0, 180, 81, 0.3);
+}
+
 #createGroup {
     background: #6366f1;
 }
@@ -1410,6 +1400,12 @@ html {
         z-index: 2;
     }
 
+    .search-container {
+        flex-shrink: 0;
+        position: sticky;
+        top: var(--header-height);
+        z-index: 1;
+    }
 
     .chat-list {
         flex: 1;
@@ -1852,6 +1848,9 @@ html {
         --safe-area-bottom: env(safe-area-inset-bottom, 34px);
     }
 
+    .header-actions {
+        padding-right: calc(env(safe-area-inset-right) + 15px);
+    }
 }
 
 /* Ajustes base para iOS */
@@ -1905,6 +1904,16 @@ html {
     }
 
     /* Contenedor de búsqueda */
+    .search-container {
+        position: fixed;
+        top: calc(var(--header-height) + var(--safe-area-top));
+        left: 0;
+        right: 0;
+        padding: 10px 15px;
+        background-color: var(--color-bg);
+        border-bottom: 1px solid var(--color-border);
+        z-index: 99;
+    }
 
     /* Lista de chats */
     .chat-list {
