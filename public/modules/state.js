@@ -19,3 +19,14 @@ export const state = {
     userLanguage: localStorage.getItem('userLanguage') || 'es'
   };
   
+
+  let currentUser = null;
+
+  export function getCurrentUser() {
+      return currentUser;
+  }
+  
+  export function setCurrentUser(user) {
+      currentUser = user;
+  }
+  
