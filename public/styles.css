@@ -1339,6 +1339,10 @@ html {
     font-size: 18px;
 }
 
+#newChat i {
+    font-size: 26px;
+}
+
 .icon-button:hover {
     transform: scale(1.05);
     background: var(--color-primary-dark);
