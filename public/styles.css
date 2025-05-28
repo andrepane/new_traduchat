@@ -157,7 +157,7 @@ body {
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: 20px;
-  font-size: 12px;
+  font-size: 14px;
   background: var(--color-bg-alt);
 }
 
@@ -1895,21 +1895,32 @@ html {
     }
 
     /* Header actions */
-      .header-actions {
-        padding-left: 15px;
-        padding-right: calc(env(safe-area-inset-right) + 15px);
-        margin-right: 0;
-        justify-content: flex-end;
-        gap: 12px;
-        width: 100%;
-        box-sizing: border-box;
-      }
-    
-      .icon-button {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
-      }
+      .user-header {
+    display: flex;
+    align-items: center;
+    padding-left: calc(env(safe-area-inset-left) + 15px);
+    padding-right: calc(env(safe-area-inset-right) + 15px);
+  }
+
+  .user-info {
+    flex: 1;  /* Esto hace que el nombre ocupe todo el espacio disponible */
+    min-width: 0; /* Evita overflow */
+  }
+
+  .header-actions {
+    margin-left: auto; /* Empuja los botones a la derecha sin ocupar todo el ancho */
+    padding: 0;
+    width: auto; /* Para que no ocupe 100% */
+    gap: 12px;
+    display: flex;
+  }
+
+  .icon-button {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+  }
+}
 
 
     /* Contenedor de búsqueda */
