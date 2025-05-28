@@ -5,7 +5,7 @@
     --color-primary-dark: #006d34;
     --color-primary-light: #1ee98e;
     --color-danger: #d32f2f;
-    --color-bg: #e9f7ef;
+    --color-bg: #f6faf7;
     --color-bg-alt: #ffffffcc;
     --color-border: #d1e7dd;
     --color-admin: #006d347;
@@ -294,7 +294,7 @@ body {
 
 /* Estilos para chats grupales */
 .chat-item.group-chat .chat-name::before {
-  content: "👥";
+  content: "👨‍👩‍👧‍👦";
   margin-right: 5px;
   font-size: 0.9em;
 }
@@ -372,7 +372,7 @@ body {
 
   /* Chat items */
   .chat-item {
-    padding: 8px 12px;
+    padding: 12px 12px;
   }
 
   .chat-name {
