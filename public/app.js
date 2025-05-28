@@ -42,6 +42,38 @@ import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-
 
 import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
 import { state } from './modules/state.js';
+import {
+    startAuthListener,
+    getCurrentUser,
+    setUserLanguage
+} from './modules/auth.js';
+
+// Antes de llamar a startAuthListener
+const userLanguage = localStorage.getItem('userLanguage') || 'es';
+
+setUserLanguage(userLanguage);
+
+startAuthListener(async (userData) => {
+    if (userData) {
+        console.log('Usuario autenticado:', userData.email);
+        console.log('User ID:', userData.uid);
+
+        resetChatState();
+        hideLoadingScreen();
+        showMainScreen();
+        updateUserInfo(userData);
+        setupRealtimeChats();
+        initializeNotifications();
+    } else {
+        console.log('No hay usuario autenticado');
+        currentUser = null;
+        resetChatState();
+        hideLoadingScreen();
+        showAuthScreen();
+    }
+});
+
+
 
 
 
@@ -87,7 +119,6 @@ let currentChat = null;
 let verificationCode = null;
 let timerInterval = null;
 const CODE_EXPIRY_TIME = 5 * 60; // 5 minutos en segundos
-let userLanguage = localStorage.getItem('userLanguage') || 'es';
 let unsubscribeMessages = null; // Variable para almacenar la función de cancelación de suscripción
 let typingTimeouts = {};
 let lastSender = null;
@@ -125,7 +156,7 @@ async function initializeNotifications() {
         });
 
         // Guardar el token en Firestore para el usuario actual
-        const userId = auth.currentUser?.uid;
+        const userId = getCurrentUser()?.uid;
         if (userId && token) {
             await setDoc(doc(db, 'users', userId), {
                 fcmToken: token,
@@ -443,7 +474,6 @@ function showAuthScreen() {
     document.getElementById('authScreen').classList.add('active');
     document.body.classList.remove('in-chat');
 }
-
 // Inicialización cuando se carga el documento
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Cargado');
@@ -453,7 +483,6 @@ document.addEventListener('DOMContentLoaded', () => {
     translateInterface(userLanguage);
     setTimeout(animateTitleWave, 100);
 
-    
     if (!auth || !db) {
         console.error('Auth o Firestore no están inicializados');
         hideLoadingScreen();
@@ -461,69 +490,19 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // Manejar cambios en el estado de autenticación
-    onAuthStateChanged(auth, async (user) => {
-        try {
+    startAuthListener((user) => {
         if (user) {
             console.log('Usuario autenticado:', user.email);
             console.log('User ID:', user.uid);
-                
-                // Limpiar cualquier estado anterior
-                resetChatState();
-            
-            try {
-                const userDocRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userDocRef);
-                
-                    let userData = {
-                        uid: user.uid,
-                        email: user.email.toLowerCase(),
-                    };
-
-                    if (userDoc.exists()) {
-                        userData = { ...userData, ...userDoc.data() };
-                    } else {
-                    console.log('Creando documento de usuario...');
-                    await setDoc(userDocRef, {
-                        uid: user.uid,
-                        email: user.email.toLowerCase(),
-                        language: userLanguage,
-                        createdAt: serverTimestamp(),
-                        lastUpdated: serverTimestamp()
-                    });
-                    console.log('Documento de usuario creado exitosamente');
-            }
-
-                    // Actualizar el estado del usuario actual con los datos completos
-                    currentUser = userData;
-                    
-                    // Mostrar la pantalla principal con el nombre de usuario
-            hideLoadingScreen();
-            showMainScreen();
-                    updateUserInfo(userData);
-            setupRealtimeChats();
-                } catch (error) {
-                    console.error('Error al verificar/crear documento de usuario:', error);
-                    showError('errorGeneric');
-                }
+            initializeNotifications(); // ← si usas notificaciones
+            // Lógica adicional que dependía de que el usuario estuviera logueado
         } else {
             console.log('No hay usuario autenticado');
-                // Limpiar el estado
-                currentUser = null;
-                resetChatState();
-                
-            hideLoadingScreen();
-            showAuthScreen();
-            }
-        } catch (error) {
-            console.error('Error en el manejo de autenticación:', error);
-            hideLoadingScreen();
-            showError('errorGeneric');
+            // Mostrar pantalla de login o redirigir
         }
     });
+}); // ← Cierre del addEventListener
 
-    adjustMobileLayout();
-});
 
 // Funciones de UI mejoradas
 function showLoadingScreen() {
@@ -610,7 +589,7 @@ async function setupRealtimeChats() {
         unsubscribeChats = null;
     }
 
-    const currentUser = auth.currentUser;
+    const currentUser = getCurrentUser();
 
     if (!db || !currentUser) {
         console.error('Firestore o usuario no inicializados');
@@ -762,7 +741,7 @@ async function searchUsers(searchTerm) {
     try {
         console.log('Iniciando búsqueda con término:', searchTerm);
         const usersRef = collection(db, 'users');
-        const currentUserUid = auth.currentUser.uid;
+        const currentUserUid = getCurrentUser().uid;
         console.log('Usuario actual:', currentUserUid);
         
         // Obtener todos los usuarios
@@ -876,7 +855,7 @@ function displaySearchResults(users, showGroupButton = false) {
 async function createChat(otherUserId) {
     console.log('Creando chat con usuario:', otherUserId);
     try {
-        const currentUser = auth.currentUser;
+        const currentUser = getCurrentUser();
 
         if (!currentUser || !otherUserId) {
             console.error('Falta información necesaria para crear el chat');
@@ -986,7 +965,7 @@ if (exists) {
     return;
 }
 
-    const currentUser = auth.currentUser;
+    const currentUser = getCurrentUser();
     if (!currentUser) {
         console.error('No hay usuario autenticado al mostrar mensaje');
         return;
@@ -1124,7 +1103,7 @@ if (exists) {
 async function openChat(chatId) {
     console.log('Abriendo chat:', chatId);
     
-    const currentUser = auth.currentUser;
+    const currentUser = getCurrentUser();
     if (!currentUser) {
         console.error('No hay usuario autenticado al abrir chat');
         return;
@@ -1430,7 +1409,7 @@ async function sendMessage(text) {
     }
 
     try {
-        const user = auth.currentUser;
+        const user = getCurrentUser();
         
         if (!user) {
             console.error('No hay usuario autenticado');
@@ -1824,7 +1803,7 @@ function showGroupCreationModal() {
 
 // Función para buscar usuarios para el grupo
 async function searchUsersForGroup(searchTerm) {
-    const currentUser = auth.currentUser;
+    const currentUser = getCurrentUser();
     
     try {
         const usersRef = collection(db, 'users');
@@ -1918,7 +1897,7 @@ async function createGroupChat(groupName, participants) {
         return;
     }
 
-    const currentUser = auth.currentUser;
+    const currentUser = getCurrentUser();
     
     if (!currentUser) {
         console.error('No hay usuario autenticado');
