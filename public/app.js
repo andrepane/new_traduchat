@@ -258,36 +258,6 @@ if (languageSelectMain) languageSelectMain.value = userLanguage;
 if (languageSelect) languageSelect.value = userLanguage;
 if (languageSelectMain) languageSelectMain.value = userLanguage;
 
-languageSelect.addEventListener('change', (e) => {
-    const newLang = e.target.value;
-    setUserLanguage(newLang);
-    if (languageSelectMain) languageSelectMain.value = newLang;
-
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-        updateUserInfo(currentUser);
-    } else {
-        console.log('Idioma cambiado, pero aún no hay usuario autenticado');
-    }
-
-    updateUITranslations();
-});
-
-
-languageSelectMain.addEventListener('change', (e) => {
-    const newLang = e.target.value;
-    setUserLanguage(newLang);
-    if (languageSelect) languageSelect.value = newLang;
-
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-        updateUserInfo(currentUser);
-    } else {
-        console.log('Idioma cambiado, pero aún no hay usuario autenticado');
-    }
-
-    updateUITranslations();
-});
 
 
 
@@ -461,18 +431,17 @@ function showAuthScreen() {
     document.getElementById('authScreen').classList.add('active');
     document.body.classList.remove('in-chat');
 }
-// Inicialización cuando se carga el documento
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Cargado');
     showLoadingScreen();
 
-    languageSelect = document.getElementById('languageSelect');
-    languageSelectMain = document.getElementById('languageSelectMain');
+    const languageSelect = document.getElementById('languageSelect');
+    const languageSelectMain = document.getElementById('languageSelectMain');
 
-    // 🔄 Obtener el idioma desde el estado centralizado
+    // 🔄 Obtener el idioma actual
     const lang = getUserLanguage();
 
-    // 🔧 Sincronizar los selects visibles de idioma (si existen)
+    // 🔧 Sincronizar selects
     if (languageSelect) languageSelect.value = lang;
     if (languageSelectMain) languageSelectMain.value = lang;
 
@@ -480,7 +449,28 @@ document.addEventListener('DOMContentLoaded', () => {
     translateInterface(lang);
     setTimeout(animateTitleWave, 100);
 
-    // ⚠️ Comprobar si están disponibles Firebase Auth y Firestore
+    // 🎧 Escuchar cambios en los selects
+    const handleLanguageChange = (newLang) => {
+        setUserLanguage(newLang);
+        if (languageSelect) languageSelect.value = newLang;
+        if (languageSelectMain) languageSelectMain.value = newLang;
+
+        const currentUser = getCurrentUser();
+        if (currentUser) updateUserInfo(currentUser);
+        else console.log('Idioma cambiado, pero aún no hay usuario autenticado');
+
+        updateUITranslations();
+    };
+
+    if (languageSelect) {
+        languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
+    }
+
+    if (languageSelectMain) {
+        languageSelectMain.addEventListener('change', (e) => handleLanguageChange(e.target.value));
+    }
+
+    // ⚠️ Verificar Firebase
     if (!auth || !db) {
         console.error('Auth o Firestore no están inicializados');
         hideLoadingScreen();
@@ -488,20 +478,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 👤 Escuchar cambios de autenticación
+    // 👤 Escuchar estado de autenticación
     startAuthListener((user) => {
         if (user) {
             console.log('Usuario autenticado:', user.email);
             console.log('User ID:', user.uid);
 
-            // 🛎️ Inicializar notificaciones si corresponde
             initializeNotifications();
-
-            // ✅ Aplicar traducciones completas al estar logueado
             updateUITranslations();
         } else {
             console.log('No hay usuario autenticado');
-            showAuthScreen(); // si tienes una función que muestra login
+            showAuthScreen();
         }
     });
 });
