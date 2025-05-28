@@ -42,11 +42,10 @@ import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-
 
 import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
 import { state } from './modules/state.js';
-import {
-    startAuthListener,
-    getCurrentUser,
-    setUserLanguage
-} from './modules/auth.js';
+import { startAuthListener, setUserLanguage } from './modules/auth.js';
+import { getCurrentUser } from './modules/state.js';
+
+import { initializeNotifications } from './modules/notificaciones.js';
 
 // Antes de llamar a startAuthListener
 const userLanguage = localStorage.getItem('userLanguage') || 'es';
@@ -63,7 +62,7 @@ startAuthListener(async (userData) => {
         showMainScreen();
         updateUserInfo(userData);
         setupRealtimeChats();
-        initializeNotifications();
+        initializeNotifications(); // Aquí está bien colocada
     } else {
         console.log('No hay usuario autenticado');
         currentUser = null;
@@ -72,6 +71,7 @@ startAuthListener(async (userData) => {
         showAuthScreen();
     }
 });
+
 
 
 
@@ -138,55 +138,6 @@ let isLoadingMore = false;
 let allMessagesLoaded = false;
 let lastVisibleMessage = null;
 
-// Función para solicitar permiso y obtener el token FCM
-async function initializeNotifications() {
-    try {
-        if (!messaging) return;
-
-        // Solicitar permiso
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-            console.log('Permiso de notificación denegado');
-            return;
-        }
-
-        // Obtener token FCM
-        const token = await getToken(messaging, {
-            vapidKey: 'BHOz-BX2_ZDpjjQEvZ03bfRVTWyMgBd6CcZ5HgpLAJnKre2UbZYd4vMmCTVVF1MY17nJJTEb7nPiAJ9M5xIXTeY'
-        });
-
-        // Guardar el token en Firestore para el usuario actual
-        const userId = getCurrentUser()?.uid;
-        if (userId && token) {
-            await setDoc(doc(db, 'users', userId), {
-                fcmToken: token,
-                lastTokenUpdate: serverTimestamp()
-            }, { merge: true });
-        }
-
-        console.log('Token FCM obtenido:', token);
-    } catch (error) {
-        console.error('Error al inicializar notificaciones:', error);
-    }
-}
-
-// Manejar mensajes en primer plano
-if (messaging) {
-    onMessage(messaging, (payload) => {
-        console.log('Mensaje recibido en primer plano:', payload);
-        
-        // Mostrar notificación aunque la app esté abierta
-        const notificationTitle = payload.notification.title;
-        const notificationOptions = {
-            body: payload.notification.body,
-            icon: '/images/icon-192x192.png'
-        };
-
-        new Notification(notificationTitle, notificationOptions);
-    });
-}
-
-// Llamar a la función cuando el usuario inicie sesión
 
 
 // Función para generar un código aleatorio de 6 dígitos
