@@ -236,15 +236,15 @@ function showError(errorKey) {
 
 // Función para actualizar la información del usuario
 function updateUserInfo(user) {
-    if (userInfo) {
-        // Priorizar el nombre de usuario sobre el email
-        const displayName = user.username || user.email.split('@')[0];
-        userInfo.textContent = displayName;
+    if (!user) {
+        console.warn('updateUserInfo: usuario no definido');
+        return;
     }
-    if (currentChatInfo) {
-        currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
-    }
+
+    const name = user.username || user.email?.split('@')[0] || 'Usuario';
+    userInfo.textContent = name;
 }
+
 
 // Manejadores de eventos para el cambio de idioma
 languageSelect.value = userLanguage;
