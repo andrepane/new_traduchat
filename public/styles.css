@@ -5,7 +5,7 @@
     --color-primary-dark: #006d34;
     --color-primary-light: #1ee98e;
     --color-danger: #ff4d4d;
-    --color-bg: #f6faf7;
+    --color-bg: linear-gradient(135deg, #e6fff4 0%, #f6faf7 100%);
     --color-bg-alt: #ffffffcc;
     --color-border: #d1e7dd;
     --color-admin: #006d347;
@@ -170,13 +170,6 @@ body {
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(var(--safe-area-bottom) + 20px);
   background-color: var(--color-bg);
-    background-image: repeating-linear-gradient(
-    45deg,
-    var(--color-bg) 0,
-    var(--color-bg) 10px,
-    #e9f7ef 10px,
-    #e9f7ef 20px
-    );
 }
 
 .chat-item {
