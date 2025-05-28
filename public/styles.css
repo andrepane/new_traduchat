@@ -1356,34 +1356,6 @@ html {
     height: -webkit-fill-available;
 }
 
-.icon-button {
-    width: 36px;
-    height: 36px;
-    min-width: 36px; /* Evita que los botones se encojan */
-    border-radius: 50%;
-    border: none;
-    background: var(--color-primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    font-size: 16px;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(0, 180, 81, 0.2);
-}
-
-.icon-button i {
-    font-size: 18px;
-}
-
-.icon-button:hover {
-    transform: scale(1.05);
-    background: var(--color-primary-dark);
-    box-shadow: 0 4px 12px rgba(0, 180, 81, 0.3);
-}
-
 #createGroup {
     background: #6366f1;
 }
@@ -1880,9 +1852,6 @@ html {
         --safe-area-bottom: env(safe-area-inset-bottom, 34px);
     }
 
-    .header-actions {
-        padding-right: calc(env(safe-area-inset-right) + 15px);
-    }
 }
 
 /* Ajustes base para iOS */
