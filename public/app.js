@@ -111,8 +111,7 @@ const searchInput = document.getElementById('searchContacts');
 const newChatBtn = document.getElementById('newChat');
 const userInfo = document.getElementById('userInfo');
 const currentChatInfo = document.getElementById('currentChatInfo');
-const languageSelect = document.getElementById('languageSelect');
-const languageSelectMain = document.getElementById('languageSelectMain');
+
 const logoutBtn = document.getElementById('logoutBtn');
 
 
@@ -121,6 +120,8 @@ const backButton = document.getElementById('backToChats');
 const sidebar = document.querySelector('.sidebar');
 
 // Variables globales
+let languageSelect;
+let languageSelectMain;
 let currentUser = null;
 let currentChat = null;
 let verificationCode = null;
@@ -463,6 +464,9 @@ function showAuthScreen() {
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Cargado');
     showLoadingScreen();
+
+    languageSelect = document.getElementById('languageSelect');
+    languageSelectMain = document.getElementById('languageSelectMain');
 
     // 🔄 Obtener el idioma desde el estado centralizado
     const lang = getUserLanguage();
