@@ -248,8 +248,9 @@ function updateUserInfo(user) {
 
 
 // Manejadores de eventos para el cambio de idioma
-languageSelect.value = userLanguage;
-languageSelectMain.value = userLanguage;
+if (languageSelect) languageSelect.value = userLanguage;
+if (languageSelectMain) languageSelectMain.value = userLanguage;
+
 // Obtener idioma desde state
 
 
