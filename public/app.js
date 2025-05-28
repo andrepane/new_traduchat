@@ -256,35 +256,37 @@ languageSelectMain.value = userLanguage;
 if (languageSelect) languageSelect.value = userLanguage;
 if (languageSelectMain) languageSelectMain.value = userLanguage;
 
-if (languageSelect) {
-    languageSelect.addEventListener('change', (e) => {
-        const newLang = e.target.value;
-        setUserLanguage(newLang);
-        if (languageSelectMain) languageSelectMain.value = newLang;
-        updateUITranslations();
+languageSelect.addEventListener('change', (e) => {
+    const newLang = e.target.value;
+    setUserLanguage(newLang);
+    if (languageSelectMain) languageSelectMain.value = newLang;
 
-        // Reiniciar reconocimiento de voz si existe
-        if (recognition) {
-            recognition.stop();
-            recognition = null;
-        }
-    });
-}
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        updateUserInfo(currentUser);
+    } else {
+        console.log('Idioma cambiado, pero aún no hay usuario autenticado');
+    }
 
-if (languageSelectMain) {
-    languageSelectMain.addEventListener('change', (e) => {
-        const newLang = e.target.value;
-        setUserLanguage(newLang);
-        if (languageSelect) languageSelect.value = newLang;
-        updateUITranslations();
+    updateUITranslations();
+});
 
-        // Reiniciar reconocimiento de voz si existe
-        if (recognition) {
-            recognition.stop();
-            recognition = null;
-        }
-    });
-}
+
+languageSelectMain.addEventListener('change', (e) => {
+    const newLang = e.target.value;
+    setUserLanguage(newLang);
+    if (languageSelect) languageSelect.value = newLang;
+
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        updateUserInfo(currentUser);
+    } else {
+        console.log('Idioma cambiado, pero aún no hay usuario autenticado');
+    }
+
+    updateUITranslations();
+});
+
 
 
 // Función de login/registro
@@ -367,15 +369,16 @@ loginBtn.addEventListener('click', async () => {
 });
 
 function updateUITranslations() {
-    const lang = getUserLanguage();
+    translateInterface(getUserLanguage());
 
-    // Traducir textos fijos
-    translateInterface(lang);
-
-    // Re-traducir zonas dinámicas
-    updateUserInfo(getCurrentUser());
-    setupRealtimeChats();
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+        updateUserInfo(currentUser);
+    } else {
+        console.log('updateUITranslations: usuario no disponible aún');
+    }
 }
+
 
 
 
