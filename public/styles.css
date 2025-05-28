@@ -176,7 +176,7 @@ body {
   display: flex;
   align-items: center;
   padding: 20px 15px;
-  border-bottom: 1px dashed var(--color-primary-dark);
+  border-bottom: 1px solid #d9e6d6;
   transition: background-color 0.2s ease;
   cursor: pointer;
   justify-content: space-between;
@@ -210,6 +210,10 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.chat-item.group-chat .chat-name {
+    color: var(--color-primary);
 }
 
 .last-message {
@@ -292,12 +296,7 @@ body {
   font-size: 1.2rem;
 }
 
-/* Estilos para chats grupales */
-.chat-item.group-chat .chat-name::before {
-  content: "👨‍👩‍👧‍👦";
-  margin-right: 5px;
-  font-size: 0.9em;
-}
+
 
 /* Estilos para chat activo */
 .chat-item.active {
@@ -372,11 +371,11 @@ body {
 
   /* Chat items */
   .chat-item {
-    padding: 12px 12px;
+    padding: 16px 12px;
   }
 
   .chat-name {
-    font-size: 0.9rem;
+    font-size: 0.95rem;
   }
 
   .last-message {
