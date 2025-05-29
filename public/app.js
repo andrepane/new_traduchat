@@ -2044,7 +2044,7 @@ function initializeSpeechRecognition() {
     };
 
     // Establecer el idioma correcto basado en el idioma del usuario
-    recognition.lang = languageMapping[userLanguage] || 'en-US';
+    recognition.lang = languageMapping[getUserLanguage()] || 'en-US';
     console.log('Idioma de reconocimiento de voz establecido a:', recognition.lang);
     
     recognition.onresult = (event) => {
