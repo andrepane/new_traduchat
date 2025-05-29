@@ -139,7 +139,7 @@ let selectedUsers = new Set();
 let isGroupCreationMode = false;
 
 // Variables para grabación de audio
-let recognition = null;
+
 let isRecording = false;
 
 // Variables para paginación
