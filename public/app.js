@@ -1642,6 +1642,10 @@ sendMessageBtn.addEventListener('click', () => {
     sendMessage(messageInput.value);
 });
 
+messageInput.addEventListener('input', () => {
+    handleTyping();
+});
+
 messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
