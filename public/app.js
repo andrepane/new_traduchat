@@ -461,41 +461,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleLanguageChange = async (newLang) => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
         
-        // Actualizar el estado y localStorage
-        setUserLanguage(newLang);
-        console.log('✅ Idioma actualizado en state y localStorage');
-        
-        // Obtener referencias a los selectores
-        const languageSelect = document.getElementById('languageSelect');
-        const languageSelectMain = document.getElementById('languageSelectMain');
-        
-        // Sincronizar ambos selectores
-        if (languageSelect && languageSelect.value !== newLang) {
-            console.log('🔄 Actualizando languageSelect a:', newLang);
-            languageSelect.value = newLang;
-        }
-        if (languageSelectMain && languageSelectMain.value !== newLang) {
-            console.log('🔄 Actualizando languageSelectMain a:', newLang);
-            languageSelectMain.value = newLang;
-        }
+        try {
+            // Actualizar el estado y localStorage
+            setUserLanguage(newLang);
+            console.log('✅ Idioma actualizado en state y localStorage');
+            
+            // Obtener referencias a los selectores
+            const languageSelect = document.getElementById('languageSelect');
+            const languageSelectMain = document.getElementById('languageSelectMain');
+            
+            // Sincronizar ambos selectores
+            if (languageSelect && languageSelect.value !== newLang) {
+                console.log('🔄 Actualizando languageSelect a:', newLang);
+                languageSelect.value = newLang;
+            }
+            if (languageSelectMain && languageSelectMain.value !== newLang) {
+                console.log('🔄 Actualizando languageSelectMain a:', newLang);
+                languageSelectMain.value = newLang;
+            }
 
-        // Actualizar la interfaz
-        console.log('🌐 Traduciendo interfaz al nuevo idioma:', newLang);
-        translateInterface(newLang);
-        
-        // Si hay un chat abierto, recargar los mensajes para mostrar las traducciones
-        if (currentChat) {
-            console.log('📝 Recargando mensajes con nuevo idioma para chat:', currentChat);
-            messagesList.innerHTML = ''; // Limpiar mensajes actuales
-            await loadInitialMessages(currentChat); // Recargar mensajes
-            console.log('✅ Mensajes recargados exitosamente');
-        }
+            // Actualizar la interfaz
+            console.log('🌐 Traduciendo interfaz al nuevo idioma:', newLang);
+            translateInterface(newLang);
+            
+            // Si hay un chat abierto, recargar los mensajes para mostrar las traducciones
+            if (currentChat) {
+                console.log('📝 Recargando mensajes con nuevo idioma para chat:', currentChat);
+                messagesList.innerHTML = ''; // Limpiar mensajes actuales
+                await loadInitialMessages(currentChat); // Recargar mensajes
+                console.log('✅ Mensajes recargados exitosamente');
+            }
 
-        // Actualizar la información del usuario si está disponible
-        const currentUser = getCurrentUser();
-        if (currentUser) {
-            console.log('👤 Actualizando información del usuario');
-            updateUserInfo(currentUser);
+            // Actualizar la información del usuario si está disponible
+            const currentUser = getCurrentUser();
+            if (currentUser) {
+                console.log('👤 Actualizando información del usuario');
+                // También actualizar el idioma en la base de datos
+                const userRef = doc(db, 'users', currentUser.uid);
+                await updateDoc(userRef, {
+                    language: newLang,
+                    lastUpdated: serverTimestamp()
+                });
+                console.log('✅ Idioma actualizado en la base de datos');
+                updateUserInfo(currentUser);
+            }
+        } catch (error) {
+            console.error('❌ Error al cambiar el idioma:', error);
+            showError('errorGeneric');
         }
     };
 
