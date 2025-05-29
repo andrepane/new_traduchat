@@ -447,6 +447,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🌐 Traducir interfaz inicial
     translateInterface(lang);
+    setTimeout(() => {
+    console.log("⏳ Reintentando traducción tras 1 segundo...");
+    translateInterface(getUserLanguage());
+}, 1000);
     setTimeout(animateTitleWave, 100);
 
     // 🎧 Escuchar cambios en los selects
