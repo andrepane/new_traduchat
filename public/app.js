@@ -2076,7 +2076,7 @@ micButton.addEventListener('click', async () => {
          await new Promise(r => setTimeout(r, 10));
 
         // Obtener idioma actual y mapearlo para reconocimiento
-        const currentLang = getUserLanguage();
+        const currentLang = languageSelect ? languageSelect.value : getUserLanguage();
         const languageMapping = {
             'es': 'es-ES',
             'en': 'en-US',
