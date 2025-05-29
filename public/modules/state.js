@@ -1,5 +1,6 @@
-import { db } from '../firebase.js'; // Ajusta la ruta según tu estructura
+import { db } from '../modules/firebase.js';
 import { doc, updateDoc } from 'firebase/firestore';
+import { getCurrentUser } from './state.js';
 
 export const state = {
     currentUser: null,
@@ -61,23 +62,33 @@ export function getUserLanguage() {
     return state.userLanguage;
 }
 
-export function setUserLanguage(lang) {
+export async function setUserLanguage(lang) {
     console.log('🌐 setUserLanguage llamado con:', lang);
     console.log('🌐 Idioma anterior en state:', state.userLanguage);
     console.log('🌐 Idioma anterior en localStorage:', localStorage.getItem('userLanguage'));
-    
-    // Validar que el idioma sea válido
+
     if (!['es', 'en', 'it'].includes(lang)) {
         console.error('❌ Idioma no válido:', lang);
         return;
     }
-    
-    // Actualizar tanto state como localStorage
+
     state.userLanguage = lang;
     localStorage.setItem('userLanguage', lang);
-    
+
     console.log('✅ Nuevo idioma guardado en state y localStorage:', lang);
-    
-    // Disparar un evento personalizado para notificar el cambio de idioma
+
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: lang }));
+
+    const user = getCurrentUser();
+    if (user) {
+        try {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                language: lang
+            });
+            console.log('✅ Idioma actualizado en Firestore:', lang);
+        } catch (err) {
+            console.error('❌ Error al actualizar idioma en Firestore:', err);
+        }
+    }
 }
