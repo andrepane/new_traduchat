@@ -37,7 +37,7 @@ import {
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 
-import { translations, getTranslation, translateInterface, animateTitleWave } from './translations.js';
+import { translations, getTranslation, translateInterface, animateTitleWave, getTypingText } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
 import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
