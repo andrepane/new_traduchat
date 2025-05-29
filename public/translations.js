@@ -223,40 +223,39 @@ function getTranslation(key, lang = getUserLanguage()) {
     return translations[lang][key];
 }
 
-function translateInterface(lang = getUserLanguage()) {
-    console.log('Traduciendo interfaz al idioma:', lang);
+export function translateInterface(language) {
+    console.log('🌐 translateInterface llamada con idioma:', language);
     
-    // Traducir elementos con data-translate
-    document.querySelectorAll('[data-translate]').forEach(element => {
+    // Obtener todos los elementos con atributo data-translate
+    const elements = document.querySelectorAll('[data-translate]');
+    console.log(`🔍 Encontrados ${elements.length} elementos para traducir`);
+    
+    elements.forEach(element => {
         const key = element.getAttribute('data-translate');
-        console.log('Traduciendo elemento:', key, 'al idioma:', lang);
+        const translation = getTranslation(key, language);
+        console.log(`📝 Traduciendo elemento [${key}] de:`, element.textContent, 'a:', translation);
         
         if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
-            element.placeholder = getTranslation(key, lang);
-        } else if (element.tagName === 'OPTION') {
-            element.textContent = getTranslation(key, lang);
-        } else {
-            element.textContent = getTranslation(key, lang);
-            if (element.id === 'titulo-wave') {
-                animateTitleWave();
+            if (element.getAttribute('placeholder')) {
+                element.placeholder = translation;
             }
+        } else {
+            element.textContent = translation;
         }
     });
 
-    // Asegurar que los selectores de idioma muestren el texto correcto
-    const languageSelect = document.getElementById('languageSelect');
-    const languageSelectMain = document.getElementById('languageSelectMain');
-
-    [languageSelect, languageSelectMain].forEach(select => {
-        if (select) {
-            Array.from(select.options).forEach(option => {
-                const key = option.getAttribute('data-translate');
-                if (key) {
-                    option.textContent = getTranslation(key, lang);
-                }
-            });
-        }
+    // Traducir elementos OPTION
+    const options = document.querySelectorAll('option[data-translate]');
+    console.log(`🔍 Encontrados ${options.length} elementos OPTION para traducir`);
+    
+    options.forEach(option => {
+        const key = option.getAttribute('data-translate');
+        const translation = getTranslation(key, language);
+        console.log(`📝 Traduciendo OPTION [${key}] de:`, option.textContent, 'a:', translation);
+        option.textContent = translation;
     });
+
+    console.log('✅ Traducción de interfaz completada');
 }
 
 function animateTitleWave() {
