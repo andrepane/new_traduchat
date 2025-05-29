@@ -50,6 +50,8 @@ import {
     getUserLanguage,
     getCurrentUser
 } from './modules/state.js';
+import { updateUITranslations } from './modules/ui.js';
+
 
 const userLanguage = getUserLanguage(); // ✅ ahora sí puedes usarla
 
