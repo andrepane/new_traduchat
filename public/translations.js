@@ -147,6 +147,7 @@ const translations = {
         // Autenticazione
         appTitle: 'TraduChat',
         email: 'Email',
+        username: 'Nome utente',
         password: 'Password',
         phoneNumber: 'Numero di telefono',
         loginRegister: 'Registrati/Accedi',
