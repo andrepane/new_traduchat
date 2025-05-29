@@ -18,20 +18,10 @@ export const state = {
     isLoadingMore: false,
     allMessagesLoaded: false,
     lastVisibleMessage: null,
-    userLanguage: 'es' // Valor por defecto
 };
 
 let currentUser = null;
 
-// Inicializar el idioma desde localStorage si existe
-const storedLanguage = localStorage.getItem('userLanguage');
-if (storedLanguage) {
-    state.userLanguage = storedLanguage;
-    console.log('🔄 Idioma inicial cargado desde localStorage:', storedLanguage);
-} else {
-    localStorage.setItem('userLanguage', state.userLanguage);
-    console.log('🔄 Idioma por defecto guardado en localStorage:', state.userLanguage);
-}
 
 export function getCurrentUser() {
     return currentUser;
@@ -42,39 +32,21 @@ export function setCurrentUser(user) {
 }
 
 export function getUserLanguage() {
-    // Siempre verificar localStorage primero
-    const storedLanguage = localStorage.getItem('userLanguage');
-    console.log('🔍 getUserLanguage - Idioma en localStorage:', storedLanguage);
-    console.log('🔍 getUserLanguage - Idioma en state:', state.userLanguage);
-    
-    // Si hay un idioma en localStorage y es diferente al del state, actualizar state
-    if (storedLanguage && storedLanguage !== state.userLanguage) {
-        console.log('🔄 Actualizando state.userLanguage desde localStorage');
-        state.userLanguage = storedLanguage;
-    }
-    // Si no hay idioma en localStorage, guardar el del state
-    else if (!storedLanguage) {
-        console.log('🔄 Guardando idioma del state en localStorage');
-        localStorage.setItem('userLanguage', state.userLanguage);
-    }
-    
-    return state.userLanguage;
+    const lang = localStorage.getItem('userLanguage') || 'es';
+    console.log('🔍 getUserLanguage - Desde localStorage:', lang);
+    return lang;
 }
 
 export async function setUserLanguage(lang) {
     console.log('🌐 setUserLanguage llamado con:', lang);
-    console.log('🌐 Idioma anterior en state:', state.userLanguage);
-    console.log('🌐 Idioma anterior en localStorage:', localStorage.getItem('userLanguage'));
 
     if (!['es', 'en', 'it'].includes(lang)) {
         console.error('❌ Idioma no válido:', lang);
         return;
     }
 
-    state.userLanguage = lang;
     localStorage.setItem('userLanguage', lang);
-
-    console.log('✅ Nuevo idioma guardado en state y localStorage:', lang);
+    console.log('✅ Nuevo idioma guardado en localStorage:', lang);
 
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: lang }));
 
