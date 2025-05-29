@@ -462,7 +462,22 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
         
         try {
-            // Actualizar el estado y localStorage
+            const currentUser = getCurrentUser();
+            if (!currentUser) {
+                console.error('❌ No hay usuario autenticado');
+                return;
+            }
+
+            // Actualizar en la base de datos primero
+            console.log('💾 Actualizando idioma en la base de datos...');
+            const userRef = doc(db, 'users', currentUser.uid);
+            await updateDoc(userRef, {
+                language: newLang,
+                lastUpdated: serverTimestamp()
+            });
+            console.log('✅ Idioma actualizado en la base de datos');
+
+            // Luego actualizar el estado local y localStorage
             setUserLanguage(newLang);
             console.log('✅ Idioma actualizado en state y localStorage');
             
@@ -492,19 +507,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('✅ Mensajes recargados exitosamente');
             }
 
-            // Actualizar la información del usuario si está disponible
-            const currentUser = getCurrentUser();
-            if (currentUser) {
-                console.log('👤 Actualizando información del usuario');
-                // También actualizar el idioma en la base de datos
-                const userRef = doc(db, 'users', currentUser.uid);
-                await updateDoc(userRef, {
-                    language: newLang,
-                    lastUpdated: serverTimestamp()
-                });
-                console.log('✅ Idioma actualizado en la base de datos');
-                updateUserInfo(currentUser);
-            }
+            // Actualizar la información del usuario
+            console.log('👤 Actualizando información del usuario');
+            updateUserInfo(currentUser);
+
         } catch (error) {
             console.error('❌ Error al cambiar el idioma:', error);
             showError('errorGeneric');
@@ -1008,32 +1014,36 @@ function debounce(func, wait) {
 
 // Función para mostrar mensajes
 async function displayMessage(messageData) {
-    // Control de duplicados: solo mostrar si NO existe ya en el DOM
+    // Control de duplicados
     if (!messageData.id) {
-        console.warn('Mensaje sin ID, posible duplicado evitado:', messageData);
+        console.warn('⚠️ Mensaje sin ID, posible duplicado evitado:', messageData);
         return;
     }
 
     const currentUser = getCurrentUser();
-    const currentLanguage = getUserLanguage(); // Obtener el idioma actualizado
+    const currentLanguage = getUserLanguage();
     
     if (!currentUser) {
-        console.error('No hay usuario autenticado al mostrar mensaje');
+        console.error('❌ No hay usuario autenticado al mostrar mensaje');
         return;
     }
 
+    // Determinar qué texto mostrar basado en el idioma actual
     let messageText = messageData.text;
-    const originalLanguage = messageData.language;
+    const originalLanguage = messageData.language || 'en';
     
+    // Si el idioma original es diferente al idioma actual del usuario
     if (originalLanguage !== currentLanguage) {
-        console.log('Traduciendo mensaje de', originalLanguage, 'a', currentLanguage);
+        console.log(`🔄 Traduciendo mensaje de ${originalLanguage} a ${currentLanguage}`);
+        
+        // Primero intentar usar una traducción existente
         if (messageData.translations && messageData.translations[currentLanguage]) {
-            console.log('Usando traducción existente');
+            console.log('✅ Usando traducción existente');
             messageText = messageData.translations[currentLanguage];
         } else {
             try {
-                console.log('Solicitando nueva traducción');
-                messageText = await translateText(messageText, currentLanguage, originalLanguage);
+                console.log('🔄 Solicitando nueva traducción');
+                messageText = await translateText(messageData.text, currentLanguage, originalLanguage);
                 
                 // Guardar la traducción para uso futuro
                 if (messageText !== messageData.text) {
@@ -1041,18 +1051,21 @@ async function displayMessage(messageData) {
                     await updateDoc(doc(messagesRef, messageData.id), {
                         [`translations.${currentLanguage}`]: messageText
                     });
-                    console.log('Nueva traducción guardada en la base de datos');
+                    console.log('✅ Nueva traducción guardada en la base de datos');
                 }
             } catch (error) {
-                console.error('Error al traducir mensaje:', error);
+                console.error('❌ Error al traducir mensaje:', error);
                 messageText = messageData.text + ' [Error de traducción]';
             }
         }
+    } else {
+        console.log('✅ Mensaje ya está en el idioma deseado');
     }
 
+    // Mostrar la bandera del idioma original del mensaje
     const flag = getFlagEmoji(originalLanguage);
+    
     let timeString = '';
-
     try {
         const timestamp = messageData.timestamp ?
             (typeof messageData.timestamp.toDate === 'function' ?
@@ -1061,7 +1074,7 @@ async function displayMessage(messageData) {
             ) : new Date();
         timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch (error) {
-        console.error('Error al formatear timestamp:', error);
+        console.error('❌ Error al formatear timestamp:', error);
         timeString = '';
     }
 
@@ -1075,14 +1088,8 @@ async function displayMessage(messageData) {
     if (isGroupChat) {
         try {
             if (messageData.senderId === currentUser.uid) {
-                // Si es mi mensaje, obtener mi nombre de usuario
-                const myDoc = await getDoc(doc(db, 'users', currentUser.uid));
-                if (myDoc.exists()) {
-                    const myData = myDoc.data();
-                    senderName = myData.username || myData.email.split('@')[0];
-                }
+                senderName = 'Tú';
             } else {
-                // Si es mensaje de otro, obtener su nombre
                 const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
                 if (senderDoc.exists()) {
                     const senderData = senderDoc.data();
@@ -1090,12 +1097,12 @@ async function displayMessage(messageData) {
                 }
             }
         } catch (error) {
-            console.error('Error al obtener información del remitente:', error);
+            console.error('❌ Error al obtener información del remitente:', error);
         }
     }
 
     const messageElement = document.createElement('div');
-    messageElement.setAttribute('data-message-id', messageData.id); // <<--- IMPORTANTE
+    messageElement.setAttribute('data-message-id', messageData.id);
     const isSentByMe = messageData.senderId === currentUser.uid;
     messageElement.className = `message ${isSentByMe ? 'sent' : 'received'}`;
 
@@ -1113,7 +1120,6 @@ async function displayMessage(messageData) {
             <span class="message-time">${timeString}</span>
         `;
 
-        // Añadir evento para reproducir audio
         const playButton = messageElement.querySelector('.play-button');
         const audio = messageElement.querySelector('audio');
 
@@ -1158,7 +1164,7 @@ async function displayMessage(messageData) {
         messagesList.appendChild(messageElement);
         messagesList.scrollTop = messagesList.scrollHeight;
     } else {
-        console.error('Lista de mensajes no encontrada');
+        console.error('❌ Lista de mensajes no encontrada');
     }
 }
 
@@ -1478,21 +1484,21 @@ async function sendMessage(text) {
             return;
         }
 
-        // Obtener el idioma del usuario desde la base de datos
+        // Obtener el idioma actual del usuario
         const userDoc = await getDoc(doc(db, 'users', user.uid));
-        const userLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
+        const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
         
         console.log('👤 Usuario actual:', user.email);
-        console.log('🌐 Idioma actual del usuario:', userLanguage);
+        console.log('🌐 Idioma actual:', currentLanguage);
         
-        console.log('📝 Preparando mensaje en idioma:', userLanguage);
+        console.log('📝 Preparando mensaje en idioma:', currentLanguage);
         // Crear el mensaje
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
             senderEmail: user.email,
             timestamp: serverTimestamp(),
-            language: userLanguage, // Usar el idioma del usuario
+            language: currentLanguage,
             translations: {}
         };
 
@@ -1530,7 +1536,7 @@ async function sendMessage(text) {
             participantsData.forEach(participantDoc => {
                 if (participantDoc.exists()) {
                     const participantLang = participantDoc.data().language || 'en';
-                    if (participantLang !== userLanguage) {
+                    if (participantLang !== currentLanguage) {
                         targetLanguages.add(participantLang);
                     }
                 }
@@ -1543,7 +1549,7 @@ async function sendMessage(text) {
                 const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
                 if (otherUserDoc.exists()) {
                     const otherUserLang = otherUserDoc.data().language || 'en';
-                    if (otherUserLang !== userLanguage) {
+                    if (otherUserLang !== currentLanguage) {
                         targetLanguages.add(otherUserLang);
                     }
                 }
@@ -1555,7 +1561,7 @@ async function sendMessage(text) {
         for (const targetLang of targetLanguages) {
             try {
                 console.log(`🔄 Traduciendo mensaje a ${targetLang}...`);
-                const translation = await translateText(text, targetLang, userLanguage);
+                const translation = await translateText(text, targetLang, currentLanguage);
                 
                 if (translation === 'LIMIT_EXCEEDED') {
                     console.warn('⚠️ Límite de traducción excedido');
@@ -1563,7 +1569,7 @@ async function sendMessage(text) {
                         [`translations.${targetLang}`]: text,
                         translationStatus: 'limit_exceeded'
                     });
-                    const limitMessage = getTranslation('translationLimitExceeded', userLanguage);
+                    const limitMessage = getTranslation('translationLimitExceeded', currentLanguage);
                     alert(limitMessage);
                     break;
                 } else {
@@ -2194,3 +2200,30 @@ document.addEventListener('focusout', (e) => {
 document.addEventListener('gesturestart', (e) => {
     e.preventDefault();
 });
+
+// Función para sincronizar el idioma al iniciar sesión
+async function syncUserLanguage(user) {
+    try {
+        console.log('🔄 Sincronizando idioma del usuario...');
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        
+        if (userDoc.exists()) {
+            const userData = userDoc.data();
+            if (userData.language) {
+                console.log('📥 Idioma encontrado en la base de datos:', userData.language);
+                setUserLanguage(userData.language);
+                translateInterface(userData.language);
+            } else {
+                // Si no hay idioma en la base de datos, usar el del state
+                const currentLanguage = getUserLanguage();
+                console.log('📤 Guardando idioma actual en la base de datos:', currentLanguage);
+                await updateDoc(doc(db, 'users', user.uid), {
+                    language: currentLanguage,
+                    lastUpdated: serverTimestamp()
+                });
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error al sincronizar idioma:', error);
+    }
+}
