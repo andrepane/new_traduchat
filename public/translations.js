@@ -242,8 +242,14 @@ function translateInterface(language) {
                 element.placeholder = translation;
             }
         } else {
-            element.textContent = translation;
-        }
+    if (element.id === 'titulo-wave') {
+        element.textContent = translation;
+        animateTitleWave(); // Aplicar efecto tras traducción
+    } else {
+        element.textContent = translation;
+    }
+}
+
     });
 
     // Traducir elementos OPTION
