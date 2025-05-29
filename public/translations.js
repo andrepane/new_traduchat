@@ -223,7 +223,8 @@ function getTranslation(key, lang = getUserLanguage()) {
     return translations[lang][key];
 }
 
-export function translateInterface(language) {
+// Función para traducir la interfaz
+function translateInterface(language) {
     console.log('🌐 translateInterface llamada con idioma:', language);
     
     // Obtener todos los elementos con atributo data-translate
@@ -271,4 +272,5 @@ function animateTitleWave() {
     }
 }
 
+// Exportar todo junto al final
 export { translations, getTranslation, translateInterface, animateTitleWave };
