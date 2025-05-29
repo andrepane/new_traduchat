@@ -29,10 +29,22 @@ export function setCurrentUser(user) {
 }
 
 export function getUserLanguage() {
+    // Siempre verificar localStorage primero
+    const storedLanguage = localStorage.getItem('userLanguage');
+    if (storedLanguage && storedLanguage !== state.userLanguage) {
+        state.userLanguage = storedLanguage;
+    }
+    console.log('Obteniendo idioma actual:', state.userLanguage);
     return state.userLanguage;
 }
 
 export function setUserLanguage(lang) {
+    console.log('Estableciendo nuevo idioma:', lang);
+    // Validar que el idioma sea válido
+    if (!['es', 'en', 'it'].includes(lang)) {
+        console.error('Idioma no válido:', lang);
+        return;
+    }
     state.userLanguage = lang;
     localStorage.setItem('userLanguage', lang);
 }
