@@ -1,3 +1,6 @@
+import { db } from '../firebase.js'; // Ajusta la ruta según tu estructura
+import { doc, updateDoc } from 'firebase/firestore';
+
 export const state = {
     currentUser: null,
     currentChat: null,
