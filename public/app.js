@@ -1269,13 +1269,16 @@ unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
 
     const data = chatDoc.data();
     const typingStatus = data.typingStatus;
+    console.log('typingStatus snapshot:', typingStatus);
 
     const currentLang = getUserLanguage();
 
     if (typingStatus && typingStatus.userId !== currentUser.uid) {
         const typingText = getTypingText(currentLang);
+        console.log('Mostrando indicador:', typingText);
         showTypingIndicator(typingText);
     } else {
+        console.log('Ocultando indicador de escritura');
         hideTypingIndicator();
     }
 });
@@ -1597,6 +1600,8 @@ let unsubscribeTypingStatus = null;
 async function setTypingStatus(isTyping) {
     if (!currentChat || !currentUser) return;
 
+    console.log(`setTypingStatus called with: ${isTyping}`);
+
     const chatRef = doc(db, 'chats', currentChat);
 
     try {
@@ -1605,6 +1610,7 @@ async function setTypingStatus(isTyping) {
                 ? { userId: currentUser.uid, timestamp: serverTimestamp() }
                 : null
         });
+        console.log('Typing status updated in Firestore');
     } catch (error) {
         console.error('Error actualizando estado de escritura:', error);
     }
