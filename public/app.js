@@ -1032,8 +1032,10 @@ async function displayMessage(messageData) {
     let messageText = messageData.text;
     const originalLanguage = messageData.language || 'en';
     
-    // Si el idioma original es diferente al idioma actual del usuario
-    if (originalLanguage !== currentLanguage) {
+    // Solo traducir si:
+    // 1. El mensaje no es del usuario actual
+    // 2. El idioma original es diferente al idioma actual del usuario
+    if (messageData.senderId !== currentUser.uid && originalLanguage !== currentLanguage) {
         console.log(`🔄 Traduciendo mensaje de ${originalLanguage} a ${currentLanguage}`);
         
         // Primero intentar usar una traducción existente
@@ -1059,7 +1061,7 @@ async function displayMessage(messageData) {
             }
         }
     } else {
-        console.log('✅ Mensaje ya está en el idioma deseado');
+        console.log('✅ Mostrando mensaje en idioma original:', originalLanguage);
     }
 
     // Mostrar la bandera del idioma original del mensaje
@@ -1484,25 +1486,24 @@ async function sendMessage(text) {
             return;
         }
 
-        // Obtener el idioma actual del usuario
+        // Obtener el idioma actual del usuario desde la base de datos
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
         
         console.log('👤 Usuario actual:', user.email);
-        console.log('🌐 Idioma actual:', currentLanguage);
+        console.log('🌐 Idioma del mensaje:', currentLanguage);
         
-        console.log('📝 Preparando mensaje en idioma:', currentLanguage);
-        // Crear el mensaje
+        // Crear el mensaje con el idioma correcto
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
             senderEmail: user.email,
             timestamp: serverTimestamp(),
-            language: currentLanguage,
+            language: currentLanguage, // Asegurar que se guarda el idioma correcto
             translations: {}
         };
 
-        console.log('💾 Enviando mensaje a Firestore...');
+        console.log('💾 Guardando mensaje en idioma original:', currentLanguage);
         // Enviar el mensaje
         const messagesRef = collection(db, 'chats', currentChat, 'messages');
         const docRef = await addDoc(messagesRef, messageData);
