@@ -1656,7 +1656,6 @@ messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         console.log('Enter presionado');
-        handleTyping();
         sendMessage(messageInput.value);
     }
 });
