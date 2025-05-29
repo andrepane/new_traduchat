@@ -442,32 +442,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🔄 Obtener el idioma actual
     const lang = getUserLanguage();
+    console.log('Idioma inicial:', lang);
 
-    // 🔧 Sincronizar selects
-    if (languageSelect) languageSelect.value = lang;
-    if (languageSelectMain) languageSelectMain.value = lang;
+    // 🔧 Sincronizar selects correctamente
+    if (languageSelect) {
+        console.log('Configurando languageSelect a:', lang);
+        languageSelect.value = lang;
+    }
+    if (languageSelectMain) {
+        console.log('Configurando languageSelectMain a:', lang);
+        languageSelectMain.value = lang;
+    }
 
     // 🌐 Traducir interfaz inicial
     translateInterface(lang);
-    setTimeout(() => {
-    console.log("⏳ Reintentando traducción tras 1 segundo...");
-    translateInterface(getUserLanguage());
-}, 1000);
-    setTimeout(animateTitleWave, 100);
 
     // 🎧 Escuchar cambios en los selects
-    const handleLanguageChange = (newLang) => {
+    const handleLanguageChange = async (newLang) => {
+        console.log('handleLanguageChange llamado con:', newLang);
+        
+        // Actualizar el estado y localStorage
         setUserLanguage(newLang);
-        if (languageSelect) languageSelect.value = newLang;
-        if (languageSelectMain) languageSelectMain.value = newLang;
+        
+        // Sincronizar ambos selectores
+        if (languageSelect && languageSelect.value !== newLang) {
+            console.log('Actualizando languageSelect a:', newLang);
+            languageSelect.value = newLang;
+        }
+        if (languageSelectMain && languageSelectMain.value !== newLang) {
+            console.log('Actualizando languageSelectMain a:', newLang);
+            languageSelectMain.value = newLang;
+        }
 
+        // Actualizar la interfaz
+        translateInterface(newLang);
+        
+        // Actualizar la información del usuario si está disponible
         const currentUser = getCurrentUser();
-        if (currentUser) updateUserInfo(currentUser);
-        else console.log('Idioma cambiado, pero aún no hay usuario autenticado');
-
-        updateUITranslations();
+        if (currentUser) {
+            updateUserInfo(currentUser);
+        }
     };
 
+    // Asignar los event listeners
     if (languageSelect) {
         languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
     }
