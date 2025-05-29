@@ -602,6 +602,13 @@ function resetChatState() {
     
     // Limpiar lista de chats
     chatList.innerHTML = '';
+
+    if (unsubscribeTypingStatus) {
+    unsubscribeTypingStatus();
+    unsubscribeTypingStatus = null;
+}
+hideTypingIndicator();
+setTypingStatus(false);
 }
 
 // Función para cargar chats en tiempo real
@@ -1253,6 +1260,25 @@ unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
         initialSnapshotSkipped = true;
         return;
     }
+    if (unsubscribeTypingStatus) {
+    unsubscribeTypingStatus();
+}
+
+unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
+    if (!chatDoc.exists()) return;
+
+    const data = chatDoc.data();
+    const typingStatus = data.typingStatus;
+
+    const currentLang = getUserLanguage();
+
+    if (typingStatus && typingStatus.userId !== currentUser.uid) {
+        const typingText = getTypingText(currentLang);
+        showTypingIndicator(typingText);
+    } else {
+        hideTypingIndicator();
+    }
+});
 
     snapshot.docChanges().forEach(async change => {
         if (change.type === 'added') {
@@ -1565,6 +1591,51 @@ async function sendMessage(text) {
     }
 }
 
+let typingTimeout = null;
+let unsubscribeTypingStatus = null;
+
+async function setTypingStatus(isTyping) {
+    if (!currentChat || !currentUser) return;
+
+    const chatRef = doc(db, 'chats', currentChat);
+
+    try {
+        await updateDoc(chatRef, {
+            typingStatus: isTyping
+                ? { userId: currentUser.uid, timestamp: serverTimestamp() }
+                : null
+        });
+    } catch (error) {
+        console.error('Error actualizando estado de escritura:', error);
+    }
+}
+
+function handleTyping() {
+    setTypingStatus(true);
+
+    if (typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        setTypingStatus(false);
+    }, 3000); // 3 segundos sin escribir = no está escribiendo
+}
+
+const typingIndicator = document.getElementById('typingIndicator');
+
+function showTypingIndicator(text) {
+    if (typingIndicator) {
+        typingIndicator.textContent = text;
+        typingIndicator.style.display = 'block';
+    }
+}
+
+function hideTypingIndicator() {
+    if (typingIndicator) {
+        typingIndicator.style.display = 'none';
+        typingIndicator.textContent = '';
+    }
+}
+
+
 // Eventos para enviar mensajes
 sendMessageBtn.addEventListener('click', () => {
     console.log('Botón enviar clickeado');
@@ -1575,6 +1646,7 @@ messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         console.log('Enter presionado');
+        handleTyping();
         sendMessage(messageInput.value);
     }
 });
