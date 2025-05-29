@@ -477,6 +477,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Actualizar la interfaz
         translateInterface(newLang);
         
+        // Si hay un chat abierto, recargar los mensajes para mostrar las traducciones
+        if (currentChat) {
+            console.log('Recargando mensajes con nuevo idioma');
+            const chatId = currentChat;
+            messagesList.innerHTML = ''; // Limpiar mensajes actuales
+            await loadInitialMessages(chatId); // Recargar mensajes
+        }
+
         // Actualizar la información del usuario si está disponible
         const currentUser = getCurrentUser();
         if (currentUser) {
@@ -977,30 +985,39 @@ function debounce(func, wait) {
 async function displayMessage(messageData) {
     // Control de duplicados: solo mostrar si NO existe ya en el DOM
     if (!messageData.id) {
-    console.warn('Mensaje sin ID, posible duplicado evitado:', messageData);
-    return;
-}
-const exists = messagesList.querySelector(`[data-message-id="${messageData.id}"]`);
-if (exists) {
-    console.warn('Mensaje ya existe en el DOM, no se muestra de nuevo:', messageData.id);
-    return;
-}
+        console.warn('Mensaje sin ID, posible duplicado evitado:', messageData);
+        return;
+    }
 
     const currentUser = getCurrentUser();
+    const currentLanguage = getUserLanguage(); // Obtener el idioma actualizado
+    
     if (!currentUser) {
         console.error('No hay usuario autenticado al mostrar mensaje');
         return;
     }
 
     let messageText = messageData.text;
-    if (messageData.language !== userLanguage) {
-        console.log('Traduciendo mensaje al idioma del usuario:', userLanguage);
-        if (messageData.translations && messageData.translations[userLanguage]) {
-            messageText = messageData.translations[userLanguage];
+    const originalLanguage = messageData.language;
+    
+    if (originalLanguage !== currentLanguage) {
+        console.log('Traduciendo mensaje de', originalLanguage, 'a', currentLanguage);
+        if (messageData.translations && messageData.translations[currentLanguage]) {
+            console.log('Usando traducción existente');
+            messageText = messageData.translations[currentLanguage];
         } else {
             try {
-                // Pasar el idioma de origen del mensaje
-                messageText = await translateText(messageText, userLanguage, messageData.language);
+                console.log('Solicitando nueva traducción');
+                messageText = await translateText(messageText, currentLanguage, originalLanguage);
+                
+                // Guardar la traducción para uso futuro
+                if (messageText !== messageData.text) {
+                    const messagesRef = collection(db, 'chats', currentChat, 'messages');
+                    await updateDoc(doc(messagesRef, messageData.id), {
+                        [`translations.${currentLanguage}`]: messageText
+                    });
+                    console.log('Nueva traducción guardada en la base de datos');
+                }
             } catch (error) {
                 console.error('Error al traducir mensaje:', error);
                 messageText = messageData.text + ' [Error de traducción]';
@@ -1008,7 +1025,7 @@ if (exists) {
         }
     }
 
-    const flag = getFlagEmoji(messageData.language);
+    const flag = getFlagEmoji(originalLanguage);
     let timeString = '';
 
     try {
@@ -1431,20 +1448,21 @@ async function sendMessage(text) {
 
     try {
         const user = getCurrentUser();
+        const currentLanguage = getUserLanguage(); // Obtener el idioma actualizado
         
         if (!user) {
             console.error('No hay usuario autenticado');
             return;
         }
 
-        console.log('Preparando mensaje para enviar...');
+        console.log('Preparando mensaje para enviar con idioma:', currentLanguage);
         // Crear el mensaje
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
             senderEmail: user.email,
             timestamp: serverTimestamp(),
-            language: userLanguage,
+            language: currentLanguage,
             translations: {}
         };
 
@@ -1481,7 +1499,7 @@ async function sendMessage(text) {
             participantsData.forEach(participantDoc => {
                 if (participantDoc.exists()) {
                     const participantLang = participantDoc.data().language || 'en';
-                    if (participantLang !== userLanguage) {
+                    if (participantLang !== currentLanguage) {
                         targetLanguages.add(participantLang);
                     }
                 }
@@ -1493,7 +1511,7 @@ async function sendMessage(text) {
                 const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
                 if (otherUserDoc.exists()) {
                     const otherUserLang = otherUserDoc.data().language || 'en';
-                    if (otherUserLang !== userLanguage) {
+                    if (otherUserLang !== currentLanguage) {
                         targetLanguages.add(otherUserLang);
                     }
                 }
@@ -1512,7 +1530,7 @@ async function sendMessage(text) {
                         translationStatus: 'limit_exceeded'
                     });
                     // Mostrar mensaje al usuario
-                    const limitMessage = getTranslation('translationLimitExceeded', userLanguage);
+                    const limitMessage = getTranslation('translationLimitExceeded', currentLanguage);
                     alert(limitMessage);
                     break; // Salir del bucle de traducciones
                 } else {
