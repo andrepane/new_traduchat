@@ -503,13 +503,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentChat) {
                 console.log('📝 Recargando mensajes con nuevo idioma para chat:', currentChat);
                 messagesList.innerHTML = ''; // Limpiar mensajes actuales
+                lastVisibleMessage = null; // Resetear paginación
+                allMessagesLoaded = false;
                 await loadInitialMessages(currentChat); // Recargar mensajes
                 console.log('✅ Mensajes recargados exitosamente');
             }
-
-            // Actualizar la información del usuario
-            console.log('👤 Actualizando información del usuario');
-            updateUserInfo(currentUser);
 
         } catch (error) {
             console.error('❌ Error al cambiar el idioma:', error);
@@ -1021,12 +1019,17 @@ async function displayMessage(messageData) {
     }
 
     const currentUser = getCurrentUser();
-    const currentLanguage = getUserLanguage();
     
     if (!currentUser) {
         console.error('❌ No hay usuario autenticado al mostrar mensaje');
         return;
     }
+
+    // Obtener el idioma actual del usuario desde la base de datos
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
+    
+    console.log('👤 Usuario actual:', currentUser.email, 'Idioma:', currentLanguage);
 
     // Determinar qué texto mostrar basado en el idioma actual
     let messageText = messageData.text;
@@ -1040,11 +1043,11 @@ async function displayMessage(messageData) {
         
         // Primero intentar usar una traducción existente
         if (messageData.translations && messageData.translations[currentLanguage]) {
-            console.log('✅ Usando traducción existente');
+            console.log('✅ Usando traducción existente para', currentLanguage);
             messageText = messageData.translations[currentLanguage];
         } else {
             try {
-                console.log('🔄 Solicitando nueva traducción');
+                console.log('🔄 Solicitando nueva traducción a', currentLanguage);
                 messageText = await translateText(messageData.text, currentLanguage, originalLanguage);
                 
                 // Guardar la traducción para uso futuro
@@ -1053,7 +1056,7 @@ async function displayMessage(messageData) {
                     await updateDoc(doc(messagesRef, messageData.id), {
                         [`translations.${currentLanguage}`]: messageText
                     });
-                    console.log('✅ Nueva traducción guardada en la base de datos');
+                    console.log('✅ Nueva traducción guardada en la base de datos para', currentLanguage);
                 }
             } catch (error) {
                 console.error('❌ Error al traducir mensaje:', error);
@@ -1062,6 +1065,8 @@ async function displayMessage(messageData) {
         }
     } else {
         console.log('✅ Mostrando mensaje en idioma original:', originalLanguage);
+        // Si el mensaje es nuestro o está en nuestro idioma, mostrar el texto original
+        messageText = messageData.text;
     }
 
     // Mostrar la bandera del idioma original del mensaje
@@ -1490,8 +1495,7 @@ async function sendMessage(text) {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
         
-        console.log('👤 Usuario actual:', user.email);
-        console.log('🌐 Idioma del mensaje:', currentLanguage);
+        console.log('👤 Usuario actual:', user.email, 'Idioma:', currentLanguage);
         
         // Crear el mensaje con el idioma correcto
         const messageData = {
