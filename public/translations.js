@@ -50,6 +50,7 @@ const translations = {
         errorOpenChat: 'Error al abrir el chat',
         newChatCreated: 'Nuevo chat creado',
         chatExists: 'Ya tienes un chat con este usuario',
+        typing: 'está escribiendo',
         
         // Notificaciones
         newMessageFrom: 'Nuevo mensaje de {user}',
@@ -120,6 +121,7 @@ const translations = {
         errorOpenChat: 'Error opening chat',
         newChatCreated: 'New chat created',
         chatExists: 'You already have a chat with this user',
+        typing: 'is typing',
         
         // Notifications
         newMessageFrom: 'New message from {user}',
@@ -190,6 +192,7 @@ const translations = {
         errorOpenChat: 'Errore nell\'apertura della chat',
         newChatCreated: 'Nuova chat creata',
         chatExists: 'Hai già una chat con questo utente',
+        typing: 'sta scrivendo',
         
         // Notifiche
         newMessageFrom: 'Nuovo messaggio da {user}',
@@ -277,6 +280,13 @@ function animateTitleWave() {
             h1.appendChild(span);
         });
     }
+}
+
+export function getTypingText(lang) {
+  if (translations.typing && translations.typing[lang]) {
+    return translations.typing[lang];
+  }
+  return 'is typing...'; // fallback
 }
 
 // Exportar todo junto al final
