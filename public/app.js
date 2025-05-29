@@ -133,6 +133,8 @@ let unsubscribeMessages = null; // Variable para almacenar la función de cancel
 let typingTimeouts = {};
 let lastSender = null;
 let unsubscribeChats = null;
+let currentLanguage = localStorage.getItem('userLanguage') || 'es';
+
 
 // Variables para grupos
 let selectedUsers = new Set();
@@ -454,8 +456,27 @@ document.addEventListener('DOMContentLoaded', () => {
         await setUserLanguage(newLang);
         translateInterface(newLang);
 
-        if (languageSelect) languageSelect.value = newLang;
-        if (languageSelectMain) languageSelectMain.value = newLang;
+    if (languageSelect) {
+        languageSelect.value = currentLanguage;
+        languageSelect.addEventListener('change', async (e) => {
+            currentLanguage = e.target.value;
+            localStorage.setItem('userLanguage', currentLanguage);
+            await setUserLanguage(currentLanguage);
+            translateInterface(currentLanguage);
+            // Aquí podrías recargar mensajes si quieres
+        });
+    }        
+        
+    if (languageSelectMain) {
+        languageSelectMain.value = currentLanguage;
+        languageSelectMain.addEventListener('change', async (e) => {
+            currentLanguage = e.target.value;
+            localStorage.setItem('userLanguage', currentLanguage);
+            await setUserLanguage(currentLanguage);
+            translateInterface(currentLanguage);
+            // Aquí también recargar mensajes si quieres
+        });
+    }
 
         if (currentChat) {
             messagesList.innerHTML = '';
@@ -2085,7 +2106,7 @@ micButton.addEventListener('click', async () => {
             'de': 'de-DE',
             'pt': 'pt-PT'
         };
-        const langCode = languageMapping[currentLang] || 'en-US';
+         const langCode = languageMapping[currentLanguage] || 'en-US';
 
         recognition = initializeSpeechRecognition(langCode);
 
@@ -2094,7 +2115,7 @@ micButton.addEventListener('click', async () => {
         isRecording = true;
 
         if (!messageInput.value.trim()) {
-            messageInput.placeholder = getTranslation('listening', currentLang);
+             messageInput.placeholder = getTranslation('listening', currentLanguage);
         }
     }
 });
