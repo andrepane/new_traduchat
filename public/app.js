@@ -433,89 +433,57 @@ function showAuthScreen() {
     document.getElementById('authScreen').classList.add('active');
     document.body.classList.remove('in-chat');
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Cargado');
     showLoadingScreen();
 
+    if (!auth || !db) {
+        console.error('Auth o Firestore no están inicializados');
+        hideLoadingScreen();
+        showError('errorGeneric');
+        return;
+    }
+
     const languageSelect = document.getElementById('languageSelect');
     const languageSelectMain = document.getElementById('languageSelectMain');
 
-    // 🔄 Obtener el idioma actual
-    const lang = getUserLanguage();
-    console.log('Idioma inicial:', lang);
+    const handleLanguageChange = async (newLang) => {
+        console.log('🔄 handleLanguageChange llamado con:', newLang);
 
-    // 🔧 Sincronizar selects correctamente
-    if (languageSelect) {
-        console.log('Configurando languageSelect a:', lang);
-        languageSelect.value = lang;
-    }
-    if (languageSelectMain) {
-        console.log('Configurando languageSelectMain a:', lang);
-        languageSelectMain.value = lang;
-    }
+        setUserLanguage(newLang);
+        translateInterface(newLang);
 
-    // 🌐 Traducir interfaz inicial
-    translateInterface(lang);
+        if (languageSelect) languageSelect.value = newLang;
+        if (languageSelectMain) languageSelectMain.value = newLang;
 
-    // 🎧 Escuchar cambios en los selects
-   const handleLanguageChange = async (newLang) => {
-    console.log('🔄 handleLanguageChange llamado con:', newLang);
+        if (currentChat) {
+            messagesList.innerHTML = '';
+            lastVisibleMessage = null;
+            allMessagesLoaded = false;
+            await loadInitialMessages(currentChat);
+        }
 
-    // Siempre actualizar estado local y localStorage
-    setUserLanguage(newLang);
-    console.log('✅ Idioma actualizado en state y localStorage');
-
-    // Actualizar los selectores (si existen)
-    const languageSelect = document.getElementById('languageSelect');
-    const languageSelectMain = document.getElementById('languageSelectMain');
-
-    if (languageSelect && languageSelect.value !== newLang) {
-        console.log('🔄 Actualizando languageSelect a:', newLang);
-        languageSelect.value = newLang;
-    }
-    if (languageSelectMain && languageSelectMain.value !== newLang) {
-        console.log('🔄 Actualizando languageSelectMain a:', newLang);
-        languageSelectMain.value = newLang;
-    }
-
-    // Traducir interfaz siempre
-    console.log('🌐 Traduciendo interfaz al nuevo idioma:', newLang);
-    translateInterface(newLang);
-
-    // Si hay chat abierto, recargar mensajes traducidos
-    if (currentChat) {
-        console.log('📝 Recargando mensajes con nuevo idioma para chat:', currentChat);
-        messagesList.innerHTML = '';
-        lastVisibleMessage = null;
-        allMessagesLoaded = false;
-        await loadInitialMessages(currentChat);
-        console.log('✅ Mensajes recargados exitosamente');
-    }
-
-    // Si hay usuario autenticado, actualizar también en Firestore
-    try {
         const currentUser = getCurrentUser();
         if (currentUser) {
-            console.log('💾 Actualizando idioma en la base de datos...');
-            const userRef = doc(db, 'users', currentUser.uid);
-            await updateDoc(userRef, {
-                language: newLang,
-                lastUpdated: serverTimestamp()
-            });
-            console.log('✅ Idioma actualizado en la base de datos');
-        } else {
-            console.warn('⚠️ No hay usuario autenticado, no se actualiza Firestore');
+            try {
+                const userRef = doc(db, 'users', currentUser.uid);
+                await updateDoc(userRef, {
+                    language: newLang,
+                    lastUpdated: serverTimestamp()
+                });
+                console.log('✅ Idioma actualizado en Firestore');
+            } catch (error) {
+                console.error('❌ Error al guardar idioma en Firestore:', error);
+                showError('errorGeneric');
+            }
         }
-    } catch (error) {
-        console.error('❌ Error al cambiar el idioma:', error);
-        showError('errorGeneric');
-    }
-};
+    };
 
-        if (languageSelect) languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
+    if (languageSelect) languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
     if (languageSelectMain) languageSelectMain.addEventListener('change', (e) => handleLanguageChange(e.target.value));
 
-    // 🔐 Escuchar sesión iniciada
+    // 🔐 Autenticación y gestión de idioma
     onAuthStateChanged(auth, async (user) => {
         if (user) {
             console.log('👤 Usuario autenticado:', user.uid);
@@ -524,66 +492,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 const userRef = doc(db, 'users', user.uid);
                 const userDoc = await getDoc(userRef);
 
+                let lang = 'es';
                 if (userDoc.exists()) {
-                    const userLang = userDoc.data().language || 'es';
-                    console.log('🌐 Idioma desde Firestore:', userLang);
-                    setUserLanguage(userLang);
-                    translateInterface(userLang);
-
-                    if (languageSelect) languageSelect.value = userLang;
-                    if (languageSelectMain) languageSelectMain.value = userLang;
+                    lang = userDoc.data().language || 'es';
+                    console.log('🌐 Idioma cargado desde Firestore:', lang);
                 } else {
-                    console.warn('⚠️ Usuario sin documento de idioma en Firestore');
+                    console.warn('⚠️ Usuario sin idioma en Firestore. Usando idioma local');
+                    lang = getUserLanguage();
                 }
+
+                setUserLanguage(lang);
+                translateInterface(lang);
+                if (languageSelect) languageSelect.value = lang;
+                if (languageSelectMain) languageSelectMain.value = lang;
+
+                showMainScreen();
             } catch (error) {
-                console.error('❌ Error obteniendo idioma de Firestore:', error);
+                console.error('❌ Error cargando idioma:', error);
+                showError('errorGeneric');
             }
 
-            showMainScreen();
         } else {
             console.log('🚪 Usuario no autenticado');
-            const fallbackLang = getUserLanguage();
-            setUserLanguage(fallbackLang);
-            translateInterface(fallbackLang);
+            const lang = getUserLanguage();
+            setUserLanguage(lang);
+            translateInterface(lang);
 
-            if (languageSelect) languageSelect.value = fallbackLang;
-            if (languageSelectMain) languageSelectMain.value = fallbackLang;
+            if (languageSelect) languageSelect.value = lang;
+            if (languageSelectMain) languageSelectMain.value = lang;
 
             showAuthScreen();
         }
+
+        hideLoadingScreen();
     });
-});
-
-
-
-    // ⚠️ Verificar Firebase
-    if (!auth || !db) {
-        console.error('Auth o Firestore no están inicializados');
-        hideLoadingScreen();
-        showError('errorGeneric');
-        return;
-    }
-
-    // 👤 Escuchar estado de autenticación
-startAuthListener((user) => {
-    if (user) {
-        console.log('Usuario autenticado:', user.email);
-        console.log('User ID:', user.uid);
-
-        initializeNotifications();
-        updateUITranslations();
-
-        // ✅ OCULTAR pantalla de carga
-        hideLoadingScreen();
-    } else {
-        console.log('No hay usuario autenticado');
-        showAuthScreen();
-
-        // ✅ TAMBIÉN aquí hay que ocultar la pantalla de carga
-        hideLoadingScreen();
-    }
-});
-
 });
 
 
