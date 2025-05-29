@@ -2074,6 +2074,15 @@ micButton.addEventListener('click', () => {
     }
 });
 
+function stopRecording() {
+  if (recognition) {
+    recognition.stop();
+  }
+  isRecording = false;
+  micButton.classList.remove('recording');
+  // Restaurar placeholder original (suponiendo que tienes getTranslation y userLanguage)
+  messageInput.placeholder = getTranslation('writeMessage', userLanguage);
+}
 
 
 // Manejo del teclado en iOS
