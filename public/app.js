@@ -512,21 +512,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 };
 
+        if (languageSelect) languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
+    if (languageSelectMain) languageSelectMain.addEventListener('change', (e) => handleLanguageChange(e.target.value));
 
-    // Asignar los event listeners
-    if (languageSelect) {
-        languageSelect.addEventListener('change', (e) => {
-            console.log('🔄 Cambio detectado en languageSelect:', e.target.value);
-            handleLanguageChange(e.target.value);
-        });
-    }
+    // 🔐 Escuchar sesión iniciada
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            console.log('👤 Usuario autenticado:', user.uid);
 
-    if (languageSelectMain) {
-        languageSelectMain.addEventListener('change', (e) => {
-            console.log('🔄 Cambio detectado en languageSelectMain:', e.target.value);
-            handleLanguageChange(e.target.value);
-        });
-    }
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userDoc = await getDoc(userRef);
+
+                if (userDoc.exists()) {
+                    const userLang = userDoc.data().language || 'es';
+                    console.log('🌐 Idioma desde Firestore:', userLang);
+                    setUserLanguage(userLang);
+                    translateInterface(userLang);
+
+                    if (languageSelect) languageSelect.value = userLang;
+                    if (languageSelectMain) languageSelectMain.value = userLang;
+                } else {
+                    console.warn('⚠️ Usuario sin documento de idioma en Firestore');
+                }
+            } catch (error) {
+                console.error('❌ Error obteniendo idioma de Firestore:', error);
+            }
+
+            showMainScreen();
+        } else {
+            console.log('🚪 Usuario no autenticado');
+            const fallbackLang = getUserLanguage();
+            setUserLanguage(fallbackLang);
+            translateInterface(fallbackLang);
+
+            if (languageSelect) languageSelect.value = fallbackLang;
+            if (languageSelectMain) languageSelectMain.value = fallbackLang;
+
+            showAuthScreen();
+        }
+    });
+});
+
+
 
     // ⚠️ Verificar Firebase
     if (!auth || !db) {
