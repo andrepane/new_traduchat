@@ -458,17 +458,44 @@ document.addEventListener('DOMContentLoaded', () => {
     translateInterface(lang);
 
     // 🎧 Escuchar cambios en los selects
-    const handleLanguageChange = async (newLang) => {
-        console.log('🔄 handleLanguageChange llamado con:', newLang);
-        
-        try {
-            const currentUser = getCurrentUser();
-            if (!currentUser) {
-                console.error('❌ No hay usuario autenticado');
-                return;
-            }
+   const handleLanguageChange = async (newLang) => {
+    console.log('🔄 handleLanguageChange llamado con:', newLang);
 
-            // Actualizar en la base de datos primero
+    // Siempre actualizar estado local y localStorage
+    setUserLanguage(newLang);
+    console.log('✅ Idioma actualizado en state y localStorage');
+
+    // Actualizar los selectores (si existen)
+    const languageSelect = document.getElementById('languageSelect');
+    const languageSelectMain = document.getElementById('languageSelectMain');
+
+    if (languageSelect && languageSelect.value !== newLang) {
+        console.log('🔄 Actualizando languageSelect a:', newLang);
+        languageSelect.value = newLang;
+    }
+    if (languageSelectMain && languageSelectMain.value !== newLang) {
+        console.log('🔄 Actualizando languageSelectMain a:', newLang);
+        languageSelectMain.value = newLang;
+    }
+
+    // Traducir interfaz siempre
+    console.log('🌐 Traduciendo interfaz al nuevo idioma:', newLang);
+    translateInterface(newLang);
+
+    // Si hay chat abierto, recargar mensajes traducidos
+    if (currentChat) {
+        console.log('📝 Recargando mensajes con nuevo idioma para chat:', currentChat);
+        messagesList.innerHTML = '';
+        lastVisibleMessage = null;
+        allMessagesLoaded = false;
+        await loadInitialMessages(currentChat);
+        console.log('✅ Mensajes recargados exitosamente');
+    }
+
+    // Si hay usuario autenticado, actualizar también en Firestore
+    try {
+        const currentUser = getCurrentUser();
+        if (currentUser) {
             console.log('💾 Actualizando idioma en la base de datos...');
             const userRef = doc(db, 'users', currentUser.uid);
             await updateDoc(userRef, {
@@ -476,44 +503,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 lastUpdated: serverTimestamp()
             });
             console.log('✅ Idioma actualizado en la base de datos');
-
-            // Luego actualizar el estado local y localStorage
-            setUserLanguage(newLang);
-            console.log('✅ Idioma actualizado en state y localStorage');
-            
-            // Obtener referencias a los selectores
-            const languageSelect = document.getElementById('languageSelect');
-            const languageSelectMain = document.getElementById('languageSelectMain');
-            
-            // Sincronizar ambos selectores
-            if (languageSelect && languageSelect.value !== newLang) {
-                console.log('🔄 Actualizando languageSelect a:', newLang);
-                languageSelect.value = newLang;
-            }
-            if (languageSelectMain && languageSelectMain.value !== newLang) {
-                console.log('🔄 Actualizando languageSelectMain a:', newLang);
-                languageSelectMain.value = newLang;
-            }
-
-            // Actualizar la interfaz
-            console.log('🌐 Traduciendo interfaz al nuevo idioma:', newLang);
-            translateInterface(newLang);
-            
-            // Si hay un chat abierto, recargar los mensajes para mostrar las traducciones
-            if (currentChat) {
-                console.log('📝 Recargando mensajes con nuevo idioma para chat:', currentChat);
-                messagesList.innerHTML = ''; // Limpiar mensajes actuales
-                lastVisibleMessage = null; // Resetear paginación
-                allMessagesLoaded = false;
-                await loadInitialMessages(currentChat); // Recargar mensajes
-                console.log('✅ Mensajes recargados exitosamente');
-            }
-
-        } catch (error) {
-            console.error('❌ Error al cambiar el idioma:', error);
-            showError('errorGeneric');
+        } else {
+            console.warn('⚠️ No hay usuario autenticado, no se actualiza Firestore');
         }
-    };
+    } catch (error) {
+        console.error('❌ Error al cambiar el idioma:', error);
+        showError('errorGeneric');
+    }
+};
+
 
     // Asignar los event listeners
     if (languageSelect) {
