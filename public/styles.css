@@ -1409,6 +1409,8 @@ html {
         position: sticky;
         top: var(--header-height);
         z-index: 1;
+        display: flex;           /* Centrar verticalmente */
+        align-items: center;
     }
 
     .chat-list {
@@ -1938,6 +1940,8 @@ html {
         background-color: var(--color-bg);
         border-bottom: 1px solid var(--color-border);
         z-index: 99;
+        display: flex;           /* Centrar verticalmente */
+        align-items: center;
     }
 
     /* Lista de chats */
