@@ -459,46 +459,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 🎧 Escuchar cambios en los selects
     const handleLanguageChange = async (newLang) => {
-        console.log('handleLanguageChange llamado con:', newLang);
+        console.log('🔄 handleLanguageChange llamado con:', newLang);
         
         // Actualizar el estado y localStorage
         setUserLanguage(newLang);
+        console.log('✅ Idioma actualizado en state y localStorage');
+        
+        // Obtener referencias a los selectores
+        const languageSelect = document.getElementById('languageSelect');
+        const languageSelectMain = document.getElementById('languageSelectMain');
         
         // Sincronizar ambos selectores
         if (languageSelect && languageSelect.value !== newLang) {
-            console.log('Actualizando languageSelect a:', newLang);
+            console.log('🔄 Actualizando languageSelect a:', newLang);
             languageSelect.value = newLang;
         }
         if (languageSelectMain && languageSelectMain.value !== newLang) {
-            console.log('Actualizando languageSelectMain a:', newLang);
+            console.log('🔄 Actualizando languageSelectMain a:', newLang);
             languageSelectMain.value = newLang;
         }
 
         // Actualizar la interfaz
+        console.log('🌐 Traduciendo interfaz al nuevo idioma:', newLang);
         translateInterface(newLang);
         
         // Si hay un chat abierto, recargar los mensajes para mostrar las traducciones
         if (currentChat) {
-            console.log('Recargando mensajes con nuevo idioma');
-            const chatId = currentChat;
+            console.log('📝 Recargando mensajes con nuevo idioma para chat:', currentChat);
             messagesList.innerHTML = ''; // Limpiar mensajes actuales
-            await loadInitialMessages(chatId); // Recargar mensajes
+            await loadInitialMessages(currentChat); // Recargar mensajes
+            console.log('✅ Mensajes recargados exitosamente');
         }
 
         // Actualizar la información del usuario si está disponible
         const currentUser = getCurrentUser();
         if (currentUser) {
+            console.log('👤 Actualizando información del usuario');
             updateUserInfo(currentUser);
         }
     };
 
     // Asignar los event listeners
     if (languageSelect) {
-        languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
+        languageSelect.addEventListener('change', (e) => {
+            console.log('🔄 Cambio detectado en languageSelect:', e.target.value);
+            handleLanguageChange(e.target.value);
+        });
     }
 
     if (languageSelectMain) {
-        languageSelectMain.addEventListener('change', (e) => handleLanguageChange(e.target.value));
+        languageSelectMain.addEventListener('change', (e) => {
+            console.log('🔄 Cambio detectado en languageSelectMain:', e.target.value);
+            handleLanguageChange(e.target.value);
+        });
     }
 
     // ⚠️ Verificar Firebase
@@ -1440,22 +1453,24 @@ function displaySystemMessage(messageData) {
 
 // Función para enviar mensaje
 async function sendMessage(text) {
-    console.log('Intentando enviar mensaje:', text);
+    console.log('📤 Intentando enviar mensaje:', text);
     if (!text.trim() || !currentChat) {
-        console.log('No hay texto o chat activo');
+        console.log('❌ No hay texto o chat activo');
         return;
     }
 
     try {
         const user = getCurrentUser();
         const currentLanguage = getUserLanguage(); // Obtener el idioma actualizado
+        console.log('👤 Usuario actual:', user?.email);
+        console.log('🌐 Idioma actual:', currentLanguage);
         
         if (!user) {
-            console.error('No hay usuario autenticado');
+            console.error('❌ No hay usuario autenticado');
             return;
         }
 
-        console.log('Preparando mensaje para enviar con idioma:', currentLanguage);
+        console.log('📝 Preparando mensaje en idioma:', currentLanguage);
         // Crear el mensaje
         const messageData = {
             text: text.trim(),
@@ -1466,11 +1481,11 @@ async function sendMessage(text) {
             translations: {}
         };
 
-        console.log('Enviando mensaje a Firestore...');
+        console.log('💾 Enviando mensaje a Firestore...');
         // Enviar el mensaje
         const messagesRef = collection(db, 'chats', currentChat, 'messages');
         const docRef = await addDoc(messagesRef, messageData);
-        console.log('Mensaje enviado con ID:', docRef.id);
+        console.log('✅ Mensaje enviado con ID:', docRef.id);
         
         // Actualizar último mensaje del chat
         const chatRef = doc(db, 'chats', currentChat);
@@ -1491,6 +1506,7 @@ async function sendMessage(text) {
         let targetLanguages = new Set();
         
         if (isGroupChat) {
+            console.log('👥 Chat grupal detectado, obteniendo idiomas de participantes...');
             // Para grupos, obtener los idiomas únicos de todos los participantes
             const participantsData = await Promise.all(
                 chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
@@ -1505,6 +1521,7 @@ async function sendMessage(text) {
                 }
             });
         } else {
+            console.log('👤 Chat individual detectado, obteniendo idioma del otro usuario...');
             // Para chats individuales, solo traducir al idioma del otro usuario
             const otherUserId = chatData.participants.find(uid => uid !== user.uid);
             if (otherUserId) {
@@ -1518,30 +1535,30 @@ async function sendMessage(text) {
             }
         }
         
+        console.log('🎯 Idiomas objetivo para traducción:', Array.from(targetLanguages));
         // Realizar las traducciones necesarias
-        console.log('Traduciendo mensaje a idiomas:', Array.from(targetLanguages));
         for (const targetLang of targetLanguages) {
             try {
+                console.log(`🔄 Traduciendo mensaje a ${targetLang}...`);
                 const translation = await translateText(text, targetLang);
+                
                 if (translation === 'LIMIT_EXCEEDED') {
-                    // Si se alcanzó el límite, guardar el mensaje original
+                    console.warn('⚠️ Límite de traducción excedido');
                     await updateDoc(doc(messagesRef, docRef.id), {
                         [`translations.${targetLang}`]: text,
                         translationStatus: 'limit_exceeded'
                     });
-                    // Mostrar mensaje al usuario
                     const limitMessage = getTranslation('translationLimitExceeded', currentLanguage);
                     alert(limitMessage);
-                    break; // Salir del bucle de traducciones
+                    break;
                 } else {
-                await updateDoc(doc(messagesRef, docRef.id), {
-                    [`translations.${targetLang}`]: translation
-                });
-                console.log(`Traducción guardada para ${targetLang}`);
+                    console.log(`✅ Traducción a ${targetLang} completada:`, translation);
+                    await updateDoc(doc(messagesRef, docRef.id), {
+                        [`translations.${targetLang}`]: translation
+                    });
                 }
             } catch (translationError) {
-                console.error('Error al traducir al', targetLang, translationError);
-                // En caso de error, guardar el mensaje original
+                console.error(`❌ Error al traducir al ${targetLang}:`, translationError);
                 await updateDoc(doc(messagesRef, docRef.id), {
                     [`translations.${targetLang}`]: text,
                     translationError: true
@@ -1549,7 +1566,7 @@ async function sendMessage(text) {
             }
         }
     } catch (error) {
-        console.error('Error al enviar mensaje:', error);
+        console.error('❌ Error al enviar mensaje:', error);
         showError('errorGeneric');
     }
 }
