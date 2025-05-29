@@ -129,11 +129,12 @@ body {
 .language-select-main {
   padding: 0.5rem;
   font-size: 0.9rem;
-  border-radius: 8px;
+  border-radius: 10px;
   border: 1.5px solid var(--color-border);
   background: var(--color-bg);
   color: var(--color-text);
   max-width: 120px;
+    text-align: center;
 }
 
 /* Contenedor de búsqueda */
