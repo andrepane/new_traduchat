@@ -1,5 +1,5 @@
 import { db } from '../modules/firebase.js';
-import { doc, updateDoc } from '../modules/firebase.js'; // ✅
+import { doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 export const state = {
     currentUser: null,
