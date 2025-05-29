@@ -224,15 +224,37 @@ function getTranslation(key, lang = getUserLanguage()) {
 }
 
 function translateInterface(lang = getUserLanguage()) {
+    console.log('Traduciendo interfaz al idioma:', lang);
+    
+    // Traducir elementos con data-translate
     document.querySelectorAll('[data-translate]').forEach(element => {
         const key = element.getAttribute('data-translate');
+        console.log('Traduciendo elemento:', key, 'al idioma:', lang);
+        
         if (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA') {
             element.placeholder = getTranslation(key, lang);
+        } else if (element.tagName === 'OPTION') {
+            element.textContent = getTranslation(key, lang);
         } else {
             element.textContent = getTranslation(key, lang);
             if (element.id === 'titulo-wave') {
                 animateTitleWave();
             }
+        }
+    });
+
+    // Asegurar que los selectores de idioma muestren el texto correcto
+    const languageSelect = document.getElementById('languageSelect');
+    const languageSelectMain = document.getElementById('languageSelectMain');
+
+    [languageSelect, languageSelectMain].forEach(select => {
+        if (select) {
+            Array.from(select.options).forEach(option => {
+                const key = option.getAttribute('data-translate');
+                if (key) {
+                    option.textContent = getTranslation(key, lang);
+                }
+            });
         }
     });
 }
