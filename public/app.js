@@ -451,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleLanguageChange = async (newLang) => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
 
-        setUserLanguage(newLang);
+        await setUserLanguage(newLang);
         translateInterface(newLang);
 
         if (languageSelect) languageSelect.value = newLang;
@@ -2072,6 +2072,8 @@ micButton.addEventListener('click', async () => {
     } else {
         // Esperar que el reconocimiento anterior se detenga (si existe)
         await waitForRecognitionStop();
+
+         await new Promise(r => setTimeout(r, 10));
 
         // Obtener idioma actual y mapearlo para reconocimiento
         const currentLang = getUserLanguage();
