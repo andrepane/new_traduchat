@@ -1473,23 +1473,26 @@ async function sendMessage(text) {
 
     try {
         const user = getCurrentUser();
-        const currentLanguage = getUserLanguage(); // Obtener el idioma actualizado
-        console.log('👤 Usuario actual:', user?.email);
-        console.log('🌐 Idioma actual:', currentLanguage);
-        
         if (!user) {
             console.error('❌ No hay usuario autenticado');
             return;
         }
 
-        console.log('📝 Preparando mensaje en idioma:', currentLanguage);
+        // Obtener el idioma del usuario desde la base de datos
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const userLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
+        
+        console.log('👤 Usuario actual:', user.email);
+        console.log('🌐 Idioma actual del usuario:', userLanguage);
+        
+        console.log('📝 Preparando mensaje en idioma:', userLanguage);
         // Crear el mensaje
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
             senderEmail: user.email,
             timestamp: serverTimestamp(),
-            language: currentLanguage,
+            language: userLanguage, // Usar el idioma del usuario
             translations: {}
         };
 
@@ -1527,7 +1530,7 @@ async function sendMessage(text) {
             participantsData.forEach(participantDoc => {
                 if (participantDoc.exists()) {
                     const participantLang = participantDoc.data().language || 'en';
-                    if (participantLang !== currentLanguage) {
+                    if (participantLang !== userLanguage) {
                         targetLanguages.add(participantLang);
                     }
                 }
@@ -1540,7 +1543,7 @@ async function sendMessage(text) {
                 const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
                 if (otherUserDoc.exists()) {
                     const otherUserLang = otherUserDoc.data().language || 'en';
-                    if (otherUserLang !== currentLanguage) {
+                    if (otherUserLang !== userLanguage) {
                         targetLanguages.add(otherUserLang);
                     }
                 }
@@ -1552,7 +1555,7 @@ async function sendMessage(text) {
         for (const targetLang of targetLanguages) {
             try {
                 console.log(`🔄 Traduciendo mensaje a ${targetLang}...`);
-                const translation = await translateText(text, targetLang);
+                const translation = await translateText(text, targetLang, userLanguage);
                 
                 if (translation === 'LIMIT_EXCEEDED') {
                     console.warn('⚠️ Límite de traducción excedido');
@@ -1560,7 +1563,7 @@ async function sendMessage(text) {
                         [`translations.${targetLang}`]: text,
                         translationStatus: 'limit_exceeded'
                     });
-                    const limitMessage = getTranslation('translationLimitExceeded', currentLanguage);
+                    const limitMessage = getTranslation('translationLimitExceeded', userLanguage);
                     alert(limitMessage);
                     break;
                 } else {
