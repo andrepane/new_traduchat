@@ -1992,6 +1992,49 @@ async function createGroupChat(groupName, participants) {
     }
 } 
 
+// Función para inicializar el reconocimiento de voz (sin fijar idioma)
+function initializeSpeechRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        console.error('El reconocimiento de voz no está soportado en este navegador');
+        return null;
+    }
+
+    const recognitionInstance = new webkitSpeechRecognition();
+    recognitionInstance.continuous = true;
+    recognitionInstance.interimResults = true;
+
+    recognitionInstance.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript = transcript;
+                messageInput.value = finalTranscript;
+            } else {
+                interimTranscript += transcript;
+                messageInput.value = interimTranscript;
+            }
+        }
+    };
+
+    recognitionInstance.onerror = (event) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        stopRecording();
+        showError('errorVoiceRecognition');
+    };
+
+    recognitionInstance.onend = () => {
+        stopRecording();
+    };
+
+    return recognitionInstance;
+}
+
+// Evento para el botón de micrófono
+const micButton = document.getElementById('micButton');
+
 micButton.addEventListener('click', () => {
     if (!currentChat) {
         showError('errorNoChat');
@@ -2001,14 +2044,14 @@ micButton.addEventListener('click', () => {
     if (isRecording) {
         stopRecording();
     } else {
-        // Si ya hay un recognition, deténlo para reiniciar con nuevo idioma
+        // Si ya hay reconocimiento activo, detenerlo para reiniciar con nuevo idioma
         if (recognition) {
             recognition.stop();
             recognition = null;
         }
         recognition = initializeSpeechRecognition();
 
-        // Actualiza el idioma justo antes de empezar
+        // Establecer idioma actualizado justo antes de iniciar
         const currentLang = getUserLanguage();
         const languageMapping = {
             'es': 'es-ES',
@@ -2030,6 +2073,7 @@ micButton.addEventListener('click', () => {
         }
     }
 });
+
 
 
 // Manejo del teclado en iOS
