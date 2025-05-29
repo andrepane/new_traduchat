@@ -1992,74 +1992,6 @@ async function createGroupChat(groupName, participants) {
     }
 } 
 
-// Función para inicializar el reconocimiento de voz
-function initializeSpeechRecognition() {
-    if (!('webkitSpeechRecognition' in window)) {
-        console.error('El reconocimiento de voz no está soportado en este navegador');
-        return null;
-    }
-
-    recognition = new webkitSpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    // Mapeo de idiomas para el reconocimiento de voz
-    const languageMapping = {
-        'es': 'es-ES',
-        'en': 'en-US',
-        'it': 'it-IT',
-        'fr': 'fr-FR',
-        'de': 'de-DE',
-        'pt': 'pt-PT'
-    };
-
-    // Establecer el idioma correcto basado en el idioma del usuario
-    recognition.lang = languageMapping[getUserLanguage()] || 'en-US';
-    console.log('Idioma de reconocimiento de voz establecido a:', recognition.lang);
-    
-    recognition.onresult = (event) => {
-        let interimTranscript = '';
-        let finalTranscript = '';
-        
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-                finalTranscript = transcript;
-                messageInput.value = finalTranscript;
-            } else {
-                interimTranscript += transcript;
-                messageInput.value = interimTranscript;
-            }
-        }
-    };
-    
-    recognition.onerror = (event) => {
-        console.error('Error en reconocimiento de voz:', event.error);
-        stopRecording();
-        showError('errorVoiceRecognition');
-    };
-    
-    recognition.onend = () => {
-        stopRecording();
-    };
-    
-    return recognition;
-}
-
-// Función para detener la grabación
-function stopRecording() {
-    if (recognition) {
-        recognition.stop();
-    }
-    isRecording = false;
-    micButton.classList.remove('recording');
-    // Restaurar el placeholder original
-    messageInput.placeholder = getTranslation('writeMessage', userLanguage);
-}
-
-// Evento para el botón de micrófono
-const micButton = document.getElementById('micButton');
-
 micButton.addEventListener('click', () => {
     if (!currentChat) {
         showError('errorNoChat');
@@ -2069,20 +2001,36 @@ micButton.addEventListener('click', () => {
     if (isRecording) {
         stopRecording();
     } else {
-        // Iniciar grabación
-        if (!recognition) {
-            recognition = initializeSpeechRecognition();
+        // Si ya hay un recognition, deténlo para reiniciar con nuevo idioma
+        if (recognition) {
+            recognition.stop();
+            recognition = null;
         }
-        
+        recognition = initializeSpeechRecognition();
+
+        // Actualiza el idioma justo antes de empezar
+        const currentLang = getUserLanguage();
+        const languageMapping = {
+            'es': 'es-ES',
+            'en': 'en-US',
+            'it': 'it-IT',
+            'fr': 'fr-FR',
+            'de': 'de-DE',
+            'pt': 'pt-PT'
+        };
+        recognition.lang = languageMapping[currentLang] || 'en-US';
+        console.log('Idioma de reconocimiento de voz actualizado a:', recognition.lang);
+
         recognition.start();
         micButton.classList.add('recording');
         isRecording = true;
-        // No limpiar el input si ya tiene texto
+
         if (!messageInput.value.trim()) {
-            messageInput.placeholder = getTranslation('listening', userLanguage);
+            messageInput.placeholder = getTranslation('listening', currentLang);
         }
     }
 });
+
 
 // Manejo del teclado en iOS
 function handleKeyboard() {
