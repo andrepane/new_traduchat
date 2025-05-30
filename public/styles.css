@@ -170,7 +170,7 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(var(--safe-area-bottom) + 20px);
-  background-color: var(--color-bg);
+  background-color: #fff;
 }
 
 .chat-item {
