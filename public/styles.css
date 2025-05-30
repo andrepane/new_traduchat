@@ -169,7 +169,7 @@ body {
   height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--safe-area-bottom) + 20px);
+  /* padding-bottom: calc(var(--safe-area-bottom) + 20px); */ 
   background-color: #fff;
 }
 
