@@ -451,6 +451,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const handleLanguageChange = async (newLang) => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
 
+        // Detener cualquier reconocimiento de voz activo
+        if (recognition) {
+            stopRecording();
+        }
+
         await setUserLanguage(newLang);
         translateInterface(newLang);
 
@@ -2123,8 +2128,7 @@ function stopRecording() {
     }
     isRecording = false;
     micButton.classList.remove('recording');
-    // Restaurar placeholder al idioma actual
-    const currentLang = getUserLanguage();
+    const currentLang = languageSelect ? languageSelect.value : getUserLanguage();
     messageInput.placeholder = getTranslation('writeMessage', currentLang);
 }
 
@@ -2151,13 +2155,17 @@ micButton.addEventListener('click', async () => {
     if (isRecording) {
         stopRecording();
     } else {
-        // Esperar que el reconocimiento anterior se detenga (si existe)
+        // Asegurarnos de que cualquier reconocimiento previo se detenga
         await waitForRecognitionStop();
+        await new Promise(r => setTimeout(r, 10));
 
-         await new Promise(r => setTimeout(r, 10));
+        // Obtener el idioma actual directamente del selector
+        const currentLang = document.getElementById('languageSelect')?.value || 
+                          document.getElementById('languageSelectMain')?.value || 
+                          getUserLanguage();
 
-        // Obtener idioma actual y mapearlo para reconocimiento
-        const currentLang = languageSelect ? languageSelect.value : getUserLanguage();
+        console.log('🎤 Iniciando reconocimiento de voz en idioma:', currentLang);
+
         const languageMapping = {
             'es': 'es-ES',
             'en': 'en-US',
@@ -2166,10 +2174,12 @@ micButton.addEventListener('click', async () => {
             'de': 'de-DE',
             'pt': 'pt-PT'
         };
+
         const langCode = languageMapping[currentLang] || 'en-US';
+        console.log('🌐 Código de idioma para reconocimiento:', langCode);
 
+        // Crear nueva instancia de reconocimiento con el idioma actual
         recognition = initializeSpeechRecognition(langCode);
-
         recognition.start();
         micButton.classList.add('recording');
         isRecording = true;
