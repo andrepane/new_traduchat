@@ -32,9 +32,22 @@ export function setCurrentUser(user) {
 }
 
 export function getUserLanguage() {
-    const lang = localStorage.getItem('userLanguage') || 'es';
-    console.log('🔍 getUserLanguage - Desde localStorage:', lang);
-    return lang;
+    // Primero intentar obtener del selector de idioma activo
+    const languageSelect = document.getElementById('languageSelect');
+    const languageSelectMain = document.getElementById('languageSelectMain');
+    
+    // Usar el valor del selector si está disponible
+    const selectedLang = (languageSelect && languageSelect.value) || 
+                        (languageSelectMain && languageSelectMain.value);
+    
+    if (selectedLang) {
+        return selectedLang;
+    }
+    
+    // Si no hay selector, usar el valor almacenado
+    const storedLang = localStorage.getItem('userLanguage');
+    console.log('🔍 getUserLanguage - Desde localStorage:', storedLang);
+    return storedLang || 'es';
 }
 
 export async function setUserLanguage(lang) {
@@ -45,9 +58,18 @@ export async function setUserLanguage(lang) {
         return;
     }
 
+    // Actualizar localStorage
     localStorage.setItem('userLanguage', lang);
     console.log('✅ Nuevo idioma guardado en localStorage:', lang);
 
+    // Actualizar selectores de idioma si existen
+    const languageSelect = document.getElementById('languageSelect');
+    const languageSelectMain = document.getElementById('languageSelectMain');
+    
+    if (languageSelect) languageSelect.value = lang;
+    if (languageSelectMain) languageSelectMain.value = lang;
+
+    // Disparar evento de cambio de idioma
     window.dispatchEvent(new CustomEvent('languageChanged', { detail: lang }));
 
     const user = getCurrentUser();
