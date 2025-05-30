@@ -15,6 +15,7 @@ const translations = {
         logoutConfirm: '¿Estás seguro de que quieres cerrar sesión?',
         logoutSuccess: 'Has cerrado sesión correctamente',
         noPhone: 'Sin teléfono',
+        listening: 'Escuchando...',
         
         // Mensajes de error/éxito
         errorEmptyFields: 'Por favor, completa todos los campos',
@@ -86,6 +87,7 @@ const translations = {
         logout: 'Logout',
         logoutConfirm: 'Are you sure you want to logout?',
         logoutSuccess: 'You have successfully logged out',
+        listening: 'Listening...',
         
         // Error/success messages
         errorEmptyFields: 'Please fill in all fields',
@@ -158,6 +160,7 @@ const translations = {
         logout: 'Disconnetti',
         logoutConfirm: 'Sei sicuro di voler disconnetterti?',
         logoutSuccess: 'Disconnessione effettuata con successo',
+        listening: 'In ascolto...',
         
         // Messaggi di errore/successo
         errorEmptyFields: 'Per favore, compila tutti i campi',
