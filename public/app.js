@@ -1274,21 +1274,21 @@ unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
 
     const data = chatDoc.data();
     const typingStatus = data.typingStatus;
-    console.log('typingStatus snapshot:', typingStatus);
+    console.log('📝 Estado de escritura recibido:', typingStatus);
 
-    // Obtener el idioma actual del selector o del estado
     const currentLang = document.getElementById('languageSelect')?.value || 
                        document.getElementById('languageSelectMain')?.value || 
                        getUserLanguage();
 
     console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
 
-    if (typingStatus && typingStatus.userId !== currentUser.uid) {
+    if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
         const typingText = getTypingText(currentLang);
-        console.log('💬 Mostrando indicador de escritura:', typingText);
-        showTypingIndicator(typingText);
+        const username = typingStatus.username || typingStatus.userId;
+        console.log('💬 Usuario escribiendo:', username);
+        showTypingIndicator(`${username} ${typingText}`);
     } else {
-        console.log('💬 Ocultando indicador de escritura');
+        console.log('💬 Nadie está escribiendo');
         hideTypingIndicator();
     }
 });
@@ -1610,19 +1610,23 @@ let unsubscribeTypingStatus = null;
 async function setTypingStatus(isTyping) {
     if (!currentChat || !currentUser) return;
 
-    console.log(`setTypingStatus called with: ${isTyping}`);
+    console.log(`🔄 setTypingStatus llamado con: ${isTyping}`);
 
     const chatRef = doc(db, 'chats', currentChat);
 
     try {
+        const typingData = isTyping ? {
+            userId: currentUser.uid,
+            timestamp: serverTimestamp(),
+            username: currentUser.email.split('@')[0] // o el nombre de usuario si lo tienes
+        } : null;
+
         await updateDoc(chatRef, {
-            typingStatus: isTyping
-                ? { userId: currentUser.uid, timestamp: serverTimestamp() }
-                : null
+            typingStatus: typingData
         });
-        console.log('Typing status updated in Firestore');
+        console.log('✅ Estado de escritura actualizado:', typingData);
     } catch (error) {
-        console.error('Error actualizando estado de escritura:', error);
+        console.error('❌ Error actualizando estado de escritura:', error);
     }
 }
 
@@ -1640,18 +1644,18 @@ const typingIndicator = document.getElementById('typingIndicator');
 function showTypingIndicator(text) {
     const typingIndicator = document.getElementById('typingIndicator');
     if (typingIndicator) {
-        // Obtener el nombre del usuario que está escribiendo si está disponible
-        const otherUserName = currentChatInfo?.textContent || '';
-        const formattedText = otherUserName ? `${otherUserName} ${text}` : text;
-        typingIndicator.textContent = formattedText;
+        typingIndicator.textContent = text;
         typingIndicator.style.display = 'block';
+        console.log('✨ Mostrando indicador:', text);
     }
 }
 
 function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
     if (typingIndicator) {
         typingIndicator.style.display = 'none';
         typingIndicator.textContent = '';
+        console.log('🚫 Ocultando indicador de escritura');
     }
 }
 
