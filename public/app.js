@@ -1845,25 +1845,25 @@ function showGroupCreationModal() {
     const modalHtml = `
         <div id="groupModal" class="modal">
             <div class="modal-content">
-                <h2>${getTranslation('createGroup', userLanguage)}</h2>
+                <h2 data-translate="createGroup">${getTranslation('createGroup', userLanguage)}</h2>
                 <div class="group-form">
-                    <input type="text" id="groupName" placeholder="${getTranslation('groupNamePlaceholder', userLanguage)}" />
+                    <input type="text" id="groupName" data-translate="groupNamePlaceholder" placeholder="${getTranslation('groupNamePlaceholder', userLanguage)}" />
                     <div class="selected-users">
                         <h3>
-                            ${getTranslation('selectedUsers', userLanguage)}
-                            <span class="users-count">(0/2 mínimo)</span>
+                            <span data-translate="selectedUsers">${getTranslation('selectedUsers', userLanguage)}</span>
+                            <span class="users-count" data-translate="minUsersCount">(0/2 mínimo)</span>
                         </h3>
                         <div id="selectedUsersList"></div>
                     </div>
                     <div class="user-search">
-                        <input type="text" id="groupUserSearch" placeholder="${getTranslation('searchUsers', userLanguage)}" />
+                        <input type="text" id="groupUserSearch" data-translate="searchUsers" placeholder="${getTranslation('searchUsers', userLanguage)}" />
                         <div id="userSearchResults"></div>
                     </div>
                     <div class="modal-buttons">
-                        <button id="createGroupBtn" disabled>
+                        <button id="createGroupBtn" disabled data-translate="createGroup">
                             ${getTranslation('createGroup', userLanguage)}
                         </button>
-                        <button id="cancelGroupBtn">
+                        <button id="cancelGroupBtn" data-translate="cancel">
                             ${getTranslation('cancel', userLanguage)}
                         </button>
                     </div>
@@ -1886,9 +1886,13 @@ function showGroupCreationModal() {
 
     // Actualizar contador de usuarios
     function updateUsersCount() {
-        usersCount.textContent = `(${selectedUsers.size}/2 mínimo)`;
+        const currentLang = getUserLanguage();
+        usersCount.textContent = getTranslation('minUsersCount', currentLang, selectedUsers.size);
         usersCount.style.color = selectedUsers.size >= 2 ? '#10b981' : '#ef4444';
     }
+
+    // Traducir la interfaz del modal
+    translateInterface(getUserLanguage());
 
     // Búsqueda de usuarios
     userSearchInput.addEventListener('input', debounce(async (e) => {
@@ -1903,7 +1907,7 @@ function showGroupCreationModal() {
             displayUserSearchResults(users, userSearchResults, selectedUsersList, createGroupBtn);
         } catch (error) {
             console.error('Error al buscar usuarios:', error);
-            userSearchResults.innerHTML = `<div class="error-message">${getTranslation('errorSearch', userLanguage)}</div>`;
+            userSearchResults.innerHTML = `<div class="error-message" data-translate="errorSearch">${getTranslation('errorSearch', userLanguage)}</div>`;
         }
     }, 300));
 
@@ -1948,6 +1952,13 @@ function showGroupCreationModal() {
     // Inicializar la lista de usuarios seleccionados
     updateSelectedUsersList(selectedUsersList, createGroupBtn);
     updateUsersCount();
+
+    // Escuchar cambios de idioma
+    window.addEventListener('languageChanged', (e) => {
+        const newLang = e.detail;
+        translateInterface(newLang);
+        updateUsersCount();
+    });
 }
 
 // Función para buscar usuarios para el grupo
