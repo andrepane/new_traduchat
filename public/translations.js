@@ -286,10 +286,20 @@ function animateTitleWave() {
 }
 
 export function getTypingText(lang) {
-  if (translations.typing && translations.typing[lang]) {
-    return translations.typing[lang];
-  }
-  return 'is typing...'; // fallback
+    // Verificar que el idioma y la traducción existan
+    if (translations[lang] && translations[lang].typing) {
+        return translations[lang].typing;
+    }
+    
+    // Mapeo de fallback para cada idioma
+    const fallbackMessages = {
+        'es': 'está escribiendo...',
+        'en': 'is typing...',
+        'it': 'sta scrivendo...'
+    };
+    
+    // Usar el fallback específico del idioma o el fallback por defecto
+    return fallbackMessages[lang] || 'is typing...';
 }
 
 // Exportar todo junto al final
