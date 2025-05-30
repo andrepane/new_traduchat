@@ -1777,8 +1777,9 @@ html {
     }
 
     #micButton {
-        background-color: #007bff;
-        color: #fff;
+        background-color: #fff;
+        border: 1px solid var(--color-primary-dark);
+        color: var(--color-primary-dark);
     }
 
     #micButton.recording {
