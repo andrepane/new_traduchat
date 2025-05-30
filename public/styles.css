@@ -170,6 +170,9 @@ body {
      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       background-color: #fff;
+    display: flex;
+    flex-directions: column;
+    gap: 10px; 
 }
 
 .chat-item {
@@ -177,11 +180,14 @@ body {
   align-items: center;
   background-color: var(--color-bg);
   padding: 20px 15px;
-  border-bottom: 1px solid #d9e6d6;
+ /*  border-bottom: 1px solid #d9e6d6; */
+    
+border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    
   transition: background-color 0.2s ease;
   cursor: pointer;
   justify-content: space-between;
-    gap: 5px;
 }
 
 .chat-item:hover {
