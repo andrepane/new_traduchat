@@ -164,10 +164,11 @@ body {
 
 /* Lista de chats */
 .chat-list {
-  margin-top: calc(var(--header-height) + var(--safe-area-top)); /* Ajustado para considerar la altura del search container */
+ /*  margin-top: calc(var(--header-height) + var(--safe-area-top)); Ajustado para considerar la altura del search container */
   padding-top: 0; /* Añadir padding superior */
-  height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px);
+ /*  height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px); */ 
   overflow-y: auto;
+  flex: 1;
   -webkit-overflow-scrolling: touch;
   padding-bottom: calc(var(--safe-area-bottom) + 20px);
   background-color: #fff;
@@ -1958,8 +1959,9 @@ html {
 
     /* Lista de chats */
     .chat-list {
-        margin-top: calc(var(--header-height) + var(--safe-area-top) + 56px);
-        height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 56px);
+       /*  margin-top: calc(var(--header-height) + var(--safe-area-top) + 56px);
+        height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 56px); */ 
+        flex: 1;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
         padding-bottom: calc(var(--safe-area-bottom) + 20px);
