@@ -338,7 +338,7 @@ body {
     top: 0;
     left: 0;
     z-index: 1000;
-    background: var(--color-bg);
+    background: #fff;
     display: flex;
     flex-direction: column;
   }
