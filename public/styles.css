@@ -707,8 +707,8 @@ body {
 }
 
 .message-flag {
+  margin: 0.2rem;
   font-size: 0.7em;
-  opacity: 0.8;
 }
 
 /* Pantallas */
