@@ -164,15 +164,12 @@ body {
 
 /* Lista de chats */
 .chat-list {
- /*  margin-top: calc(var(--header-height) + var(--safe-area-top)); Ajustado para considerar la altura del search container */
- /* padding-top: 0;  Añadir padding superior */
- /*  height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px); */ 
-    padding: 10px 0 calc(var(--safe-area-bottom) + 20px);
-    overflow-y: auto;
-  flex: 1;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--safe-area-bottom) + 20px);
-  background-color: #fff;
+     margin-top: calc(var(--header-height) + var(--safe-area-top)); /* Ajustado para considerar la altura del search container */
+     padding-top: 0; /*  Añadir padding superior */
+     height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px); 
+     overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      background-color: #fff;
 }
 
 .chat-item {
@@ -1428,8 +1425,6 @@ html {
         overflow-y: auto;
         margin-top: 0;
         padding-top: 0;
-          padding: 10px 0 calc(var(--safe-area-bottom) + 20px);
-
     }
 
     .chat-item:first-child {
@@ -1962,14 +1957,10 @@ html {
 
     /* Lista de chats */
     .chat-list {
-       /*  margin-top: calc(var(--header-height) + var(--safe-area-top) + 56px);
-        height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 56px); */ 
-        flex: 1;
-          padding: 10px 0 calc(var(--safe-area-bottom) + 20px);
-
+        margin-top: calc(var(--header-height) + var(--safe-area-top) + 56px);
+        height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 56px); 
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding-bottom: calc(var(--safe-area-bottom) + 20px);
     }
 
     /* Lista de mensajes */
