@@ -102,7 +102,7 @@ body {
 .user-header {
   height: var(--header-height);
   padding: 12px 15px;
-  background-color: #f8f9fa;
+  background-color: #fff;
   border-bottom: 1px solid #dee2e6;
   display: flex;
   align-items: center;
@@ -144,7 +144,7 @@ body {
   left: 0;
   right: 0;
   padding: 10px 10px 12px 10px; 
-  background-color: var(--color-bg);
+  background-color: #fff;
   border-bottom: 1px solid var(--color-border);
   z-index: 99;
   height: 60px; /* Altura fija para el contenedor de búsqueda */
@@ -176,6 +176,7 @@ body {
 .chat-item {
   display: flex;
   align-items: center;
+  background-color: var(--color-bg);
   padding: 20px 15px;
   border-bottom: 1px solid #d9e6d6;
   transition: background-color 0.2s ease;
