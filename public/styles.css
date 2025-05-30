@@ -178,17 +178,17 @@ body {
 .chat-item {
   display: flex;
   align-items: center;
+    justify-content: center;
   background-color: var(--color-bg);
   padding: 20px 15px;
   border-bottom: 1px solid #d9e6d6;
-    width: 80%;
+    width: 95%;
   transition: background-color 0.2s ease;
   cursor: pointer;
   justify-content: space-between;
     margin: 5px 0;
     border-radius: 12px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-    gap: 20px;
 }
 
 .chat-item:hover {
