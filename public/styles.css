@@ -173,6 +173,7 @@ body {
      overflow-y: auto;
       -webkit-overflow-scrolling: touch;
       background-color: #fff;
+    display: flex;
 }
 
 .chat-item {
