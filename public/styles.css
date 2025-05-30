@@ -181,6 +181,7 @@ body {
   background-color: var(--color-bg);
   padding: 20px 15px;
   border-bottom: 1px solid #d9e6d6;
+    width: 80%;
   transition: background-color 0.2s ease;
   cursor: pointer;
   justify-content: space-between;
