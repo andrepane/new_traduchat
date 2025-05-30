@@ -145,7 +145,7 @@ body {
   right: 0;
   padding: 10px 10px 12px 10px; 
   background-color: #fff;
-  border-bottom: 1px solid var(--color-border);
+  /* border-bottom: 1px solid var(--color-border); */ 
   z-index: 99;
   height: 60px; /* Altura fija para el contenedor de búsqueda */
   display: flex;
@@ -1956,7 +1956,7 @@ html {
         right: 0;
         padding: 8px 12px;
         background-color: #fff;
-        border-bottom: 1px solid var(--color-border);
+        /* border-bottom: 1px solid var(--color-border); */ 
         z-index: 99;
         display: flex;           /* Centrar verticalmente */
         align-items: center;
