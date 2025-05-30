@@ -165,7 +165,7 @@ body {
 /* Lista de chats */
 .chat-list {
   margin-top: calc(var(--header-height) + var(--safe-area-top)); /* Ajustado para considerar la altura del search container */
-  padding-top: 10px; /* Añadir padding superior */
+  padding-top: 0; /* Añadir padding superior */
   height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
