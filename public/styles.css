@@ -220,6 +220,10 @@ body {
   white-space: nowrap;
 }
 
+.currentChatInfo {
+    font-weight: 600;
+}
+
 .chat-item.group-chat .chat-name {
     color: var(--color-primary);
 }
