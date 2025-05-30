@@ -139,6 +139,7 @@ body {
 
 /* Contenedor de búsqueda */
 .search-container {
+    width: 100%;
   position: fixed;
   top: calc(var(--header-height) + var(--safe-area-top));
   left: 0;
