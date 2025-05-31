@@ -1826,64 +1826,7 @@ html {
 
 /* Ajustes adicionales para iOS */
 @supports (-webkit-touch-callout: none) {
-  /* Prevenir scroll del body cuando el teclado está abierto */
-  body.keyboard-open {
-    height: calc(100% - var(--keyboard-height, 0px));
-  }
-
-  /* Ajustar contenedor principal cuando el teclado está abierto */
-  #mainScreen.keyboard-open {
-    height: calc(100% - var(--keyboard-height, 0px));
-  }
-
-  /* Asegurar que los mensajes sean visibles sobre el teclado */
-  .messages-list.keyboard-open {
-    height: calc(100vh - var(--header-height) - var(--footer-height) - var(--safe-area-top) - var(--keyboard-height, 0px));
-    padding-bottom: 20px;
-  }
-
-  /* Ajustar input container cuando el teclado está abierto */
-  .message-input.keyboard-open {
-    bottom: var(--keyboard-height, 0px);
-  }
-
-  /* Mejorar el scroll */
-  .messages-list {
-    overscroll-behavior-y: contain;
-    scroll-behavior: smooth;
-  }
-
-  /* Prevenir rebote en iOS */
-  .chat-list,
-  .messages-list {
-    overscroll-behavior-y: none;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  /* Asegurar que los inputs no sean tapados por el teclado */
-  input[type="text"],
-  textarea {
-    font-size: 16px; /* Prevenir zoom en iOS */
-  }
-}
-
-/* Ajustes específicos para iPhone con notch */
-@media screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
-     screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
-     screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
-     screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) {
-  :root {
-    --safe-area-top: env(safe-area-inset-top, 44px);
-    --safe-area-bottom: env(safe-area-inset-bottom, 50px);
-  }
-
-  .header-actions {
-    padding-right: calc(env(safe-area-inset-right) + 15px);
-  }
-}
-
-/* Ajustes base para iOS */
-@supports (-webkit-touch-callout: none) {
+  /* Variables base para iOS */
   :root {
     --safe-area-top: env(safe-area-inset-top, 44px);
     --safe-area-bottom: env(safe-area-inset-bottom, 10px);
@@ -1891,6 +1834,18 @@ html {
     --footer-height: 60px;
   }
 
+  /* Ajustes específicos para dispositivos con notch */
+  @media screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
+         screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
+         screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
+         screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) {
+    :root {
+      --safe-area-top: env(safe-area-inset-top, 44px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 50px);
+    }
+  }
+
+  /* Estructura base */
   body {
     position: fixed;
     width: 100%;
@@ -1906,7 +1861,7 @@ html {
     padding-top: var(--safe-area-top);
   }
 
-  /* Headers */
+  /* Headers y navegación */
   .user-header,
   .chat-header {
     position: fixed;
@@ -1915,9 +1870,8 @@ html {
     right: 0;
     height: var(--header-height);
     padding: 10px 15px;
-    /* border-bottom: 1px solid #dee2e6; */ 
     background-color: #fff;
-    z-index: 1002; /* Aumentado para asegurar que esté por encima del contenido */
+    z-index: 1002;
     display: flex;
     align-items: center;
     backdrop-filter: blur(10px);
@@ -1927,31 +1881,66 @@ html {
   .chat-header {
     border-bottom: 1px solid var(--color-border);
   }
-  
-  /* Header actions */
+
   .user-header {
-    display: flex;
-    align-items: center;
     padding-left: calc(env(safe-area-inset-left) + 15px);
     padding-right: calc(env(safe-area-inset-right) + 15px);
   }
 
-  .user-info {
-    flex: 1;  /* Esto hace que el nombre ocupe todo el espacio disponible */
-    min-width: 0; /* Evita overflow */
-  }
-
   .header-actions {
-    margin-left: auto; /* Empuja los botones a la derecha sin ocupar todo el ancho */
-    padding: 0;
-    width: auto; /* Para que no ocupe 100% */
-    gap: 12px;
-    display: flex;
+    padding-right: calc(env(safe-area-inset-right) + 15px);
   }
 
-  .icon-button {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
+  /* Contenedores principales */
+  .search-container {
+    position: fixed;
+    top: calc(var(--header-height) + var(--safe-area-top));
+  }
+
+  .chat-list {
+    margin-top: calc(var(--header-height) + var(--safe-area-top));
+    height: calc(100vh - var(--header-height) - var(--safe-area-top) - var(--safe-area-bottom) - 60px);
+    padding-top: 60px;
+  }
+
+  /* Optimizaciones de scroll */
+  .messages-list {
+    padding-bottom: 30px;
+    overscroll-behavior-y: contain;
+    scroll-behavior: smooth;
+  }
+
+  .chat-list,
+  .messages-list {
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ajustes para el teclado */
+  body.keyboard-open {
+    height: calc(100% - var(--keyboard-height, 0px));
+  }
+
+  #mainScreen.keyboard-open {
+    height: calc(100% - var(--keyboard-height, 0px));
+  }
+
+  .messages-list.keyboard-open {
+    height: calc(100vh - var(--header-height) - var(--footer-height) - var(--safe-area-top) - var(--keyboard-height, 0px));
+    padding-bottom: 20px;
+  }
+
+  .message-input.keyboard-open {
+    bottom: var(--keyboard-height, 0px);
+  }
+
+  .message-input {
+    padding-bottom: calc(env(safe-area-inset-bottom, 10px));
+  }
+
+  /* Prevención de zoom en inputs */
+  input[type="text"],
+  textarea {
+    font-size: 16px;
   }
 }
