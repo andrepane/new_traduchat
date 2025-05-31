@@ -1835,9 +1835,9 @@ html {
   :root {
     --safe-area-top: env(safe-area-inset-top, 44px);
     --safe-area-bottom: env(safe-area-inset-bottom, 10px);
-    --header-height: 60px;
+    --header-height: 65px;
     --footer-height: 60px;
-    --message-input-height: 60px;
+    --message-input-height: 65px;
   }
 
   /* Estructura base */
@@ -1900,8 +1900,8 @@ html {
 
   /* Optimizaciones de scroll */
   .messages-list {
-    margin-top: calc(var(--header-height) + 18px);
-    height: calc(100vh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    margin-top: calc(var(--header-height) + 15px);
+    height: calc(100dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom));
     padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom) + 20px);
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
