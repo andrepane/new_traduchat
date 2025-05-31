@@ -1739,9 +1739,9 @@ html {
 
   .messages-list {
     flex: 1;
-    height: calc(100vh - 150px);
+    height: calc(100vh - var(--header-height) - var(--message-input-height) - var(--safe-area-bottom));
     overflow: auto;
-    padding-bottom: 100px;
+    padding-bottom: var(--message-input-height);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -1750,17 +1750,12 @@ html {
     bottom: 0;
     left: 0;
     width: 100%;
-    min-height: 60px;
-    max-height: 120px;
+    min-height: var(--message-input-height);
     padding: 10px 15px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
     background-color: #fff;
     border-top: 1px solid #ddd;
     z-index: 1001;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
   }
 
   #messageInput {
@@ -1898,14 +1893,10 @@ html {
     padding-top: 60px;
   }
 
-
-
   /* Optimizaciones de scroll */
   .messages-list {
-   /* padding-top: calc(var(--header-height)); */ 
-   /*  margin-top: calc(var(--header-height) + 15px); Empuja el primer mensaje hacia abajo */
-    height: calc(90dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom));
-    padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom) + 50px);
+    height: calc(100dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom));
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
@@ -1965,7 +1956,7 @@ html {
     }
 
     .messages-list {
-      padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom) + 30px);
+      padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom));
     }
   }
 
