@@ -1810,7 +1810,7 @@ html {
   /* Ajustes para iPhone X y posteriores */
 @supports (padding: max(0px)) {
     .message-input {
-        padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 10px));
     }
 }
 }
@@ -1891,7 +1891,7 @@ html {
 @supports (-webkit-touch-callout: none) {
   :root {
       --safe-area-top: env(safe-area-inset-top, 44px);
-      --safe-area-bottom: env(safe-area-inset-bottom, 50px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 10px);
       --header-height: 60px;
       --footer-height: 60px;
   }
