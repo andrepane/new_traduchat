@@ -564,7 +564,6 @@ padding-bottom: calc(70px + env(safe-area-inset-bottom));
 
   .message-input {
     padding-bottom: calc(env(safe-area-inset-bottom, 50px) + 30px);
-    bottom: 15px;
   }
 }
 
