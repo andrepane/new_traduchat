@@ -1901,7 +1901,7 @@ html {
   /* Optimizaciones de scroll */
   .messages-list {
     margin-top: calc(var(--header-height) + 15px); /* Empuja el primer mensaje hacia abajo */
-    height: calc(100dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom) - 15px);
+    height: calc(90dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom) - 15px);
     padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom) + 20px);
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
