@@ -400,11 +400,10 @@ body {
   
   /* Lista de mensajes */
   .messages-list {
-    margin-top: calc(var(--header-height) + var(--safe-area-top));
-    height: calc(100vh - var(--header-height) - var(--footer-height) - var(--safe-area-top) - var(--safe-area-bottom));
-    padding: 10px 15px;
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
-    overflow-y: auto;
+    flex: 1;
+    height: calc(100vh - 150px);
+    overflow: auto;
+    padding-bottom: 100px;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -1739,9 +1738,9 @@ html {
 
   .messages-list {
     flex: 1;
-    height: calc(100vh - var(--header-height) - var(--message-input-height) - var(--safe-area-bottom));
+    height: calc(100vh - 150px);
     overflow: auto;
-    padding-bottom: var(--message-input-height);
+    padding-bottom: 100px;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -1750,12 +1749,17 @@ html {
     bottom: 0;
     left: 0;
     width: 100%;
-    min-height: var(--message-input-height);
+    min-height: 60px;
+    max-height: 120px;
     padding: 10px 15px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
     background-color: #fff;
     border-top: 1px solid #ddd;
     z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
   }
 
   #messageInput {
