@@ -541,22 +541,24 @@ gap: 0.5rem;
   position: fixed;
   bottom: 0;
   left: 0;
-  right: 0;
-  min-height: 68px;
-  background-color: var(--color-bg);
-  border-top: 1px solid var(--color-border);
-  z-index: 1002;
+  width: 100%;
+  min-height: 60px;
+  max-height: 120px;
+  padding: 10px 15px;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+  background-color: #fff;
+  border-top: 1px solid #ddd;
+  z-index: 1001;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 15px;
-  padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  justify-content: space-between;
+  gap: 10px;
 }
 
 /* Ajustes específicos para iOS */
 @supports (-webkit-touch-callout: none) {
   .message-input {
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 50px));
+    padding-bottom: env(safe-area-inset-bottom, 50px);
   }
 }
 
@@ -1737,7 +1739,7 @@ html {
       -webkit-overflow-scrolling: touch;
   }
 
-  .input-container {
+  .message-input {
       position: fixed;
       bottom: 0;
       left: 0;
@@ -1953,3 +1955,4 @@ html {
   min-width: 38px;
 }
 }
+
