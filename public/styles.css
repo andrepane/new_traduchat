@@ -1866,11 +1866,13 @@ html {
     height: var(--header-height);
     padding: 10px 15px;
     background-color: #fff;
-    z-index: 1002;
+    z-index: 1005; /* Aumentamos el z-index */
     display: flex;
     align-items: center;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
+    transform: translateZ(0); /* Forzar composición de capas */
+    will-change: transform; /* Optimizar para cambios */
   }
 
   .chat-header {
@@ -1970,5 +1972,18 @@ html {
   input[type="text"],
   textarea {
     font-size: 16px;
+  }
+
+  /* Aseguramos que el header se mantenga visible con el teclado */
+  .chat-header.keyboard-open {
+    position: fixed;
+    top: env(safe-area-inset-top, 0);
+    transform: none;
+    transition: none;
+  }
+
+  /* Ajustamos el contenedor principal cuando el teclado está abierto */
+  .chat-container.keyboard-open {
+    padding-top: calc(var(--header-height) + env(safe-area-inset-top, 0));
   }
 }
