@@ -1835,9 +1835,9 @@ html {
   :root {
     --safe-area-top: env(safe-area-inset-top, 44px);
     --safe-area-bottom: env(safe-area-inset-bottom, 10px);
-    --header-height: 65px;
+    --header-height: 70px;
     --footer-height: 60px;
-    --message-input-height: 65px;
+    --message-input-height: 68px;
   }
 
   /* Estructura base */
@@ -1924,7 +1924,7 @@ html {
   }
 
   .messages-list.keyboard-open {
-    height: calc(100vh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--keyboard-height, 0px));
+    height: calc(100dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--keyboard-height, 0px));
     padding-bottom: calc(var(--message-input-height) + 20px);
   }
 
