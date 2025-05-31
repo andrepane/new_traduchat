@@ -1865,7 +1865,7 @@ html {
      screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) {
   :root {
       --safe-area-top: env(safe-area-inset-top, 44px);
-      --safe-area-bottom: env(safe-area-inset-bottom, 34px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 50px);
   }
 
   .header-actions {
@@ -1877,7 +1877,7 @@ html {
 @supports (-webkit-touch-callout: none) {
   :root {
       --safe-area-top: env(safe-area-inset-top, 44px);
-      --safe-area-bottom: env(safe-area-inset-bottom, 34px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 50px);
       --header-height: 60px;
       --footer-height: 60px;
   }
@@ -1946,4 +1946,3 @@ html {
   min-width: 38px;
 }
 }
-
