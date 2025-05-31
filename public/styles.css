@@ -532,6 +532,8 @@ body {
   flex-direction: column;
   gap: 0.5rem;
   padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  min-height: calc(100vh - var(--header-height));
+  width: 100%;
 }
 
 /* Contenedor de mensajes e input - Estilos base */
@@ -633,6 +635,10 @@ body {
     left: 0;
     flex: 1;
     transform: none !important;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--color-bg-alt);
   }
 
   .back-button {
