@@ -1900,8 +1900,8 @@ html {
 
   /* Optimizaciones de scroll */
   .messages-list {
-    padding-top: calc(var(--header-height) + 15px); /* Empuja el primer mensaje hacia abajo */
-    height: calc(100dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    margin-top: calc(var(--header-height) + 15px); /* Empuja el primer mensaje hacia abajo */
+    height: calc(100dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom) - 15px);
     padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom) + 20px);
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
