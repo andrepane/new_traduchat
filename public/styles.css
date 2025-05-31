@@ -1905,7 +1905,7 @@ html {
    /* padding-top: calc(var(--header-height)); */ 
    /*  margin-top: calc(var(--header-height) + 15px); Empuja el primer mensaje hacia abajo */
     height: calc(90dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom));
-    padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom) + 30px);
+    padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom) + 50px);
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
