@@ -1763,11 +1763,6 @@ function toggleChatList(show) {
             chatContainer.style.display = 'none';
         }
         
-        // Ocultar botón de retorno cuando se muestra la lista
-        if (backButton) {
-            backButton.style.display = 'none';
-        }
-        
         // Cancelar suscripción a mensajes si existe
         if (unsubscribeMessages) {
             unsubscribeMessages();
@@ -1795,24 +1790,25 @@ function toggleChatList(show) {
             chatContainer.classList.remove('hidden');
             chatContainer.style.display = 'block';
         }
-        
-        // Mostrar botón de retorno cuando se muestra el chat
-        if (backButton) {
-            backButton.style.display = 'flex';
-        }
+    }
+
+    // Manejar visibilidad del botón de retorno
+    if (backButton) {
+        backButton.style.display = window.innerWidth <= 768 && !show ? 'block' : 'none';
     }
 
     adjustMobileLayout();
 }
 
-// Modificar el evento resize para mantener la visibilidad del botón según el estado del chat
+// Asegurarse de que el botón de retorno se muestre/oculte correctamente al cambiar el tamaño de la ventana
 window.addEventListener('resize', () => {
     const backButton = document.getElementById('backToChats');
-    const chatContainer = document.querySelector('.chat-container');
-    
-    if (backButton && chatContainer) {
-        // Mostrar el botón si el chat está visible
-        backButton.style.display = chatContainer.style.display !== 'none' ? 'flex' : 'none';
+    if (backButton) {
+        if (window.innerWidth <= 768 && document.querySelector('.chat-container')?.style.display !== 'none') {
+            backButton.style.display = 'block';
+        } else {
+            backButton.style.display = 'none';
+        }
     }
 });
 
