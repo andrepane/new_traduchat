@@ -1835,9 +1835,9 @@ html {
   :root {
     --safe-area-top: env(safe-area-inset-top, 44px);
     --safe-area-bottom: env(safe-area-inset-bottom, 10px);
-    --header-height: 75px;
+    --header-height: 80px;
     --footer-height: 60px;
-    --message-input-height: 75px;
+    --message-input-height: 65px;
   }
 
   /* Estructura base */
