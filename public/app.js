@@ -150,11 +150,6 @@ let lastVisibleMessage = null;
 
 
 
-// Función para generar un código aleatorio de 6 dígitos
-function generateVerificationCode() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
 // Función para formatear el tiempo
 function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
@@ -181,56 +176,6 @@ function startTimer(duration) {
     }, 1000);
 }
 
-// Función para simular el envío de SMS
-function simulateSendSMS(phoneNumber, code) {
-    console.log(`Código enviado a ${phoneNumber}: ${code}`);
-    // En una implementación real, aquí se llamaría a un servicio de SMS
-    alert(`Para fines de demostración, tu código es: ${code}`);
-}
-
-// Función para enviar el código vía API
-async function sendVerificationCode(phoneNumber) {
-    try {
-        const response = await fetch('http://localhost:3000/api/send-code', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ phoneNumber })
-        });
-
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.message);
-        }
-
-        return true;
-    } catch (error) {
-        console.error('Error al enviar código:', error);
-        alert('Error al enviar el código: ' + error.message);
-        return false;
-    }
-}
-
-// Función para verificar el código vía API
-async function verifyCode(phoneNumber, code) {
-    try {
-        const response = await fetch('http://localhost:3000/api/verify-code', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ phoneNumber, code })
-        });
-
-        const data = await response.json();
-        return data.success;
-    } catch (error) {
-        console.error('Error al verificar código:', error);
-        alert('Error al verificar el código: ' + error.message);
-        return false;
-    }
-}
 
 // Función para mostrar mensajes de error
 function showError(errorKey) {
