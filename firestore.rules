@@ -1,12 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
     // Funciones auxiliares
     function isAuthenticated() {
       return request.auth != null;
     }
-
+    
     function isUserInChat(chatData) {
       return isAuthenticated() && 
              (chatData.participants.hasAny([request.auth.uid]) || 
@@ -14,7 +13,7 @@ service cloud.firestore {
     }
 
     // Reglas para la colección users
-    match /users/{document=**} {
+    match /users/{userId} {
       allow read: if isAuthenticated();
       allow create, update: if isAuthenticated();
       allow delete: if false;
@@ -24,16 +23,23 @@ service cloud.firestore {
     match /chats/{chatId} {
       allow create: if isAuthenticated();
       allow read: if isAuthenticated();
-      allow update: if isAuthenticated() &&
-                    (resource == null || 
-                     resource.data.participants.hasAny([request.auth.uid]));
-      allow delete: if false;
-
+      allow update: if isAuthenticated() && 
+                   (resource == null || 
+                    resource.data.participants.hasAny([request.auth.uid]));
+      // Modificado: Permitir borrado si el usuario es participante
+      allow delete: if isAuthenticated() && 
+                   resource.data.participants.hasAny([request.auth.uid]);
+      
       // Reglas para mensajes dentro de chats
       match /messages/{messageId} {
-        allow read, create, update: if isAuthenticated() &&
-                                     isUserInChat(get(/databases/$(database)/documents/chats/$(chatId)).data);
-        allow delete: if false;
+        allow read, create: if isAuthenticated() && 
+                            get(/databases/$(database)/documents/chats/$(chatId))
+                            .data.participants.hasAny([request.auth.uid]);
+        // Modificado: Permitir borrado de mensajes si el usuario es participante del chat
+        allow update: if false;
+        allow delete: if isAuthenticated() && 
+                     get(/databases/$(database)/documents/chats/$(chatId))
+                     .data.participants.hasAny([request.auth.uid]);
       }
     }
   }
