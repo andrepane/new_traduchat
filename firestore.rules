@@ -26,21 +26,15 @@ service cloud.firestore {
       allow update: if isAuthenticated() && 
                    (resource == null || 
                     resource.data.participants.hasAny([request.auth.uid]));
-      // Modificado: Permitir borrado si el usuario es participante
-      allow delete: if isAuthenticated() && 
-                   resource.data.participants.hasAny([request.auth.uid]);
+      allow delete: if false;
       
       // Reglas para mensajes dentro de chats
       match /messages/{messageId} {
         allow read, create: if isAuthenticated() && 
                             get(/databases/$(database)/documents/chats/$(chatId))
                             .data.participants.hasAny([request.auth.uid]);
-        // Modificado: Permitir borrado de mensajes si el usuario es participante del chat
-        allow update: if false;
-        allow delete: if isAuthenticated() && 
-                     get(/databases/$(database)/documents/chats/$(chatId))
-                     .data.participants.hasAny([request.auth.uid]);
+        allow update, delete: if false;
       }
     }
   }
-}
+} 
