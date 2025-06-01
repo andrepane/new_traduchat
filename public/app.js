@@ -1345,6 +1345,7 @@ const newMessagesQuery = query(
 );
 
 let lastProcessedMessageId = null;
+let initialLoadComplete = false;
 
 unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
     if (unsubscribeTypingStatus) {
@@ -1407,6 +1408,7 @@ unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
 
 // Función para cargar los mensajes iniciales
 async function loadInitialMessages(chatId) {
+    initialLoadComplete = false; // Resetear el estado de carga inicial
     const messagesRef = collection(db, 'chats', chatId, 'messages');
 
     const q = query(
@@ -1419,6 +1421,7 @@ async function loadInitialMessages(chatId) {
         const snapshot = await getDocs(q);
         if (snapshot.empty) {
             allMessagesLoaded = true;
+            initialLoadComplete = true; // Marcar como completo incluso si no hay mensajes
             return;
         }
 
@@ -1428,15 +1431,20 @@ async function loadInitialMessages(chatId) {
         }));
 
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
+        
+        // Si hay mensajes, guardar el ID del último para evitar duplicados
+        if (messages.length > 0) {
+            lastProcessedMessageId = messages[0].id; // Guardamos el ID del mensaje más reciente
+        }
 
-        // ✅ Ordenar por timestamp o usar 0 si no hay timestamp
+        // Ordenar por timestamp o usar 0 si no hay timestamp
         messages.sort((a, b) => {
             const timeA = a.timestamp?.toMillis?.() || 0;
             const timeB = b.timestamp?.toMillis?.() || 0;
             return timeA - timeB;
         });
 
-        // ✅ Mostrar mensajes
+        // Mostrar mensajes
         await Promise.all(messages.map(async (messageData) => {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
@@ -1446,9 +1454,14 @@ async function loadInitialMessages(chatId) {
         }));
 
         messagesList.scrollTop = messagesList.scrollHeight;
+        
+        // Marcar la carga inicial como completa después de mostrar los mensajes
+        initialLoadComplete = true;
+        console.log('✅ Carga inicial completada, último mensaje procesado:', lastProcessedMessageId);
     } catch (error) {
         console.error('Error al cargar mensajes iniciales:', error);
         showError('errorGeneric');
+        initialLoadComplete = true; // Marcar como completo incluso en caso de error
     }
 }
 
