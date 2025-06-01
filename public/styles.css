@@ -1894,13 +1894,13 @@ html {
   }
 
   /* Optimizaciones de scroll */
-  .messages-list {
+ /* .messages-list {
     height: calc(100dvh - var(--header-height) - var(--message-input-height) - var(--safe-area-top) - var(--safe-area-bottom));
     padding-bottom: calc(var(--message-input-height) + var(--safe-area-bottom));
     overscroll-behavior-y: contain;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
-  }
+  } */ 
 
   .chat-list,
   .messages-list {
