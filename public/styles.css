@@ -293,6 +293,7 @@
     padding: 15px;
     border-radius: var(--radius);
     margin-bottom: 8px;
+    border-left: 3px solid var(--color-primary-dark);
     transition: var(--transition);
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0,0,0,0.04);
