@@ -292,6 +292,7 @@
     background-color: var(--color-bg);
     padding: 15px;
     border-radius: var(--radius);
+    border-left: 3px solid var(--color-primary-dark);
     margin-bottom: 8px;
     transition: var(--transition);
     cursor: pointer;
