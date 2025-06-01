@@ -79,6 +79,10 @@ const translations = {
         groupCreated: 'Grupo creado exitosamente',
         minUsersCount: '({0}/2 mínimo)',
         youMessage: 'Tú',
+        addMembers: 'Agregar miembros',
+        membersAdded: 'Miembros agregados exitosamente',
+        errorAddMembers: 'Error al agregar miembros',
+        addedMembers: 'ha agregado a los miembros'
     },
     en: {
         // Authentication
@@ -156,6 +160,10 @@ const translations = {
         groupCreated: 'Group successfully created',
         minUsersCount: '({0}/2 minimum)',
         youMessage: 'You',
+        addMembers: 'Add members',
+        membersAdded: 'Members added successfully',
+        errorAddMembers: 'Error adding members',
+        addedMembers: 'has added members'
     },
     it: {
         // Autenticazione
@@ -233,6 +241,10 @@ const translations = {
         groupCreated: 'Gruppo creato con successo',
         minUsersCount: '({0}/2 minimo)',
         youMessage: 'Tu',
+        addMembers: 'Aggiungi membri',
+        membersAdded: 'Membri aggiunti con successo',
+        errorAddMembers: 'Errore durante l\'aggiunta dei membri',
+        addedMembers: 'ha aggiunto i membri'
     }
 };
 
