@@ -133,13 +133,13 @@ let unsubscribeMessages = null; // Variable para almacenar la función de cancel
 let typingTimeouts = {};
 let lastSender = null;
 let unsubscribeChats = null;
+let initialLoadComplete = false; // Variable para controlar la carga inicial de mensajes
 
 // Variables para grupos
 let selectedUsers = new Set();
 let isGroupCreationMode = false;
 
 // Variables para grabación de audio
-
 let isRecording = false;
 
 // Variables para paginación
@@ -147,6 +147,7 @@ const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
 let isLoadingMore = false;
 let allMessagesLoaded = false;
 let lastVisibleMessage = null;
+let lastProcessedMessageId = null; // Variable para evitar duplicados
 
 
 
@@ -604,16 +605,20 @@ function resetChatState() {
     // Limpiar estado
     currentChat = null;
     lastSender = null;
+    lastProcessedMessageId = null;
+    initialLoadComplete = false;
+    allMessagesLoaded = false;
+    lastVisibleMessage = null;
     
     // Limpiar lista de chats
     chatList.innerHTML = '';
 
     if (unsubscribeTypingStatus) {
-    unsubscribeTypingStatus();
-    unsubscribeTypingStatus = null;
-}
-hideTypingIndicator();
-setTypingStatus(false);
+        unsubscribeTypingStatus();
+        unsubscribeTypingStatus = null;
+    }
+    hideTypingIndicator();
+    setTypingStatus(false);
 }
 
 // Función para borrar un chat
@@ -1343,9 +1348,6 @@ const newMessagesQuery = query(
     orderBy('timestamp', 'desc'),
     limit(1)
 );
-
-let lastProcessedMessageId = null;
-let initialLoadComplete = false;
 
 unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
     if (unsubscribeTypingStatus) {
@@ -2433,3 +2435,4 @@ async function syncUserLanguage(user) {
         console.error('❌ Error al sincronizar idioma:', error);
     }
 }
+
