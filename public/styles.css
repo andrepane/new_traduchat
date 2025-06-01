@@ -53,18 +53,174 @@
   -webkit-touch-callout: none;
 }
 
-html {
-  height: -webkit-fill-available;
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
 }
 
 body {
   font-family: var(--font-main);
   background: var(--color-bg);
   color: var(--color-text);
-  height: 100dvh;
-  width: 100dvw;
-  overflow: hidden;
+}
+
+/* ==========================================================================
+   Pantallas y Estados
+   ========================================================================== */
+.screen {
   position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease;
+}
+
+.screen.active {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Pantalla de Autenticación */
+#authScreen {
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: calc(1rem + var(--safe-area-top)) 1rem calc(1rem + var(--safe-area-bottom));
+  background: var(--color-bg);
+  min-height: 100vh;
+}
+
+/* Pantalla Principal */
+#mainScreen {
+  display: none;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+#mainScreen.active {
+  display: flex;
+}
+
+/* ==========================================================================
+   Sidebar y Lista de Chats
+   ========================================================================== */
+.sidebar {
+  height: 100%;
+  width: 350px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-right: 1px solid var(--color-border);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.hidden {
+  transform: translateX(-100%);
+}
+
+/* Chat Container */
+.chat-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-alt);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.chat-container.hidden {
+  display: none;
+}
+
+/* ==========================================================================
+   Loading Screen
+   ========================================================================== */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+@media (max-width: 768px) {
+  .sidebar {
+    position: absolute;
+    width: 100%;
+    z-index: 100;
+  }
+
+  .chat-container {
+    width: 100%;
+  }
+
+  .sidebar.hidden {
+    display: none;
+  }
+
+  .chat-container.hidden {
+    display: none;
+  }
+
+  #backToChats {
+    display: none;
+  }
+
+  .chat-container:not(.hidden) ~ #backToChats {
+    display: flex;
+  }
+
+  .user-header {
+    padding-top: calc(12px + var(--safe-area-top));
+  }
+
+  .message-input {
+    padding-bottom: calc(10px + var(--safe-area-bottom));
+  }
+}
+
+/* ==========================================================================
+   Ajustes iOS
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
+  .keyboard-open #mainScreen {
+    height: calc(100% - var(--keyboard-height));
+  }
+
+  .keyboard-open .messages-list {
+    height: calc(100% - var(--header-height) - var(--message-input-height) - var(--keyboard-height));
+  }
+
+  .keyboard-open .message-input {
+    position: absolute;
+    bottom: var(--keyboard-height);
+    left: 0;
+    right: 0;
+  }
 }
 
 /* ==========================================================================
@@ -79,18 +235,6 @@ body {
 }
 
 /* Sidebar */
-.sidebar {
-  height: 100%;
-  width: 350px;
-  background: var(--color-bg);
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  border-right: 1px solid var(--color-border);
-  transition: var(--transition);
-}
-
-/* Header del Sidebar */
 .user-header {
   height: var(--header-height);
   padding: 12px 15px;
@@ -158,16 +302,6 @@ body {
 /* ==========================================================================
    Contenedor de Chat
    ========================================================================== */
-.chat-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: var(--color-bg-alt);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  max-width: calc(100% - 350px);
-}
-
 .messages-list {
   flex: 1;
   overflow-y: auto;
@@ -353,15 +487,6 @@ body {
 /* ==========================================================================
    Pantalla de Autenticación
    ========================================================================== */
-#authScreen {
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 1rem;
-  background: var(--color-bg);
-  min-height: 100vh;
-}
-
 .auth-container {
   width: 100%;
   max-width: 600px;
@@ -433,31 +558,6 @@ body {
   background: #fff;
   color: var(--color-text);
   cursor: pointer;
-}
-
-/* ==========================================================================
-   Pantalla de Carga
-   ========================================================================== */
-.loading-screen {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
 }
 
 /* ==========================================================================
