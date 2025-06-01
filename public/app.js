@@ -460,9 +460,26 @@ document.addEventListener('DOMContentLoaded', () => {
         await setUserLanguage(newLang);
         translateInterface(newLang);
 
+        // Sincronizar selectores de idioma
         if (languageSelect) languageSelect.value = newLang;
         if (languageSelectMain) languageSelectMain.value = newLang;
 
+        // Actualizar traducciones en la búsqueda
+        const searchInput = document.getElementById('searchContacts');
+        if (searchInput) {
+            searchInput.placeholder = getTranslation('searchPlaceholder', newLang);
+            // Si hay resultados de búsqueda activos, actualizarlos
+            if (searchInput.value.trim()) {
+                searchUsers(searchInput.value.trim());
+            }
+        }
+
+        // Actualizar la lista de chats
+        if (chatList) {
+            setupRealtimeChats();
+        }
+
+        // Actualizar mensajes si hay un chat activo
         if (currentChat) {
             messagesList.innerHTML = '';
             lastVisibleMessage = null;
@@ -484,6 +501,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError('errorGeneric');
             }
         }
+
+        // Disparar evento personalizado de cambio de idioma
+        window.dispatchEvent(new CustomEvent('languageChanged', { detail: newLang }));
     };
 
     if (languageSelect) languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
@@ -748,11 +768,14 @@ async function setupRealtimeChats() {
     }
 
     const currentUser = getCurrentUser();
+    const currentLang = document.getElementById('languageSelect')?.value || 
+                       document.getElementById('languageSelectMain')?.value || 
+                       getUserLanguage();
 
     if (!db || !currentUser) {
         console.error('❌ Firestore o usuario no inicializados');
         if (chatList) {
-            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', currentLang)}</div>`;
         }
         return;
     }
@@ -781,7 +804,12 @@ async function setupRealtimeChats() {
                 
                 if (snapshot.empty) {
                     if (chatList && displayedChats.size === 0) {
-                        chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
+                        const noChatsDiv = document.createElement('div');
+                        noChatsDiv.className = 'chat-item';
+                        noChatsDiv.setAttribute('data-translate', 'noChats');
+                        noChatsDiv.textContent = getTranslation('noChats', currentLang);
+                        chatList.innerHTML = '';
+                        chatList.appendChild(noChatsDiv);
                     }
                     return;
                 }
@@ -968,6 +996,10 @@ async function searchUsers(searchTerm) {
 
 // Función para mostrar resultados de búsqueda
 function displaySearchResults(users, showGroupButton = false) {
+    const currentLang = document.getElementById('languageSelect')?.value || 
+                       document.getElementById('languageSelectMain')?.value || 
+                       getUserLanguage();
+    
     chatList.innerHTML = '';
     
     // Añadir botón de crear grupo
@@ -977,7 +1009,7 @@ function displaySearchResults(users, showGroupButton = false) {
         createGroupButton.innerHTML = `
             <div class="group-button">
                 <i class="fas fa-users"></i>
-                <span data-translate="createNewGroup">${getTranslation('createNewGroup', userLanguage)}</span>
+                <span data-translate="createNewGroup">${getTranslation('createNewGroup', currentLang)}</span>
             </div>
         `;
         
@@ -993,7 +1025,7 @@ function displaySearchResults(users, showGroupButton = false) {
         const noUsersMessage = document.createElement('div');
         noUsersMessage.className = 'chat-item';
         noUsersMessage.setAttribute('data-translate', 'noUsersFound');
-        noUsersMessage.textContent = getTranslation('noUsersFound', userLanguage);
+        noUsersMessage.textContent = getTranslation('noUsersFound', currentLang);
         chatList.appendChild(noUsersMessage);
         return;
     }
@@ -1008,9 +1040,9 @@ function displaySearchResults(users, showGroupButton = false) {
                 <div class="user-name">${user.username}</div>
                 <div class="user-email">${user.email}</div>
             </div>
-            <button class="start-chat-btn" data-userid="${user.id}">
+            <button class="start-chat-btn" data-userid="${user.id}" data-translate="startChat">
                 <i class="fas fa-comment"></i>
-                <span data-translate="startChat">${getTranslation('startChat', userLanguage)}</span>
+                <span>${getTranslation('startChat', currentLang)}</span>
             </button>
         `;
 
