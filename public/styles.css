@@ -1,103 +1,62 @@
 /* Variables CSS */
 :root {
-  /* Colores Base */
+  /* Colores */
   --color-primary: #4caf50;
   --color-primary-dark: #006d34;
   --color-primary-light: #1ee98e;
   --color-danger: #d32f2f;
-  
-  /* Colores de Fondo */
   --color-bg: #f6faf7;
   --color-bg-alt: #ffffffcc;
-  --color-bg-glass: rgba(255, 255, 255, 0.8);
-  
-  /* Colores de Bordes */
   --color-border: #d1e7dd;
-  --color-border-light: #e5e7eb;
-  
-  /* Colores de Mensajes */
-  --color-user-left: #e6fff4;
-  --color-user-right: #b9f5d8;
   --color-admin: #006d347;
   --color-admin-bg: #e8f9ee;
   --color-admin-border: #b7efc5;
   --color-system: #98a6a9;
   --color-system-bg: #f0f8f2cc;
-  
-  /* Colores de Texto */
+  --color-user-left: #e6fff4;
+  --color-user-right: #b9f5d8;
+  --color-user-list: #4e5e57;
   --color-text: #232f2b;
   --color-text-light: #fff;
-  --color-text-secondary: #6b7280;
   
   /* Tipografía */
   --font-main: "Poppins", "Segoe UI", system-ui, sans-serif;
-  --font-size-base: 16px;
-  --font-size-sm: 14px;
-  --font-size-xs: 12px;
-  --font-size-lg: 18px;
-  --font-size-xl: 20px;
   
-  /* Espaciado Base */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  
-  /* Dimensiones de Componentes */
+  /* Dimensiones y espaciado */
+  --radius: 17px;
+  --radius-bubble: 20px;
   --header-height: 60px;
   --footer-height: 60px;
-  --message-input-height: 60px;
   --chat-max-width: 1200px;
-  --sidebar-width: 350px;
   
-  /* Bordes y Sombras */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-bubble: 20px;
-  --radius-full: 9999px;
+  /* Efectos */
+  --shadow: 0 8px 32px 0 rgba(60, 100, 60, 0.13);
+  --shadow-glass: 0 4px 24px 0 rgba(0, 180, 81, 0.08);
+  --transition: background 0.25s, color 0.2s, box-shadow 0.2s;
   
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
-  --shadow-glass: 0 4px 24px rgba(0, 180, 81, 0.08);
-  
-  /* Transiciones */
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-  --transition-slow: 350ms ease;
-  
-  /* Safe Areas y Ajustes Móviles */
+  /* Safe Areas para iOS */
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
-  --safe-area-left: env(safe-area-inset-left, 0px);
-  --safe-area-right: env(safe-area-inset-right, 0px);
+  --message-input-height: 60px;
 }
 
 /* Tema Oscuro */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #212a24;
-    --color-bg-alt: #232b28cc;
-    --color-bg-glass: rgba(35, 43, 40, 0.8);
-    --color-border: #295e42;
-    --color-text: #e4ffe9;
-    --color-system-bg: #1d2420cc;
-    --color-user-left: #284c35;
-    --color-user-right: #1bb774;
-    --color-admin-bg: #283a2a;
-    --color-admin-border: #1ee98e;
-    --color-text-secondary: #9ca3af;
-    
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+      --color-bg: #212a24;
+      --color-bg-alt: #232b28cc;
+      --color-border: #295e42;
+      --color-text: #e4ffe9;
+      --color-system-bg: #1d2420cc;
+      --color-user-left: #284c35;
+      --color-user-right: #1bb774;
+      --color-admin-bg: #283a2a;
+      --color-admin-border: #1ee98e;
   }
 }
 
-/* Reset Base */
-*, *::before, *::after {
+/* Reset y Estilos Base */
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -105,14 +64,13 @@
   -webkit-touch-callout: none;
 }
 
-html, body {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
+body {
   font-family: var(--font-main);
-  font-size: var(--font-size-base);
   background: var(--color-bg);
   color: var(--color-text);
+  height: 100dvh;
+  width: 100dvw;
+  overflow: hidden;
 }
 
 /* Estructura principal */
@@ -442,10 +400,11 @@ html, body {
   
   /* Lista de mensajes */
   .messages-list {
-    flex: 1;
-    height: calc(100vh - 150px);
-    overflow: auto;
-    padding-bottom: 100px;
+    margin-top: calc(var(--header-height) + var(--safe-area-top));
+    height: calc(100vh - var(--header-height) - var(--footer-height) - var(--safe-area-top) - var(--safe-area-bottom));
+    padding: 10px 15px;
+    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -871,7 +830,7 @@ html, body {
   background: var(--color-bg-alt);
   padding: 2.2rem 1.3rem;
   box-shadow: var(--shadow-glass), 0 1.5px 10px rgba(0,0,0,0.03);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius);
   margin: 1.2rem;
   backdrop-filter: blur(16px) saturate(160%);
   border: 1.5px solid var(--color-border);
@@ -922,7 +881,7 @@ button {
   border: 1.5px solid var(--color-border);
   border-radius: 12px;
   font-family: inherit;
-  transition: var(--transition-normal);
+  transition: var(--transition);
   background: #fff;
   -webkit-appearance: none;
   appearance: none;
@@ -986,9 +945,9 @@ button:hover:not(:disabled) {
   color: var(--color-text-light);
   border: none;
   padding: 0.75rem 1.5rem;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius);
   font-weight: 600;
-  transition: var(--transition-normal);
+  transition: var(--transition);
 }
 
 #logoutBtn:hover {
@@ -1050,7 +1009,7 @@ button:hover:not(:disabled) {
   font-size: 1rem;
   background: #fff;
   color: var(--color-text);
-  transition: var(--transition-normal);
+  transition: var(--transition);
 }
 
 .language-select:focus {
@@ -1780,9 +1739,9 @@ html {
 
   .messages-list {
     flex: 1;
-    height: calc(100vh - 150px);
+    height: calc(100vh - var(--header-height) - var(--message-input-height) - var(--safe-area-bottom));
     overflow: auto;
-    padding-bottom: 100px;
+    padding-bottom: var(--message-input-height);
     -webkit-overflow-scrolling: touch;
   }
 
@@ -1791,17 +1750,12 @@ html {
     bottom: 0;
     left: 0;
     width: 100%;
-    min-height: 60px;
-    max-height: 120px;
+    min-height: var(--message-input-height);
     padding: 10px 15px;
     padding-bottom: calc(10px + env(safe-area-inset-bottom));
     background-color: #fff;
     border-top: 1px solid #ddd;
     z-index: 1001;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
   }
 
   #messageInput {
@@ -1876,7 +1830,7 @@ html {
   :root {
     --safe-area-top: env(safe-area-inset-top, 44px);
     --safe-area-bottom: env(safe-area-inset-bottom, 10px);
-    --header-height: 80px;
+    --header-height: 100px;
     --footer-height: 60px;
     --message-input-height: 65px;
   }
