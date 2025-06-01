@@ -1075,7 +1075,7 @@ async function displayMessage(messageData) {
     if (isGroupChat) {
         try {
             if (messageData.senderId === currentUser.uid) {
-                senderName = 'Tú';
+                senderName = getTranslation('youMessage', currentLanguage);
             } else {
                 const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
                 if (senderDoc.exists()) {
