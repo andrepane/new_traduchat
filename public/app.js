@@ -592,15 +592,40 @@ function showMainScreen() {
 
 // Función para limpiar el estado del chat
 function resetChatState() {
+    console.log('🔄 Reseteando estado del chat');
+    
+    // Cancelar todas las suscripciones
     if (unsubscribeMessages) {
         unsubscribeMessages();
         unsubscribeMessages = null;
     }
     
+    if (unsubscribeChats) {
+        unsubscribeChats();
+        unsubscribeChats = null;
+    }
+
+    if (unsubscribeTypingStatus) {
+        unsubscribeTypingStatus();
+        unsubscribeTypingStatus = null;
+    }
+    
     // Limpiar UI
-    messagesList.innerHTML = '';
-    messageInput.value = '';
-    currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+    if (messagesList) {
+        messagesList.innerHTML = '';
+    }
+    
+    if (messageInput) {
+        messageInput.value = '';
+    }
+    
+    if (currentChatInfo) {
+        currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+    }
+    
+    if (chatList) {
+        chatList.innerHTML = '';
+    }
     
     // Limpiar estado
     currentChat = null;
@@ -610,15 +635,11 @@ function resetChatState() {
     allMessagesLoaded = false;
     lastVisibleMessage = null;
     
-    // Limpiar lista de chats
-    chatList.innerHTML = '';
-
-    if (unsubscribeTypingStatus) {
-        unsubscribeTypingStatus();
-        unsubscribeTypingStatus = null;
-    }
+    // Ocultar indicador de escritura
     hideTypingIndicator();
     setTypingStatus(false);
+    
+    console.log('✅ Estado del chat reseteado completamente');
 }
 
 // Función para borrar un chat
@@ -739,6 +760,9 @@ async function setupRealtimeChats() {
     try {
         console.log('🔍 Configurando consulta de chats para usuario:', currentUser.uid);
         
+        // Set para mantener un registro de los chats ya mostrados
+        const displayedChats = new Set();
+        
         const q = query(
             collection(db, 'chats'),
             where('participants', 'array-contains', currentUser.uid),
@@ -750,13 +774,13 @@ async function setupRealtimeChats() {
             try {
                 console.log('📥 Actualización de chats detectada');
                 
-                // Limpiar lista actual
-                if (chatList) {
+                // Limpiar lista actual solo si no hay chats mostrados
+                if (chatList && displayedChats.size === 0) {
                     chatList.innerHTML = '';
                 }
                 
                 if (snapshot.empty) {
-                    if (chatList) {
+                    if (chatList && displayedChats.size === 0) {
                         chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
                     }
                     return;
@@ -765,12 +789,16 @@ async function setupRealtimeChats() {
                 // Procesar chats
                 const chats = [];
                 snapshot.forEach(doc => {
-                    const chatData = doc.data();
-                    chats.push({
-                        id: doc.id,
-                        ...chatData,
-                        lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
-                    });
+                    // Evitar duplicados usando el Set
+                    if (!displayedChats.has(doc.id)) {
+                        const chatData = doc.data();
+                        chats.push({
+                            id: doc.id,
+                            ...chatData,
+                            lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
+                        });
+                        displayedChats.add(doc.id);
+                    }
                 });
 
                 // Ordenar chats por tiempo del último mensaje
@@ -779,8 +807,15 @@ async function setupRealtimeChats() {
                 // Mostrar chats
                 for (const chat of chats) {
                     try {
+                        // Verificar si el chat ya está mostrado
+                        if (document.querySelector(`[data-chat-id="${chat.id}"]`)) {
+                            continue;
+                        }
+
                         const chatElement = document.createElement('div');
                         chatElement.className = 'chat-item';
+                        chatElement.setAttribute('data-chat-id', chat.id);
+                        
                         if (chat.type === 'group') {
                             chatElement.classList.add('group-chat');
                         }
@@ -841,13 +876,13 @@ async function setupRealtimeChats() {
                 }
             } catch (error) {
                 console.error('❌ Error al procesar actualización de chats:', error);
-                if (chatList) {
+                if (chatList && displayedChats.size === 0) {
                     chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
                 }
             }
         }, error => {
             console.error('❌ Error en la suscripción de chats:', error);
-            if (chatList) {
+            if (chatList && displayedChats.size === 0) {
                 chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
             }
         });
