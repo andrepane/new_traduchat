@@ -1293,3 +1293,60 @@
     }
   }
   
+  /* ==========================================================================
+     Scrollbars
+     ========================================================================== */
+  /* Scrollbar para Firefox */
+  .chat-list,
+  .messages-list {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) transparent;
+  }
+  
+  /* Scrollbar para Chrome/Safari/Edge */
+  .chat-list::-webkit-scrollbar,
+  .messages-list::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .chat-list::-webkit-scrollbar-track,
+  .messages-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .chat-list::-webkit-scrollbar-thumb,
+  .messages-list::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 3px;
+  }
+  
+  /* Scrollbar para iOS */
+  @supports (-webkit-touch-callout: none) {
+    .chat-list,
+    .messages-list {
+      /* Habilitar scrollbar en iOS */
+      -webkit-overflow-scrolling: touch;
+      overflow-y: auto;
+      
+      /* Estilizar scrollbar */
+      &::-webkit-scrollbar {
+        -webkit-appearance: none;
+        width: 6px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: transparent;
+        border-radius: 3px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: var(--color-primary);
+        border-radius: 3px;
+      }
+      
+      /* Asegurar que el scroll sea suave */
+      scroll-behavior: smooth;
+    }
+  }
+  
