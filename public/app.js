@@ -1,4 +1,3 @@
-// Firebase imports
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword, 
@@ -24,7 +23,8 @@ import {
     initializeFirestore,
     getFirestore,
     limit,
-    startAfter
+    startAfter,
+    writeBatch
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import {
@@ -616,11 +616,99 @@ hideTypingIndicator();
 setTypingStatus(false);
 }
 
+// Función para borrar un chat
+async function deleteChat(chatId) {
+    try {
+        const currentUser = getCurrentUser();
+        if (!currentUser) {
+            console.error('No hay usuario autenticado');
+            return;
+        }
+
+        // Obtener referencia al chat
+        const chatRef = doc(db, 'chats', chatId);
+        const chatDoc = await getDoc(chatRef);
+
+        if (!chatDoc.exists()) {
+            console.error('Chat no encontrado');
+            return;
+        }
+
+        // Borrar todos los mensajes del chat
+        const messagesRef = collection(db, 'chats', chatId, 'messages');
+        const messagesSnapshot = await getDocs(messagesRef);
+        const batch = writeBatch(db);
+
+        messagesSnapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        // Borrar el chat
+        batch.delete(chatRef);
+
+        // Ejecutar el batch
+        await batch.commit();
+
+        // Mostrar mensaje de éxito
+        alert(getTranslation('chatDeleted', getUserLanguage()));
+
+    } catch (error) {
+        console.error('Error al borrar chat:', error);
+        showError('errorGeneric');
+    }
+}
+
+// Función para mostrar el diálogo de confirmación
+function showDeleteConfirmDialog(chatId, chatElement) {
+    const currentLang = getUserLanguage();
+    
+    // Crear el backdrop
+    const backdrop = document.createElement('div');
+    backdrop.className = 'dialog-backdrop';
+    
+    // Crear el diálogo
+    const dialog = document.createElement('div');
+    dialog.className = 'delete-confirm-dialog';
+    dialog.innerHTML = `
+        <div class="dialog-content">
+            <p>${getTranslation('deleteChatConfirm', currentLang)}</p>
+            <div class="dialog-buttons">
+                <button class="cancel-delete">${getTranslation('cancel', currentLang)}</button>
+                <button class="confirm-delete">${getTranslation('deleteChat', currentLang)}</button>
+            </div>
+        </div>
+    `;
+
+    // Añadir eventos
+    const cancelBtn = dialog.querySelector('.cancel-delete');
+    const confirmBtn = dialog.querySelector('.confirm-delete');
+
+    cancelBtn.addEventListener('click', () => {
+        backdrop.remove();
+    });
+
+    confirmBtn.addEventListener('click', async () => {
+        chatElement.classList.add('deleting');
+        backdrop.remove();
+        await deleteChat(chatId);
+    });
+
+    // Añadir al DOM
+    backdrop.appendChild(dialog);
+    document.body.appendChild(backdrop);
+
+    // Cerrar al hacer clic fuera
+    backdrop.addEventListener('click', (e) => {
+        if (e.target === backdrop) {
+            backdrop.remove();
+        }
+    });
+}
+
 // Función para cargar chats en tiempo real
 async function setupRealtimeChats() {
     console.log('Configurando escucha de chats en tiempo real');
     
-    // Cancelar suscripción anterior si existe
     if (unsubscribeChats) {
         unsubscribeChats();
         unsubscribeChats = null;
@@ -639,102 +727,101 @@ async function setupRealtimeChats() {
         const chatsRef = collection(db, 'chats');
         
         const q = query(
-          collection(db, 'chats'),
-          where('participants', 'array-contains', currentUser.uid),
-          orderBy('lastMessageTime', 'desc')
+            collection(db, 'chats'),
+            where('participants', 'array-contains', currentUser.uid),
+            orderBy('lastMessageTime', 'desc')
         );
-
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
             try {
-            console.log('Actualización de chats detectada');
-            chatList.innerHTML = '';
-            
-            if (snapshot.empty) {
-                chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
-                return;
-            }
+                console.log('Actualización de chats detectada');
+                chatList.innerHTML = '';
+                
+                if (snapshot.empty) {
+                    chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
+                    return;
+                }
 
-            // Obtener todos los chats y ordenarlos manualmente
-            const chats = [];
-            for (const doc of snapshot.docs) {
-                const chatData = doc.data();
-                chats.push({
-                    id: doc.id,
-                    ...chatData,
-                    lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
-                });
-            }
+                const chats = [];
+                for (const doc of snapshot.docs) {
+                    const chatData = doc.data();
+                    chats.push({
+                        id: doc.id,
+                        ...chatData,
+                        lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
+                    });
+                }
 
-            // Ordenar chats por lastMessageTime
-            chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
 
-            for (const chat of chats) {
-                try {
-                    const chatElement = document.createElement('div');
-                    chatElement.className = 'chat-item';
-                    if (chat.type === 'group') {
-                        chatElement.classList.add('group-chat');
-                    }
-                    if (chat.id === currentChat) {
-                        chatElement.classList.add('active');
-                    }
+                for (const chat of chats) {
+                    try {
+                        const chatElement = document.createElement('div');
+                        chatElement.className = 'chat-item';
+                        if (chat.type === 'group') {
+                            chatElement.classList.add('group-chat');
+                        }
+                        if (chat.id === currentChat) {
+                            chatElement.classList.add('active');
+                        }
 
-                    let chatName = '';
-                    if (chat.type === 'group') {
-                        chatName = chat.name;
-                    } else {
-                        const otherUserId = chat.participants.find(id => id !== currentUser.uid);
-                        if (otherUserId) {
-                            const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                            if (otherUserDoc.exists()) {
-                                const otherUserData = otherUserDoc.data();
+                        let chatName = '';
+                        if (chat.type === 'group') {
+                            chatName = chat.name;
+                        } else {
+                            const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+                            if (otherUserId) {
+                                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                                if (otherUserDoc.exists()) {
+                                    const otherUserData = otherUserDoc.data();
                                     chatName = otherUserData.username || otherUserData.email.split('@')[0];
+                                }
                             }
                         }
-                    }
 
-                    const lastMessageTime = chat.lastMessageTime ? 
-                        chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                        const lastMessageTime = chat.lastMessageTime ? 
+                            chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-                    chatElement.innerHTML = `
-                        <div class="chat-info">
-                            <div class="chat-details">
-                            <div class="chat-name">${chatName}</div>
-                                <div class="last-message">${chat.lastMessage || ''}</div>
-                            </div>
+                        chatElement.innerHTML = `
+                            <div class="chat-info">
+                                <div class="chat-details">
+                                    <div class="chat-name">${chatName}</div>
+                                    <div class="last-message">${chat.lastMessage || ''}</div>
+                                </div>
                                 <div class="last-message-time">${lastMessageTime}</div>
-                        </div>
-                    `;
+                            </div>
+                            <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        `;
 
-                    if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
-                        chatElement.classList.add('chat-updated');
-                        setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
+                        // Evento para borrar chat
+                        const deleteBtn = chatElement.querySelector('.delete-chat-btn');
+                        deleteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            showDeleteConfirmDialog(chat.id, chatElement);
+                        });
+
+                        if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
+                            chatElement.classList.add('chat-updated');
+                            setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
+                        }
+
+                        chatElement.addEventListener('click', () => {
+                            console.log('Abriendo chat:', chat.id);
+                            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+                            chatElement.classList.add('active');
+                            openChat(chat.id);
+                        });
+
+                        chatList.appendChild(chatElement);
+                    } catch (error) {
+                        console.error('Error al procesar chat individual:', error);
                     }
-
-                    chatElement.addEventListener('click', () => {
-                        console.log('Abriendo chat:', chat.id);
-                        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-                        chatElement.classList.add('active');
-                        openChat(chat.id);
-                    });
-
-                    chatList.appendChild(chatElement);
-                } catch (error) {
-                    console.error('Error al procesar chat individual:', error);
-                }
                 }
             } catch (error) {
                 console.error('Error al procesar actualización de chats:', error);
                 chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
-            }
-        }, (error) => {
-            console.error('Error en escucha de chats:', error);
-            // Si el error es de permisos, probablemente el usuario ya no está autenticado
-            if (error.code === 'permission-denied') {
-                handleLogout();
-            } else {
-            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
             }
         });
 
