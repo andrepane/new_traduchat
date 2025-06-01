@@ -235,17 +235,25 @@ body {
 }
 
 /* Sidebar */
-.user-header {
-  height: var(--header-height);
-  padding: 12px 15px;
+.user-header,
+.chat-header {
+  height: calc(var(--header-height) + var(--safe-area-top));
+  padding: calc(var(--safe-area-top) + 12px) 15px 12px;
   background-color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
   position: sticky;
   top: 0;
-  z-index: 10;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.chat-header {
+  background-color: var(--color-bg-alt);
 }
 
 .user-info {
@@ -275,6 +283,7 @@ body {
   padding: 10px;
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary) transparent;
+  height: calc(100% - (var(--header-height) + var(--safe-area-top)));
 }
 
 .chat-item {
@@ -311,6 +320,7 @@ body {
   background: var(--color-bg-alt);
   display: flex;
   flex-direction: column;
+  height: calc(100% - (var(--header-height) + var(--safe-area-top)));
 }
 
 /* Mensajes */
@@ -1228,4 +1238,110 @@ select:focus-visible {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
+}
+
+/* ==========================================================================
+   Headers y Safe Areas
+   ========================================================================== */
+.user-header,
+.chat-header {
+  height: calc(var(--header-height) + var(--safe-area-top));
+  padding: calc(var(--safe-area-top) + 12px) 15px 12px;
+  background-color: #fff;
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.chat-header {
+  background-color: var(--color-bg-alt);
+}
+
+/* Ajustar el contenedor principal para compensar el header más alto */
+.chat-list,
+.messages-list {
+  height: calc(100% - (var(--header-height) + var(--safe-area-top)));
+}
+
+/* ==========================================================================
+   Ajustes iOS Específicos
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
+  /* Ajustes generales para iOS */
+  .sidebar,
+  .chat-container {
+    height: 100%;
+    height: -webkit-fill-available;
+  }
+
+  /* Headers en iOS */
+  .user-header,
+  .chat-header {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-bottom: 0.5px solid var(--color-border);
+  }
+
+  .chat-header {
+    background-color: rgba(246, 250, 247, 0.95);
+  }
+
+  /* Ajustes específicos para diferentes dispositivos iOS */
+  @media screen and 
+    /* iPhone X, XS, 11 Pro */
+    (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone XR, 11 */
+    (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
+    /* iPhone XS Max, 11 Pro Max */
+    (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone 12, 12 Pro */
+    (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone 12 Pro Max */
+    (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone 13 Mini */
+    (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone 13, 13 Pro */
+    (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone 13 Pro Max */
+    (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone 14, 14 Pro */
+    (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3),
+    /* iPhone 14 Plus, 14 Pro Max */
+    (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
+    
+    :root {
+      --safe-area-top: env(safe-area-inset-top, 47px);
+      --safe-area-bottom: env(safe-area-inset-bottom, 34px);
+    }
+
+    .user-header,
+    .chat-header {
+      height: calc(var(--header-height) + var(--safe-area-top));
+      padding-top: calc(var(--safe-area-top) + 8px);
+    }
+
+    /* Ajustar altura de las listas para compensar el header más alto */
+    .chat-list,
+    .messages-list {
+      height: calc(100% - (var(--header-height) + var(--safe-area-top)));
+    }
+
+    /* Ajustar el input cuando el teclado está abierto */
+    .keyboard-open .message-input {
+      padding-bottom: max(10px, var(--safe-area-bottom));
+    }
+  }
+
+  /* Prevenir el rebote del scroll en iOS */
+  .chat-list,
+  .messages-list {
+    overscroll-behavior-y: none;
+    -webkit-overflow-scrolling: touch;
+  }
 }
