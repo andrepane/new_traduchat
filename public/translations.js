@@ -75,6 +75,7 @@ const translations = {
         errorMinUsers: 'Se necesitan al menos 2 participantes para crear un grupo',
         groupCreated: 'Grupo creado exitosamente',
         minUsersCount: '({0}/2 mínimo)',
+        youMessage: 'Tú',
     },
     en: {
         // Authentication
@@ -148,6 +149,7 @@ const translations = {
         errorMinUsers: 'At least 2 participants are needed to create a group',
         groupCreated: 'Group successfully created',
         minUsersCount: '({0}/2 minimum)',
+        youMessage: 'You',
     },
     it: {
         // Autenticazione
@@ -221,6 +223,7 @@ const translations = {
         errorMinUsers: 'Sono necessari almeno 2 partecipanti per creare un gruppo',
         groupCreated: 'Gruppo creato con successo',
         minUsersCount: '({0}/2 minimo)',
+        youMessage: 'Tu',
     }
 };
 
