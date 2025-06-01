@@ -971,23 +971,24 @@ function displaySearchResults(users, showGroupButton = false) {
     chatList.innerHTML = '';
     
     // Añadir botón de crear grupo
-   if (showGroupButton) {
-    const createGroupButton = document.createElement('div');
-    createGroupButton.className = 'chat-item create-group';
-    createGroupButton.innerHTML = `
-        <div class="group-button">
-            <i class="fas fa-users"></i>
-            <span data-translate="createNewGroup">${getTranslation('createNewGroup', userLanguage)}</span>
-        </div>
-    `;
-    
-    createGroupButton.addEventListener('click', () => {
-        selectedUsers.clear();
-        showGroupCreationModal();
-    });
-    
-    chatList.appendChild(createGroupButton);
-   }
+    if (showGroupButton) {
+        const createGroupButton = document.createElement('div');
+        createGroupButton.className = 'chat-item create-group';
+        createGroupButton.innerHTML = `
+            <div class="group-button">
+                <i class="fas fa-users"></i>
+                <span data-translate="createNewGroup">${getTranslation('createNewGroup', userLanguage)}</span>
+            </div>
+        `;
+        
+        createGroupButton.addEventListener('click', () => {
+            selectedUsers.clear();
+            showGroupCreationModal();
+        });
+        
+        chatList.appendChild(createGroupButton);
+    }
+
     if (users.length === 0) {
         const noUsersMessage = document.createElement('div');
         noUsersMessage.className = 'chat-item';
@@ -1000,42 +1001,26 @@ function displaySearchResults(users, showGroupButton = false) {
     // Mostrar usuarios encontrados
     users.forEach(user => {
         const userElement = document.createElement('div');
-        userElement.className = 'chat-item';
+        userElement.className = 'chat-item search-result';
 
-        // Contenedor para la información del usuario
-        const userInfoContainer = document.createElement('div');
-        userInfoContainer.className = 'user-info';
-
-        // Nombre de usuario
-        const username = document.createElement('div');
-        username.className = 'user-name';
-        username.textContent = user.username;
-
-        // Email del usuario
-        const userEmail = document.createElement('div');
-        userEmail.className = 'user-email';
-        userEmail.textContent = user.email;
-
-        userInfoContainer.appendChild(username);
-        userInfoContainer.appendChild(userEmail);
-
-        // Botón de iniciar chat
-        const startChatBtn = document.createElement('button');
-        startChatBtn.className = 'start-chat-btn';
-        startChatBtn.setAttribute('data-userid', user.id);
-        startChatBtn.innerHTML = `
-            <i class="fas fa-comment"></i>
-            <span data-translate="startChat">${getTranslation('startChat', userLanguage)}</span>
+        userElement.innerHTML = `
+            <div class="user-info">
+                <div class="user-name">${user.username}</div>
+                <div class="user-email">${user.email}</div>
+            </div>
+            <button class="start-chat-btn" data-userid="${user.id}">
+                <i class="fas fa-comment"></i>
+                <span data-translate="startChat">${getTranslation('startChat', userLanguage)}</span>
+            </button>
         `;
 
+        const startChatBtn = userElement.querySelector('.start-chat-btn');
         startChatBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Evitar que el clic se propague al elemento padre
+            e.stopPropagation();
             console.log('Iniciando chat con usuario:', user.id);
             createChat(user.id);
         });
 
-        userElement.appendChild(userInfoContainer);
-        userElement.appendChild(startChatBtn);
         chatList.appendChild(userElement);
     });
 }
