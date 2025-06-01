@@ -1344,45 +1344,48 @@ const newMessagesQuery = query(
     limit(1)
 );
 
-let initialSnapshotSkipped = false;
+let lastProcessedMessageId = null;
 
 unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
-    if (!initialSnapshotSkipped) {
-        // Saltar el primer snapshot porque es el que ya se mostró con loadInitialMessages
-        initialSnapshotSkipped = true;
-        return;
-    }
     if (unsubscribeTypingStatus) {
-    unsubscribeTypingStatus();
-}
-
-unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
-    if (!chatDoc.exists()) return;
-
-    const data = chatDoc.data();
-    const typingStatus = data.typingStatus;
-    console.log('📝 Estado de escritura recibido:', typingStatus);
-
-    const currentLang = document.getElementById('languageSelect')?.value || 
-                       document.getElementById('languageSelectMain')?.value || 
-                       getUserLanguage();
-
-    console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
-
-    if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
-        const typingText = getTypingText(currentLang);
-        const username = typingStatus.username || typingStatus.userId;
-        console.log('💬 Usuario escribiendo:', username);
-        showTypingIndicator(`${username} ${typingText}`);
-    } else {
-        console.log('💬 Nadie está escribiendo');
-        hideTypingIndicator();
+        unsubscribeTypingStatus();
     }
-});
+
+    unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
+        if (!chatDoc.exists()) return;
+
+        const data = chatDoc.data();
+        const typingStatus = data.typingStatus;
+        console.log('📝 Estado de escritura recibido:', typingStatus);
+
+        const currentLang = document.getElementById('languageSelect')?.value || 
+                           document.getElementById('languageSelectMain')?.value || 
+                           getUserLanguage();
+
+        console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
+
+        if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
+            const typingText = getTypingText(currentLang);
+            const username = typingStatus.username || typingStatus.userId;
+            console.log('💬 Usuario escribiendo:', username);
+            showTypingIndicator(`${username} ${typingText}`);
+        } else {
+            console.log('💬 Nadie está escribiendo');
+            hideTypingIndicator();
+        }
+    });
 
     snapshot.docChanges().forEach(async change => {
         if (change.type === 'added') {
             const messageData = { ...change.doc.data(), id: change.doc.id };
+            
+            // Evitar duplicados
+            if (lastProcessedMessageId === messageData.id) {
+                return;
+            }
+            
+            // Actualizar el último mensaje procesado
+            lastProcessedMessageId = messageData.id;
 
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
