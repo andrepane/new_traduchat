@@ -712,24 +712,32 @@ function showDeleteConfirmDialog(chatId, chatElement) {
 
 // Función para cargar chats en tiempo real
 async function setupRealtimeChats() {
-    console.log('Configurando escucha de chats en tiempo real');
+    console.log('🔄 Configurando escucha de chats en tiempo real');
     
+    // Cancelar suscripción anterior si existe
     if (unsubscribeChats) {
+        console.log('📤 Cancelando suscripción anterior de chats');
         unsubscribeChats();
         unsubscribeChats = null;
+    }
+
+    // Limpiar la lista de chats
+    if (chatList) {
+        chatList.innerHTML = '';
     }
 
     const currentUser = getCurrentUser();
 
     if (!db || !currentUser) {
-        console.error('Firestore o usuario no inicializados');
-        chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+        console.error('❌ Firestore o usuario no inicializados');
+        if (chatList) {
+            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+        }
         return;
     }
 
     try {
-        console.log('Intentando configurar consulta de chats...');
-        const chatsRef = collection(db, 'chats');
+        console.log('🔍 Configurando consulta de chats para usuario:', currentUser.uid);
         
         const q = query(
             collection(db, 'chats'),
@@ -737,28 +745,38 @@ async function setupRealtimeChats() {
             orderBy('lastMessageTime', 'desc')
         );
 
+        // Crear nueva suscripción
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
             try {
-                console.log('Actualización de chats detectada');
-                chatList.innerHTML = '';
+                console.log('📥 Actualización de chats detectada');
+                
+                // Limpiar lista actual
+                if (chatList) {
+                    chatList.innerHTML = '';
+                }
                 
                 if (snapshot.empty) {
-                    chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
+                    if (chatList) {
+                        chatList.innerHTML = `<div class="chat-item" data-translate="noChats">${getTranslation('noChats', userLanguage)}</div>`;
+                    }
                     return;
                 }
 
+                // Procesar chats
                 const chats = [];
-                for (const doc of snapshot.docs) {
+                snapshot.forEach(doc => {
                     const chatData = doc.data();
                     chats.push({
                         id: doc.id,
                         ...chatData,
                         lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
                     });
-                }
+                });
 
+                // Ordenar chats por tiempo del último mensaje
                 chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
 
+                // Mostrar chats
                 for (const chat of chats) {
                     try {
                         const chatElement = document.createElement('div');
@@ -807,32 +825,38 @@ async function setupRealtimeChats() {
                             showDeleteConfirmDialog(chat.id, chatElement);
                         });
 
-                        if (chat.lastMessageTime && Date.now() - chat.lastMessageTime.getTime() < 2000) {
-                            chatElement.classList.add('chat-updated');
-                            setTimeout(() => chatElement.classList.remove('chat-updated'), 2000);
-                        }
-
                         chatElement.addEventListener('click', () => {
-                            console.log('Abriendo chat:', chat.id);
+                            console.log('👆 Abriendo chat:', chat.id);
                             document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
                             chatElement.classList.add('active');
                             openChat(chat.id);
                         });
 
-                        chatList.appendChild(chatElement);
+                        if (chatList) {
+                            chatList.appendChild(chatElement);
+                        }
                     } catch (error) {
-                        console.error('Error al procesar chat individual:', error);
+                        console.error('❌ Error al procesar chat individual:', error);
                     }
                 }
             } catch (error) {
-                console.error('Error al procesar actualización de chats:', error);
+                console.error('❌ Error al procesar actualización de chats:', error);
+                if (chatList) {
+                    chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+                }
+            }
+        }, error => {
+            console.error('❌ Error en la suscripción de chats:', error);
+            if (chatList) {
                 chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
             }
         });
 
     } catch (error) {
-        console.error('Error al configurar escucha de chats:', error);
-        chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+        console.error('❌ Error al configurar escucha de chats:', error);
+        if (chatList) {
+            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+        }
     }
 }
 
@@ -2435,4 +2459,3 @@ async function syncUserLanguage(user) {
         console.error('❌ Error al sincronizar idioma:', error);
     }
 }
-
