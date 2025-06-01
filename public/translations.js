@@ -52,6 +52,9 @@ const translations = {
         newChatCreated: 'Nuevo chat creado',
         chatExists: 'Ya tienes un chat con este usuario',
         typing: 'está escribiendo',
+        deleteChat: 'Borrar chat',
+        deleteChatConfirm: '¿Estás seguro de que quieres borrar este chat?',
+        chatDeleted: 'Chat eliminado correctamente',
         
         // Notificaciones
         newMessageFrom: 'Nuevo mensaje de {user}',
@@ -126,6 +129,9 @@ const translations = {
         newChatCreated: 'New chat created',
         chatExists: 'You already have a chat with this user',
         typing: 'is typing',
+        deleteChat: 'Delete chat',
+        deleteChatConfirm: 'Are you sure you want to delete this chat?',
+        chatDeleted: 'Chat successfully deleted',
         
         // Notifications
         newMessageFrom: 'New message from {user}',
@@ -200,6 +206,9 @@ const translations = {
         newChatCreated: 'Nuova chat creata',
         chatExists: 'Hai già una chat con questo utente',
         typing: 'sta scrivendo',
+        deleteChat: 'Elimina chat',
+        deleteChatConfirm: 'Sei sicuro di voler eliminare questa chat?',
+        chatDeleted: 'Chat eliminata con successo',
         
         // Notifiche
         newMessageFrom: 'Nuovo messaggio da {user}',
