@@ -2565,6 +2565,7 @@ document.addEventListener("DOMContentLoaded", () => {
     applyTheme();
 });
 
+/*
 const themeSelectMain = document.getElementById("themeSelectMain");
 
 if (themeSelectMain) {
@@ -2584,4 +2585,6 @@ if (themeSelectMain) {
         document.body.classList.add(`theme-${currentLang}`);
     });
 }
+*/
+
 
