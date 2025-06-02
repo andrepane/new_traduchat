@@ -41,17 +41,23 @@ export async function initializeNotifications() {
 
         const user = getCurrentUser();
         if (user && token) {
-            console.log('💾 Guardando token en Firestore para usuario:', user.uid);
-            const userRef = doc(db, 'users', user.uid);
-            await setDoc(userRef, {
-                fcmToken: token,
-                lastTokenUpdate: serverTimestamp()
-            }, { merge: true });
-            console.log('✅ Token guardado en Firestore');
+            try {
+                console.log('💾 Guardando token en Firestore para usuario:', user.uid);
+                const userRef = doc(db, 'users', user.uid);
+                await setDoc(userRef, {
+                    fcmToken: token,
+                    lastTokenUpdate: serverTimestamp()
+                }, { merge: true });
+                console.log('✅ Token guardado en Firestore');
+            } catch (error) {
+                console.error('❌ Error al guardar token en Firestore:', error);
+                throw error;
+            }
         }
 
     } catch (error) {
         console.error('❌ Error al inicializar notificaciones:', error);
+        throw error; // Propagar el error para mejor debugging
     }
 
     // Recibir mensajes mientras la app está en primer plano
