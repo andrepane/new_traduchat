@@ -1641,7 +1641,16 @@ async function setupIndividualChatInterface(chatData, currentUser) {
 
     const otherUserData = otherUserDoc.data();
     if (currentChatInfo) {
-        currentChatInfo.textContent = otherUserData.email;
+        const userInfoElement = document.createElement('div');
+        userInfoElement.className = 'user-chat-info';
+        userInfoElement.innerHTML = `
+            <div class="user-header">
+                <div class="user-name">${otherUserData.username || otherUserData.email.split('@')[0]}</div>
+            </div>
+        `;
+        
+        currentChatInfo.innerHTML = '';
+        currentChatInfo.appendChild(userInfoElement);
     }
 }
 
