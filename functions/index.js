@@ -11,6 +11,12 @@ exports.sendMessageNotification = functions.firestore
             const message = snap.data();
             const chatId = context.params.chatId;
 
+            // Verificar que el mensaje tenga los datos necesarios
+            if (!message || !message.senderId || !message.text) {
+                console.error('❌ Mensaje inválido:', message);
+                return null;
+            }
+
             console.log('📝 Datos del mensaje:', {
                 chatId,
                 messageId: context.params.messageId,
@@ -20,7 +26,13 @@ exports.sendMessageNotification = functions.firestore
 
             // Obtener información del chat
             const chatDoc = await admin.firestore().collection('chats').doc(chatId).get();
+            if (!chatDoc.exists) {
+                console.error('❌ Chat no encontrado:', chatId);
+                return null;
+            }
+
             const chatData = chatDoc.data();
+            console.log('💬 Datos del chat:', chatData);
 
             // Obtener los participantes del chat
             const participants = chatData.participants || [];
@@ -30,6 +42,11 @@ exports.sendMessageNotification = functions.firestore
             const recipientIds = participants.filter(userId => userId !== message.senderId);
             console.log('📫 Destinatarios:', recipientIds);
 
+            if (recipientIds.length === 0) {
+                console.log('⚠️ No hay destinatarios para notificar');
+                return null;
+            }
+
             // Obtener los tokens FCM de los destinatarios
             const userDocs = await Promise.all(
                 recipientIds.map(userId => 
@@ -38,14 +55,14 @@ exports.sendMessageNotification = functions.firestore
             );
 
             const tokens = userDocs
-                .map(doc => doc.data()?.fcmToken)
+                .map(doc => doc.exists ? doc.data()?.fcmToken : null)
                 .filter(token => token);
 
-            console.log('🔑 Tokens FCM encontrados:', tokens.length);
+            console.log('🔑 Tokens FCM encontrados:', tokens);
 
             if (tokens.length === 0) {
                 console.log('⚠️ No se encontraron tokens FCM para enviar notificaciones');
-                return;
+                return null;
             }
 
             // Obtener el nombre del remitente
@@ -58,22 +75,27 @@ exports.sendMessageNotification = functions.firestore
             // Construir la notificación
             const notification = {
                 title: `Nuevo mensaje de ${senderName}`,
-                body: message.text || 'Nuevo mensaje',
+                body: message.text,
                 icon: '/images/icon-192.png'
             };
 
-            console.log('📬 Enviando notificación:', notification);
+            const payload = {
+                notification,
+                data: {
+                    chatId,
+                    messageId: context.params.messageId,
+                    type: 'new_message',
+                    click_action: 'FLUTTER_NOTIFICATION_CLICK'
+                }
+            };
+
+            console.log('📬 Enviando notificación:', payload);
 
             // Enviar la notificación
             try {
                 const response = await admin.messaging().sendMulticast({
                     tokens,
-                    notification,
-                    data: {
-                        chatId,
-                        messageId: context.params.messageId,
-                        type: 'new_message'
-                    }
+                    ...payload
                 });
 
                 console.log('✅ Resultado del envío:', {
@@ -82,7 +104,7 @@ exports.sendMessageNotification = functions.firestore
                     responses: response.responses
                 });
 
-                // Si hay tokens inválidos, los eliminamos
+                // Manejar tokens inválidos
                 const invalidTokens = [];
                 response.responses.forEach((resp, idx) => {
                     if (!resp.success) {
@@ -101,20 +123,32 @@ exports.sendMessageNotification = functions.firestore
                 if (invalidTokens.length > 0) {
                     console.log('🗑️ Eliminando tokens inválidos:', invalidTokens);
                     const batch = admin.firestore().batch();
-                    for (const token of invalidTokens) {
-                        const userQuery = await admin.firestore()
-                            .collection('users')
-                            .where('fcmToken', '==', token)
-                            .get();
-                        
-                        userQuery.docs.forEach(doc => {
+                    
+                    const tokenQuerySnapshots = await Promise.all(
+                        invalidTokens.map(token =>
+                            admin.firestore()
+                                .collection('users')
+                                .where('fcmToken', '==', token)
+                                .get()
+                        )
+                    );
+
+                    tokenQuerySnapshots.forEach(querySnapshot => {
+                        querySnapshot.docs.forEach(doc => {
                             batch.update(doc.ref, {
                                 fcmToken: admin.firestore.FieldValue.delete()
                             });
                         });
-                    }
+                    });
+
                     await batch.commit();
+                    console.log('✅ Tokens inválidos eliminados');
                 }
+
+                return {
+                    success: response.successCount,
+                    failure: response.failureCount
+                };
 
             } catch (sendError) {
                 console.error('❌ Error al enviar notificación:', {
