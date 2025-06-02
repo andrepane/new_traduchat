@@ -726,6 +726,7 @@ body {
     background: linear-gradient(96deg, var(--color-primary) 70%, var(--color-primary-light) 100%);
     color: var(--color-text-light);
     font-weight: 700;
+    font-size: 0.95rem;
     border: none;
     border-radius: 12px;
     margin-top: 1rem;
