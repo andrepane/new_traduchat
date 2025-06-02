@@ -20,6 +20,8 @@ import {
     orderBy,
     setDoc,
     updateDoc,
+    initializeFirestore,
+    getFirestore,
     limit,
     startAfter,
     writeBatch
@@ -38,7 +40,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { translations, getTranslation, translateInterface, animateTitleWave, getTypingText } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
-import { auth, db } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
+import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
 import { state } from './modules/state.js';
 import { startAuthListener, setUserLanguage } from './modules/auth.js';
 
@@ -48,6 +50,76 @@ import {
     getUserLanguage,
     getCurrentUser
 } from './modules/state.js';
+
+
+
+const userLanguage = getUserLanguage(); // ✅ ahora sí puedes usarla
+
+
+// Antes de llamar a startAuthListener
+
+setUserLanguage(userLanguage);
+
+startAuthListener(async (userData) => {
+    if (userData) {
+        console.log('Usuario autenticado:', userData.email);
+        console.log('User ID:', userData.uid);
+
+        resetChatState();
+        hideLoadingScreen();
+        showMainScreen();
+        updateUserInfo(userData);
+        setupRealtimeChats();
+        initializeNotifications(); // Aquí está bien colocada
+    } else {
+        console.log('No hay usuario autenticado');
+        currentUser = null;
+        resetChatState();
+        hideLoadingScreen();
+        showAuthScreen();
+    }
+});
+
+
+
+
+
+
+// Verificar inicialización de Firebase
+
+// Obtener la instancia de Firebase Messaging
+let messaging;
+try {
+    messaging = window.messaging;
+    console.log('Firebase Messaging obtenido correctamente');
+} catch (error) {
+    console.log('Firebase Messaging no está soportado en este navegador');
+}
+
+// Referencias a elementos del DOM
+const authScreen = document.getElementById('authScreen');
+const mainScreen = document.getElementById('mainScreen');
+const emailInput = document.getElementById('emailInput');
+const usernameInput = document.getElementById('usernameInput');
+const passwordInput = document.getElementById('passwordInput');
+const phoneInput = document.getElementById('phoneNumber');
+const countrySelect = document.getElementById('countryCode');
+const loginBtn = document.getElementById('loginBtn');
+const chatList = document.getElementById('chatList');
+const messageInput = document.getElementById('messageInput');
+const sendMessageBtn = document.getElementById('sendMessage');
+const messagesList = document.getElementById('messagesList');
+const searchInput = document.getElementById('searchContacts');
+const newChatBtn = document.getElementById('newChat');
+const userInfo = document.getElementById('userInfo');
+const currentChatInfo = document.getElementById('currentChatInfo');
+
+const logoutBtn = document.getElementById('logoutBtn');
+
+
+// Referencias adicionales para móvil
+const backButton = document.getElementById('backToChats');
+const sidebar = document.querySelector('.sidebar');
 
 // Variables globales
 let languageSelect;
@@ -1542,12 +1614,7 @@ async function setupGroupChatInterface(chatData) {
     const groupInfoElement = document.createElement('div');
     groupInfoElement.className = 'group-info';
     groupInfoElement.innerHTML = `
-        <div class="group-header">
-            <div class="group-name">${chatData.name}</div>
-            <button id="addGroupMembers" class="icon-button" title="${getTranslation('addMembers', userLanguage)}">
-                <i class="fas fa-user-plus"></i>
-            </button>
-        </div>
+        <div class="group-name">${chatData.name}</div>
         <div class="group-participants">
             ${participantsInfo.map(user => user.username || user.email.split('@')[0]).join(', ')}
         </div>
@@ -1556,12 +1623,6 @@ async function setupGroupChatInterface(chatData) {
     if (currentChatInfo) {
         currentChatInfo.innerHTML = '';
         currentChatInfo.appendChild(groupInfoElement);
-
-        // Agregar evento al botón de añadir miembros
-        const addMembersBtn = groupInfoElement.querySelector('#addGroupMembers');
-        addMembersBtn.addEventListener('click', () => {
-            showAddMembersModal(chatData);
-        });
     }
 }
 
@@ -1950,16 +2011,10 @@ function updateSelectedUsersList(selectedUsersList, createGroupBtn) {
         });
     });
 
-    // Actualizar estado del botón según el contexto
+    // Actualizar estado del botón
     if (createGroupBtn) {
         const groupNameInput = document.getElementById('groupName');
-        if (groupNameInput) {
-            // Estamos en el modal de crear grupo
-            createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput.value.trim();
-        } else {
-            // Estamos en el modal de agregar miembros
-            createGroupBtn.disabled = selectedUsers.size === 0;
-        }
+        createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput?.value.trim();
     }
 }
 
@@ -2137,6 +2192,7 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
                 <div class="user-name">${user.username || user.email.split('@')[0]}</div>
                 <div class="user-email">${user.email}</div>
             </div>
+
         </div>
     `).join('');
 
@@ -2156,19 +2212,11 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
                 updateSelectedUsersList(selectedUsersList, createGroupBtn);
                 item.remove();
                 
-                // Actualizar estado del botón según el contexto
-                if (createGroupBtn) {
-                    const groupNameInput = document.getElementById('groupName');
-                    if (groupNameInput) {
-                        // Estamos en el modal de crear grupo
-                        createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < 2;
-                    } else {
-                        // Estamos en el modal de agregar miembros
-                        createGroupBtn.disabled = selectedUsers.size === 0;
-                    }
-                }
+                // Actualizar estado del botón de crear
+                const groupNameInput = document.getElementById('groupName');
+                createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < 2;
                 
-                // Actualizar contador si existe
+                // Actualizar contador
                 const usersCount = document.querySelector('.users-count');
                 if (usersCount) {
                     usersCount.textContent = `(${selectedUsers.size}/2 mínimo)`;
@@ -2461,217 +2509,5 @@ async function syncUserLanguage(user) {
         }
     } catch (error) {
         console.error('❌ Error al sincronizar idioma:', error);
-    }
-}
-
-// Función para mostrar el modal de agregar miembros
-async function showAddMembersModal(chatData) {
-    // Obtener los participantes actuales
-    const currentParticipants = new Set(chatData.participants);
-    
-    const modalHtml = `
-        <div id="addMembersModal" class="modal">
-            <div class="modal-content">
-                <h2 data-translate="addMembers">${getTranslation('addMembers', userLanguage)}</h2>
-                <div class="group-form">
-                    <div class="selected-users">
-                        <h3 data-translate="selectedUsers">${getTranslation('selectedUsers', userLanguage)}</h3>
-                        <div id="selectedUsersList"></div>
-                    </div>
-                    <div class="user-search">
-                        <input type="text" id="memberSearchInput" data-translate="searchUsers" 
-                               placeholder="${getTranslation('searchUsers', userLanguage)}" />
-                        <div id="userSearchResults"></div>
-                    </div>
-                    <div class="modal-buttons">
-                        <button id="addMembersBtn" disabled data-translate="addMembers">
-                            ${getTranslation('addMembers', userLanguage)}
-                        </button>
-                        <button id="cancelAddBtn" data-translate="cancel">
-                            ${getTranslation('cancel', userLanguage)}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-    const modal = document.getElementById('addMembersModal');
-    const searchInput = document.getElementById('memberSearchInput');
-    const addMembersBtn = document.getElementById('addMembersBtn');
-    const cancelAddBtn = document.getElementById('cancelAddBtn');
-    const selectedUsersList = document.getElementById('selectedUsersList');
-    const userSearchResults = document.getElementById('userSearchResults');
-
-    // Set para mantener los usuarios seleccionados
-    selectedUsers.clear();
-
-    // Búsqueda de usuarios
-    searchInput.addEventListener('input', debounce(async (e) => {
-        const searchTerm = e.target.value.trim();
-        if (searchTerm.length < 2) {
-            userSearchResults.innerHTML = '';
-            return;
-        }
-
-        try {
-            const users = await searchUsersForGroup(searchTerm);
-            // Filtrar usuarios que ya están en el grupo
-            const availableUsers = users.filter(user => !currentParticipants.has(user.id));
-            displayUserSearchResults(availableUsers, userSearchResults, selectedUsersList, addMembersBtn);
-        } catch (error) {
-            console.error('Error al buscar usuarios:', error);
-            userSearchResults.innerHTML = `<div class="error-message">${getTranslation('errorSearch', userLanguage)}</div>`;
-        }
-    }, 300));
-
-    // Habilitar/deshabilitar botón según selección
-    const updateAddButton = () => {
-        addMembersBtn.disabled = selectedUsers.size === 0;
-    };
-
-    // Agregar miembros
-    addMembersBtn.addEventListener('click', async () => {
-        try {
-            console.log('Iniciando proceso de agregar miembros...');
-            const selectedMembersArray = Array.from(selectedUsers);
-            
-            if (selectedMembersArray.length === 0) {
-                throw new Error('No hay usuarios seleccionados');
-            }
-
-            // Deshabilitar el botón mientras se procesa
-            addMembersBtn.disabled = true;
-            addMembersBtn.textContent = getTranslation('adding', userLanguage);
-
-            await addMembersToGroup(chatData.id, selectedMembersArray);
-            
-            // Limpiar selección y cerrar modal
-            selectedUsers.clear();
-            modal.remove();
-            
-            // Mostrar mensaje de éxito
-            alert(getTranslation('membersAdded', userLanguage));
-        } catch (error) {
-            console.error('Error al agregar miembros:', error);
-            alert(getTranslation('errorAddMembers', userLanguage));
-        } finally {
-            // Restaurar el botón
-            if (addMembersBtn) {
-                addMembersBtn.disabled = false;
-                addMembersBtn.textContent = getTranslation('addMembers', userLanguage);
-            }
-        }
-    });
-
-    // Cancelar
-    cancelAddBtn.addEventListener('click', () => {
-        selectedUsers.clear();
-        modal.remove();
-    });
-
-    // Cerrar modal al hacer clic fuera
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            selectedUsers.clear();
-            modal.remove();
-        }
-    });
-
-    // Inicializar la lista de usuarios seleccionados
-    updateSelectedUsersList(selectedUsersList, addMembersBtn);
-}
-
-// Función para agregar miembros al grupo
-async function addMembersToGroup(chatId, newMembers) {
-    console.log('Iniciando addMembersToGroup:', { chatId, newMembers });
-    
-    try {
-        const currentUser = getCurrentUser();
-        if (!currentUser) {
-            console.error('No hay usuario autenticado');
-            throw new Error('No hay usuario autenticado');
-        }
-
-        console.log('Usuario actual:', currentUser.uid);
-        console.log('Chat ID:', chatId);
-        console.log('Nuevos miembros:', newMembers);
-
-        if (!chatId) {
-            throw new Error('ID del chat no válido');
-        }
-
-        // Obtener datos actuales del chat
-        try {
-            const chatRef = doc(db, 'chats', chatId);
-            console.log('Referencia del chat creada');
-            
-            const chatDoc = await getDoc(chatRef);
-            console.log('Documento del chat obtenido');
-            
-            if (!chatDoc.exists()) {
-                console.error('Chat no encontrado:', chatId);
-                throw new Error('Chat no encontrado');
-            }
-
-            const chatData = chatDoc.data();
-            console.log('Datos del chat:', chatData);
-            
-            // Verificar que es un grupo
-            if (chatData.type !== 'group') {
-                console.error('El chat no es un grupo');
-                throw new Error('El chat no es un grupo');
-            }
-
-            // Verificar que hay nuevos miembros para agregar
-            if (!newMembers || newMembers.length === 0) {
-                console.error('No hay nuevos miembros para agregar');
-                throw new Error('No hay nuevos miembros para agregar');
-            }
-
-            console.log('Miembros actuales:', chatData.participants);
-            console.log('Nuevos miembros a agregar:', newMembers);
-
-            // Agregar nuevos miembros a la lista de participantes
-            const updatedParticipants = [...new Set([...chatData.participants, ...newMembers.map(m => m.id)])];
-            console.log('Lista actualizada de participantes:', updatedParticipants);
-
-            // Actualizar el documento del chat
-            console.log('Actualizando documento del chat...');
-            await updateDoc(chatRef, {
-                participants: updatedParticipants
-            });
-
-            // Crear mensaje de sistema para notificar nuevos miembros
-            const newMembersEmails = newMembers.map(m => m.email).join(', ');
-            console.log('Creando mensaje del sistema sobre nuevos miembros...');
-            
-            const messagesRef = collection(db, 'chats', chatId, 'messages');
-            await addDoc(messagesRef, {
-                text: `${currentUser.email} ${getTranslation('addedMembers', userLanguage)}: ${newMembersEmails}`,
-                type: 'system',
-                timestamp: serverTimestamp(),
-                senderId: 'system'
-            });
-
-            console.log('Actualización completada exitosamente');
-
-            // Actualizar la interfaz
-            const updatedChatDoc = await getDoc(chatRef);
-            if (updatedChatDoc.exists()) {
-                await setupGroupChatInterface(updatedChatDoc.data());
-                console.log('Interfaz actualizada exitosamente');
-            }
-
-            return true;
-        } catch (dbError) {
-            console.error('Error en operaciones de base de datos:', dbError);
-            throw new Error(`Error de base de datos: ${dbError.message}`);
-        }
-    } catch (error) {
-        console.error('Error detallado en addMembersToGroup:', error);
-        throw new Error(`Error al agregar miembros: ${error.message}`);
     }
 }
