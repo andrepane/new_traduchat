@@ -119,10 +119,10 @@ const translations = {
         send: 'Send',
         noChats: 'No chats available',
         errorLoadingChats: 'Error loading chats',
-          selectTheme_en: "Select theme",
-  themeBanderas_en: "Flag colors",
-  themeElegante_en: "Elegant pastel",
-  themeCreativo_en: "Creative vibrant",
+          selectTheme: "Select theme",
+  themeBanderas: "Flag colors",
+  themeElegante: "Elegant pastel",
+  themeCreativo: "Creative vibrant",
         
         // Languages
         languageEs: 'Spanish',
@@ -204,10 +204,10 @@ const translations = {
         send: 'Invia',
         noChats: 'Nessuna chat disponibile',
         errorLoadingChats: 'Errore nel caricamento delle chat',
-         selectTheme_it: "Seleziona tema",
-  themeBanderas_it: "Colori della bandiera",
-  themeElegante_it: "Pastello elegante",
-  themeCreativo_it: "Creativo e vivace",
+         selectTheme: "Seleziona tema",
+  themeBanderas: "Colori della bandiera",
+  themeElegante: "Pastello elegante",
+  themeCreativo: "Creativo e vivace",
         
         // Lingue
         languageEs: 'Spagnolo',
