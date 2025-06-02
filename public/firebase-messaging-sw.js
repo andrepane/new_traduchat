@@ -1,5 +1,5 @@
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
 
 const firebaseConfig = {
   apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
@@ -62,3 +62,4 @@ self.addEventListener('notificationclick', (event) => {
       })
   );
 });
+
