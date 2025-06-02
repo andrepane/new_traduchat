@@ -2022,10 +2022,16 @@ function updateSelectedUsersList(selectedUsersList, createGroupBtn) {
         });
     });
 
-    // Actualizar estado del botón
+    // Actualizar estado del botón según el contexto
     if (createGroupBtn) {
         const groupNameInput = document.getElementById('groupName');
-        createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput?.value.trim();
+        if (groupNameInput) {
+            // Estamos en el modal de crear grupo
+            createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput.value.trim();
+        } else {
+            // Estamos en el modal de agregar miembros
+            createGroupBtn.disabled = selectedUsers.size === 0;
+        }
     }
 }
 
@@ -2203,7 +2209,6 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
                 <div class="user-name">${user.username || user.email.split('@')[0]}</div>
                 <div class="user-email">${user.email}</div>
             </div>
-
         </div>
     `).join('');
 
@@ -2223,11 +2228,19 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
                 updateSelectedUsersList(selectedUsersList, createGroupBtn);
                 item.remove();
                 
-                // Actualizar estado del botón de crear
-                const groupNameInput = document.getElementById('groupName');
-                createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < 2;
+                // Actualizar estado del botón según el contexto
+                if (createGroupBtn) {
+                    const groupNameInput = document.getElementById('groupName');
+                    if (groupNameInput) {
+                        // Estamos en el modal de crear grupo
+                        createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < 2;
+                    } else {
+                        // Estamos en el modal de agregar miembros
+                        createGroupBtn.disabled = selectedUsers.size === 0;
+                    }
+                }
                 
-                // Actualizar contador
+                // Actualizar contador si existe
                 const usersCount = document.querySelector('.users-count');
                 if (usersCount) {
                     usersCount.textContent = `(${selectedUsers.size}/2 mínimo)`;
