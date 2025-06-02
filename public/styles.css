@@ -140,6 +140,29 @@ body {
     min-height: 100vh;
 }
 
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+#passwordInput {
+    width: 100%;
+    padding-right: 40px; /* espacio para el icono del ojo */
+    box-sizing: border-box;
+}
+
+#togglePassword {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+
 /* Pantalla Principal */
 #mainScreen {
     display: none;
