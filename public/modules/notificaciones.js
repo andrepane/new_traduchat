@@ -15,8 +15,14 @@ export async function initializeNotifications() {
         // Registrar el Service Worker primero
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                    scope: '/'
+                });
                 console.log('✅ Service Worker registrado:', registration);
+
+                // Esperar a que el Service Worker esté activo
+                await navigator.serviceWorker.ready;
+                console.log('🚀 Service Worker está activo');
             } catch (error) {
                 console.error('❌ Error al registrar Service Worker:', error);
                 return;
@@ -37,6 +43,11 @@ export async function initializeNotifications() {
             vapidKey: 'BHOz-BX2_ZDpjjQEvZ03bfRVTWyMgBd6CcZ5HgpLAJnKre2UbZYd4vMmCTVVF1MY17nJJTEb7nPiAJ9M5xIXTeY'
         });
 
+        if (!token) {
+            console.error('❌ No se pudo obtener el token FCM');
+            return;
+        }
+
         console.log('✅ Token FCM obtenido:', token);
 
         const user = getCurrentUser();
@@ -46,9 +57,33 @@ export async function initializeNotifications() {
                 const userRef = doc(db, 'users', user.uid);
                 await setDoc(userRef, {
                     fcmToken: token,
-                    lastTokenUpdate: serverTimestamp()
+                    lastTokenUpdate: serverTimestamp(),
+                    notificationsEnabled: true
                 }, { merge: true });
                 console.log('✅ Token guardado en Firestore');
+
+                // Configurar listener para mensajes en primer plano
+                onMessage(messaging, (payload) => {
+                    console.log('🔔 Mensaje recibido en primer plano:', payload);
+                    
+                    if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
+                        navigator.serviceWorker.ready.then(registration => {
+                            const notificationTitle = payload.notification.title;
+                            const notificationOptions = {
+                                body: payload.notification.body,
+                                icon: '/images/icon-192.png',
+                                badge: '/images/icon-72.png',
+                                vibrate: [200, 100, 200],
+                                tag: 'new-message',
+                                data: payload.data,
+                                requireInteraction: true
+                            };
+
+                            registration.showNotification(notificationTitle, notificationOptions);
+                        });
+                    }
+                });
+
             } catch (error) {
                 console.error('❌ Error al guardar token en Firestore:', error);
                 throw error;
@@ -59,27 +94,5 @@ export async function initializeNotifications() {
         console.error('❌ Error al inicializar notificaciones:', error);
         throw error;
     }
-
-    // Recibir mensajes mientras la app está en primer plano
-    onMessage(messaging, (payload) => {
-        console.log('🔔 Mensaje recibido en primer plano:', payload);
-        
-        // Mostrar notificación incluso en primer plano
-        if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
-            navigator.serviceWorker.ready.then(registration => {
-                const notificationTitle = payload.notification.title;
-                const notificationOptions = {
-                    body: payload.notification.body,
-                    icon: '/images/icon-192.png',
-                    badge: '/images/icon-72.png',
-                    vibrate: [200, 100, 200],
-                    tag: 'new-message',
-                    data: payload.data
-                };
-
-                registration.showNotification(notificationTitle, notificationOptions);
-            });
-        }
-    });
 }
 
