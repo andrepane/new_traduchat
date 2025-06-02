@@ -250,6 +250,14 @@ function updateUserInfo(user) {
 }
 
 
+// Función para actualizar el tema según el idioma
+function updateTheme(lang) {
+    // Remover clases de tema anteriores
+    document.body.classList.remove('theme-es', 'theme-en', 'theme-it');
+    // Agregar la nueva clase de tema
+    document.body.classList.add(`theme-${lang}`);
+}
+
 // Manejadores de eventos para el cambio de idioma
 if (languageSelect) languageSelect.value = userLanguage;
 if (languageSelectMain) languageSelectMain.value = userLanguage;
@@ -449,6 +457,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const languageSelect = document.getElementById('languageSelect');
     const languageSelectMain = document.getElementById('languageSelectMain');
 
+    // Inicializar el tema según el idioma actual
+    const currentLang = getUserLanguage();
+    updateTheme(currentLang);
+
     const handleLanguageChange = async (newLang) => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
 
@@ -456,6 +468,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (recognition) {
             stopRecording();
         }
+
+        // Actualizar el tema según el nuevo idioma
+        updateTheme(newLang);
 
         await setUserLanguage(newLang);
         translateInterface(newLang);
