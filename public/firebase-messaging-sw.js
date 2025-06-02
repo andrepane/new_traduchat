@@ -1,5 +1,5 @@
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
 const firebaseConfig = {
   apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
@@ -12,11 +12,8 @@ const firebaseConfig = {
 
 console.log('🔧 Service Worker inicializándose...');
 
-// ✅ Comprobación para evitar duplicados
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-  console.log('✅ Firebase inicializado en Service Worker');
-}
+firebase.initializeApp(firebaseConfig);
+console.log('✅ Firebase inicializado en Service Worker');
 
 const messaging = firebase.messaging();
 console.log('✅ Firebase Messaging inicializado en Service Worker');
@@ -32,7 +29,7 @@ messaging.onBackgroundMessage((payload) => {
     badge: '/images/icon-72.png',
     vibrate: [200, 100, 200],
     tag: 'new-message',
-    data: payload.data // Incluir datos adicionales
+    data: payload.data
   };
 
   console.log('🔔 Mostrando notificación:', { title: notificationTitle, options: notificationOptions });
