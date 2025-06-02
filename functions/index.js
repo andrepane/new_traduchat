@@ -1,6 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
+// Inicializar Firebase Admin
 admin.initializeApp();
 
 exports.sendMessageNotification = functions.firestore
