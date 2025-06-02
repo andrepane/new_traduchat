@@ -1,22 +1,63 @@
 /* ==========================================================================
    Variables CSS Globales
    ========================================================================== */
-   :root {
-    /* Colores principales */
+   
+/* Tema Español */
+.theme-es {
     --color-primary: #4caf50;
     --color-primary-dark: #006d34;
     --color-primary-light: #1ee98e;
-    
-    /* Colores de fondo y bordes */
     --color-bg: #f6faf7;
     --color-bg-alt: #ffffffcc;
     --color-border: #d1e7dd;
-    
-    /* Colores de mensajes y estados */
     --color-user-left: #e6fff4;
     --color-user-right: #b9f5d8;
     --color-system: #98a6a9;
     --color-system-bg: #f0f8f2cc;
+}
+
+/* Tema Inglés */
+.theme-en {
+    --color-primary: #2196F3;
+    --color-primary-dark: #1565C0;
+    --color-primary-light: #64B5F6;
+    --color-bg: #f5f9ff;
+    --color-bg-alt: #ffffffcc;
+    --color-border: #d1e3ff;
+    --color-user-left: #e6f3ff;
+    --color-user-right: #b3e0ff;
+    --color-system: #90a4ae;
+    --color-system-bg: #f0f6ffcc;
+}
+
+/* Tema Italiano */
+.theme-it {
+    --color-primary: #d32f2f;
+    --color-primary-dark: #b71c1c;
+    --color-primary-light: #ef5350;
+    --color-bg: #fff9f9;
+    --color-bg-alt: #ffffffcc;
+    --color-border: #ffcdd2;
+    --color-user-left: #ffebee;
+    --color-user-right: #ffcdd2;
+    --color-system: #9e9e9e;
+    --color-system-bg: #fff5f5cc;
+}
+
+:root {
+    /* Colores por defecto (tema español) */
+    --color-primary: #4caf50;
+    --color-primary-dark: #006d34;
+    --color-primary-light: #1ee98e;
+    --color-bg: #f6faf7;
+    --color-bg-alt: #ffffffcc;
+    --color-border: #d1e7dd;
+    --color-user-left: #e6fff4;
+    --color-user-right: #b9f5d8;
+    --color-system: #98a6a9;
+    --color-system-bg: #f0f8f2cc;
+    
+    /* Colores de texto y estados */
     --color-text: #232f2b;
     --color-text-light: #fff;
     --color-danger: #d32f2f;
@@ -40,38 +81,38 @@
     
     /* Tipografía */
     --font-main: "Poppins", "Segoe UI", system-ui, sans-serif;
-  }
-  
-  /* ==========================================================================
-     Reset y Estilos Base
-     ========================================================================== */
-  * {
+}
+
+/* ==========================================================================
+   Reset y Estilos Base
+   ========================================================================== */
+* {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
     -webkit-touch-callout: none;
-  }
-  
-  html, body {
+}
+
+html, body {
     height: 100%;
     width: 100%;
     overflow: hidden;
     position: fixed;
     top: 0;
     left: 0;
-  }
-  
-  body {
+}
+
+body {
     font-family: var(--font-main);
     background: var(--color-bg);
     color: var(--color-text);
-  }
-  
-  /* ==========================================================================
-     Pantallas y Estados
-     ========================================================================== */
-  .screen {
+}
+
+/* ==========================================================================
+   Pantallas y Estados
+   ========================================================================== */
+.screen {
     position: fixed;
     top: 0;
     left: 0;
@@ -81,41 +122,41 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease;
-  }
-  
-  .screen.active {
+}
+
+.screen.active {
     display: flex;
     opacity: 1;
     visibility: visible;
-  }
-  
-  /* Pantalla de Autenticación */
-  #authScreen {
+}
+
+/* Pantalla de Autenticación */
+#authScreen {
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: calc(1rem + var(--safe-area-top)) 1rem calc(1rem + var(--safe-area-bottom));
     background: var(--color-bg);
     min-height: 100vh;
-  }
-  
-  /* Pantalla Principal */
-  #mainScreen {
+}
+
+/* Pantalla Principal */
+#mainScreen {
     display: none;
     height: 100%;
     width: 100%;
     position: relative;
     overflow: hidden;
-  }
-  
-  #mainScreen.active {
+}
+
+#mainScreen.active {
     display: flex;
-  }
-  
-  /* ==========================================================================
-     Sidebar y Lista de Chats
-     ========================================================================== */
-  .sidebar {
+}
+
+/* ==========================================================================
+   Sidebar y Lista de Chats
+   ========================================================================== */
+.sidebar {
     height: 100%;
     width: 350px;
     background: #fff;
@@ -124,14 +165,14 @@
     position: relative;
     border-right: 1px solid var(--color-border);
     transition: transform 0.3s ease;
-  }
-  
-  .sidebar.hidden {
+}
+
+.sidebar.hidden {
     transform: translateX(-100%);
-  }
-  
-  /* Chat Container */
-  .chat-container {
+}
+
+/* Chat Container */
+.chat-container {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -140,16 +181,16 @@
     -webkit-backdrop-filter: blur(10px);
     position: relative;
     overflow: hidden;
-  }
-  
-  .chat-container.hidden {
+}
+
+.chat-container.hidden {
     display: none;
-  }
-  
-  /* ==========================================================================
-     Loading Screen
-     ========================================================================== */
-  .loading-screen {
+}
+
+/* ==========================================================================
+   Loading Screen
+   ========================================================================== */
+.loading-screen {
     position: fixed;
     top: 0;
     left: 0;
@@ -162,81 +203,81 @@
     z-index: 2000;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-  }
-  
-  /* ==========================================================================
-     Responsive Design
-     ========================================================================== */
-  @media (max-width: 768px) {
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+@media (max-width: 768px) {
     .sidebar {
-      position: absolute;
-      width: 100%;
-      z-index: 100;
+        position: absolute;
+        width: 100%;
+        z-index: 100;
     }
-  
+
     .chat-container {
-      width: 100%;
+        width: 100%;
     }
-  
+
     .sidebar.hidden {
-      display: none;
+        display: none;
     }
-  
+
     .chat-container.hidden {
-      display: none;
+        display: none;
     }
-  
+
     #backToChats {
-      display: none;
+        display: none;
     }
-  
+
     .chat-container:not(.hidden) ~ #backToChats {
-      display: flex;
+        display: flex;
     }
-  
+
     .user-header {
-      padding-top: calc(12px + var(--safe-area-top));
+        padding-top: calc(12px + var(--safe-area-top));
     }
-  
+
     .message-input {
-      padding-bottom: calc(10px + var(--safe-area-bottom));
+        padding-bottom: calc(10px + var(--safe-area-bottom));
     }
-  }
-  
-  /* ==========================================================================
-     Ajustes iOS
-     ========================================================================== */
-  @supports (-webkit-touch-callout: none) {
+}
+
+/* ==========================================================================
+   Ajustes iOS
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
     .keyboard-open #mainScreen {
-      height: calc(100% - var(--keyboard-height));
+        height: calc(100% - var(--keyboard-height));
     }
-  
+
     .keyboard-open .messages-list {
-      height: calc(100% - var(--header-height) - var(--message-input-height) - var(--keyboard-height));
+        height: calc(100% - var(--header-height) - var(--message-input-height) - var(--keyboard-height));
     }
-  
+
     .keyboard-open .message-input {
-      position: absolute;
-      bottom: var(--keyboard-height);
-      left: 0;
-      right: 0;
+        position: absolute;
+        bottom: var(--keyboard-height);
+        left: 0;
+        right: 0;
     }
-  }
-  
-  /* ==========================================================================
-     Layout Principal
-     ========================================================================== */
-  #mainScreen {
+}
+
+/* ==========================================================================
+   Layout Principal
+   ========================================================================== */
+#mainScreen {
     display: flex;
     height: 100dvh;
     width: 100dvw;
     position: relative;
     overflow: hidden;
-  }
-  
-  /* Sidebar */
-  .user-header,
-  .chat-header {
+}
+
+/* Sidebar */
+.user-header,
+.chat-header {
     height: var(--header-height);
     padding: 12px 15px;
     background-color: #fff;
@@ -248,22 +289,22 @@
     top: 0;
     z-index: 10;
     border-bottom: 1px solid var(--color-border);
-  }
-  
-  .chat-header {
+}
+
+.chat-header {
     background-color: var(--color-bg-alt);
-  }
-  
-  .user-info {
+}
+
+.user-info {
     display: flex;
     align-items: center;
     gap: 10px;
     min-width: 0;
     flex: 1;
     position: relative;
-  }
-  
-  #userInfo {
+}
+
+#userInfo {
     font-weight: 600;
     color: var(--color-primary-dark);
     white-space: nowrap;
@@ -271,12 +312,12 @@
     text-overflow: ellipsis;
     flex: 1;
     min-width: 0;
-  }
-  
-  /* ==========================================================================
-     Lista de Chats
-     ========================================================================== */
-  .chat-list {
+}
+
+/* ==========================================================================
+   Lista de Chats
+   ========================================================================== */
+.chat-list {
     flex: 1;
     overflow-y: auto;
     background-color: #fff;
@@ -284,9 +325,9 @@
     padding: 10px;
     scrollbar-width: thin;
     scrollbar-color: var(--color-primary) transparent;
-  }
-  
-  .chat-item {
+}
+
+.chat-item {
     display: flex;
     align-items: center;
     background-color: var(--color-bg);
@@ -299,25 +340,25 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     position: relative;
     padding-right: 40px;
-  }
-  
-  .chat-item:hover {
+}
+
+.chat-item:hover {
     background-color: #f0f2f5;
     transform: translateY(-1px);
-  }
-  
-  .chat-item.active {
+}
+
+.chat-item.active {
     background-color: var(--color-user-left);
     border-left: 3px solid var(--color-primary);
-  }
-  
-  .chat-info {
+}
+
+.chat-info {
     flex: 1;
     min-width: 0;
     margin-right: 8px;
-  }
-  
-  .delete-chat-btn {
+}
+
+.delete-chat-btn {
     position: absolute;
     right: 12px;
     top: 50%;
@@ -333,36 +374,36 @@
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-  }
-  
-  .delete-chat-btn i {
+}
+
+.delete-chat-btn i {
     font-size: 0.9rem;
-  }
-  
-  .chat-item:hover .delete-chat-btn {
+}
+
+.chat-item:hover .delete-chat-btn {
     opacity: 0.8;
-  }
-  
-  .delete-chat-btn:hover {
+}
+
+.delete-chat-btn:hover {
     color: var(--color-danger);
     opacity: 1;
-  }
-  
-  .chat-item.deleting {
+}
+
+.chat-item.deleting {
     animation: slideOut 0.2s ease forwards;
-  }
-  
-  @keyframes slideOut {
+}
+
+@keyframes slideOut {
     to {
         transform: translateX(-100%);
         opacity: 0;
     }
-  }
-  
-  /* ==========================================================================
-     Contenedor de Chat y Mensajes
-     ========================================================================== */
-  .messages-list {
+}
+
+/* ==========================================================================
+   Contenedor de Chat y Mensajes
+   ========================================================================== */
+.messages-list {
     flex: 1;
     overflow-y: auto;
     padding: 20px;
@@ -371,28 +412,28 @@
     background: var(--color-bg-alt);
     display: flex;
     flex-direction: column;
-  }
-  
-  /* Mensajes */
-  .message {
+}
+
+/* Mensajes */
+.message {
     display: flex;
     flex-direction: column;
     max-width: 76%;
     margin-bottom: 8px;
     position: relative;
-  }
-  
-  .message.sent {
+}
+
+.message.sent {
     align-self: flex-end;
     margin-left: auto;
-  }
-  
-  .message.received {
+}
+
+.message.received {
     align-self: flex-start;
     margin-right: auto;
-  }
-  
-  .message-content {
+}
+
+.message-content {
     padding: 12px 16px;
     border-radius: var(--radius-bubble);
     word-break: break-word;
@@ -401,46 +442,46 @@
     box-shadow: var(--shadow-glass);
     transition: var(--transition);
     animation: messageAppear 0.3s ease;
-  }
-  
-  .message.sent .message-content {
+}
+
+.message.sent .message-content {
     background: linear-gradient(120deg, var(--color-user-right) 90%, var(--color-user-left) 100%);
     color: var(--color-primary-dark);
     border-bottom-right-radius: 6px;
-  }
-  
-  .message.received .message-content {
+}
+
+.message.received .message-content {
     background: linear-gradient(120deg, var(--color-user-left) 60%, var(--color-bg) 100%);
     color: var(--color-text);
     border-bottom-left-radius: 6px;
-  }
-  
-  .message-time {
+}
+
+.message-time {
     font-size: 0.65em;
     color: rgba(134, 150, 160, 0.9);
     margin-top: 4px;
     align-self: flex-end;
-  }
-  
-  .message.sent .message-time {
+}
+
+.message.sent .message-time {
     margin-right: 4px;
-  }
-  
-  .message.received .message-time {
+}
+
+.message.received .message-time {
     margin-left: 4px;
-  }
-  
-  /* Sistema de Mensajes Agrupados */
-  .message[data-same-sender="true"] {
+}
+
+/* Sistema de Mensajes Agrupados */
+.message[data-same-sender="true"] {
     margin-top: -4px;
-  }
-  
-  .message[data-same-sender="true"] .message-sender {
+}
+
+.message[data-same-sender="true"] .message-sender {
     display: none;
-  }
-  
-  /* Input de Mensajes */
-  .message-input {
+}
+
+/* Input de Mensajes */
+.message-input {
     padding: 10px 15px;
     background: #fff;
     border-top: 1px solid var(--color-border);
@@ -449,9 +490,9 @@
     gap: 10px;
     position: relative;
     min-height: var(--message-input-height);
-  }
-  
-  .message-input input {
+}
+
+.message-input input {
     flex: 1;
     padding: 12px 16px;
     border-radius: 20px;
@@ -459,16 +500,16 @@
     font-size: 16px;
     background: var(--color-bg);
     transition: var(--transition);
-  }
-  
-  .message-input input:focus {
+}
+
+.message-input input:focus {
     border-color: var(--color-primary);
     outline: none;
     background: #fff;
-  }
-  
-  /* Botones de Acción */
-  .icon-button {
+}
+
+/* Botones de Acción */
+.icon-button {
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -480,164 +521,164 @@
     justify-content: center;
     cursor: pointer;
     transition: var(--transition);
-  }
-  
-  .icon-button:hover {
+}
+
+.icon-button:hover {
     background: var(--color-primary-dark);
     transform: scale(1.05);
-  }
-  
-  /* ==========================================================================
-     Animaciones
-     ========================================================================== */
-  @keyframes messageAppear {
+}
+
+/* ==========================================================================
+   Animaciones
+   ========================================================================== */
+@keyframes messageAppear {
     from {
-      opacity: 0;
-      transform: translateY(10px);
+        opacity: 0;
+        transform: translateY(10px);
     }
     to {
-      opacity: 1;
-      transform: translateY(0);
+        opacity: 1;
+        transform: translateY(0);
     }
-  }
-  
-  /* ==========================================================================
-     Media Queries - Mobile First
-     ========================================================================== */
-  @media (max-width: 768px) {
+}
+
+/* ==========================================================================
+   Media Queries - Mobile First
+   ========================================================================== */
+@media (max-width: 768px) {
     .sidebar {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      z-index: 1000;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
     }
-  
+
     .sidebar.hidden {
-      transform: translateX(-100%);
+        transform: translateX(-100%);
     }
-  
+
     .sidebar:not(.hidden) {
-      transform: translateX(0);
+        transform: translateX(0);
     }
-  
+
     .chat-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 900;
-      display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 900;
+        display: none;
     }
-  
+
     .chat-container:not(.hidden) {
-      display: flex;
+        display: flex;
     }
-  
+
     .back-button {
-      display: flex !important;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border: none;
-      background: transparent;
-      color: var(--color-primary);
-      cursor: pointer;
-      margin-right: 10px;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border: none;
+        background: transparent;
+        color: var(--color-primary);
+        cursor: pointer;
+        margin-right: 10px;
     }
-  
+
     .chat-header {
-      padding-top: max(10px, var(--safe-area-top));
+        padding-top: max(10px, var(--safe-area-top));
     }
-  
+
     .message-input {
-      padding-bottom: max(10px, var(--safe-area-bottom));
+        padding-bottom: max(10px, var(--safe-area-bottom));
     }
-  
+
     .messages-list {
-      height: calc(100% - var(--header-height) - var(--message-input-height));
-      padding-bottom: max(20px, var(--safe-area-bottom));
+        height: calc(100% - var(--header-height) - var(--message-input-height));
+        padding-bottom: max(20px, var(--safe-area-bottom));
     }
-  }
-  
-  /* ==========================================================================
-     Ajustes iOS
-     ========================================================================== */
-  @supports (-webkit-touch-callout: none) {
+}
+
+/* ==========================================================================
+   Ajustes iOS
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
     .keyboard-open .chat-container {
-      height: calc(100% - var(--keyboard-height));
+        height: calc(100% - var(--keyboard-height));
     }
-  
+
     .keyboard-open .messages-list {
-      height: calc(100% - var(--header-height) - var(--message-input-height) - var(--keyboard-height));
+        height: calc(100% - var(--header-height) - var(--message-input-height) - var(--keyboard-height));
     }
-  
+
     .keyboard-open .message-input {
-      position: fixed;
-      bottom: var(--keyboard-height);
-      left: 0;
-      right: 0;
-      background: #fff;
+        position: fixed;
+        bottom: var(--keyboard-height);
+        left: 0;
+        right: 0;
+        background: #fff;
     }
-  
+
     .message-input {
-      padding-bottom: max(10px, var(--safe-area-bottom));
+        padding-bottom: max(10px, var(--safe-area-bottom));
     }
-  
+
     .messages-list {
-      padding-bottom: calc(var(--message-input-height) + env(safe-area-inset-bottom));
+        padding-bottom: calc(var(--message-input-height) + env(safe-area-inset-bottom));
     }
-  
+
     /* Prevenir zoom en inputs */
     input[type="text"],
     input[type="email"],
     input[type="password"] {
-      font-size: 16px;
+        font-size: 16px;
     }
-  
+
     /* Ajustes para notch */
     @media screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
            screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
            screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
            screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) {
-      :root {
-        --safe-area-top: env(safe-area-inset-top, 44px);
-        --safe-area-bottom: env(safe-area-inset-bottom, 34px);
-      }
+        :root {
+            --safe-area-top: env(safe-area-inset-top, 44px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 34px);
+        }
     }
-  }
-  
-  /* ==========================================================================
-     Utilidades
-     ========================================================================== */
-  .hidden {
+}
+
+/* ==========================================================================
+   Utilidades
+   ========================================================================== */
+.hidden {
     display: none !important;
-  }
-  
-  /* Scrollbars personalizados */
-  .chat-list::-webkit-scrollbar,
-  .messages-list::-webkit-scrollbar {
+}
+
+/* Scrollbars personalizados */
+.chat-list::-webkit-scrollbar,
+.messages-list::-webkit-scrollbar {
     width: 6px;
-  }
-  
-  .chat-list::-webkit-scrollbar-thumb,
-  .messages-list::-webkit-scrollbar-thumb {
+}
+
+.chat-list::-webkit-scrollbar-thumb,
+.messages-list::-webkit-scrollbar-thumb {
     background: var(--color-primary);
     border-radius: 3px;
-  }
-  
-  .chat-list::-webkit-scrollbar-track,
-  .messages-list::-webkit-scrollbar-track {
+}
+
+.chat-list::-webkit-scrollbar-track,
+.messages-list::-webkit-scrollbar-track {
     background: transparent;
-  }
-  
-  /* ==========================================================================
-     Pantalla de Autenticación
-     ========================================================================== */
-  .auth-container {
+}
+
+/* ==========================================================================
+   Pantalla de Autenticación
+   ========================================================================== */
+.auth-container {
     width: 100%;
     max-width: 600px;
     background: var(--color-bg-alt);
@@ -647,27 +688,27 @@
     margin: 1.2rem;
     backdrop-filter: blur(16px);
     border: 1.5px solid var(--color-border);
-  }
-  
-  /* Título con animación wave */
-  #titulo-wave {
+}
+
+/* Título con animación wave */
+#titulo-wave {
     text-align: center;
     margin-bottom: 1.5rem;
     font-size: 2.15rem;
     color: var(--color-primary-dark);
     font-weight: 700;
     text-shadow: 0 2px 18px rgba(30, 233, 142, 0.27);
-  }
-  
-  #titulo-wave span {
+}
+
+#titulo-wave span {
     display: inline-block;
     animation: wave 1.5s ease-in-out infinite;
-  }
-  
-  /* Campos de autenticación */
-  #emailInput,
-  #usernameInput,
-  #passwordInput {
+}
+
+/* Campos de autenticación */
+#emailInput,
+#usernameInput,
+#passwordInput {
     width: 100%;
     padding: 1.05rem 1.15rem;
     margin-top: 0.45rem;
@@ -676,9 +717,9 @@
     border-radius: 12px;
     background: #fff;
     transition: var(--transition);
-  }
-  
-  #loginBtn {
+}
+
+#loginBtn {
     width: 100%;
     padding: 1.05rem;
     background: linear-gradient(96deg, var(--color-primary) 70%, var(--color-primary-light) 100%);
@@ -689,17 +730,17 @@
     margin-top: 1rem;
     cursor: pointer;
     transition: var(--transition);
-  }
-  
-  /* ==========================================================================
-     Selector de Idioma
-     ========================================================================== */
-  .language-selector {
+}
+
+/* ==========================================================================
+   Selector de Idioma
+   ========================================================================== */
+.language-selector {
     margin-bottom: 1.5rem;
-  }
-  
-  .language-select,
-  .language-select-main {
+}
+
+.language-select,
+.language-select-main {
     width: 100%;
     padding: 0.8rem 1rem;
     border: 1.5px solid var(--color-border);
@@ -708,9 +749,9 @@
     background: #fff;
     color: var(--color-text);
     cursor: pointer;
-  }
-  
-  .language-select-main {
+}
+
+.language-select-main {
     width: auto;
     min-width: 70px;
     padding: 4px 24px 4px 8px;
@@ -724,37 +765,37 @@
     -webkit-appearance: none;
     margin-left: 8px;
     flex-shrink: 0;
-  }
-  
-  .language-select-main:focus {
+}
+
+.language-select-main:focus {
     outline: none;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
-  }
-  
-  /* Ajuste responsive */
-  @media (max-width: 380px) {
+}
+
+/* Ajuste responsive */
+@media (max-width: 380px) {
     .language-select-main {
-      min-width: 60px;
-      padding: 4px 20px 4px 4px;
-      font-size: 0.8rem;
+        min-width: 60px;
+        padding: 4px 20px 4px 4px;
+        font-size: 0.8rem;
     }
-  }
-  
-  /* ==========================================================================
-     Componentes de Chat
-     ========================================================================== */
-  /* Búsqueda */
-  .search-container {
+}
+
+/* ==========================================================================
+   Componentes de Chat
+   ========================================================================== */
+/* Búsqueda */
+.search-container {
     position: sticky;
     top: var(--header-height);
     padding: 10px;
     background: #fff;
     z-index: 99;
     border-bottom: 1px solid var(--color-border);
-  }
-  
-  #searchContacts {
+}
+
+#searchContacts {
     width: 100%;
     height: 40px;
     padding: 8px 12px;
@@ -762,19 +803,19 @@
     border-radius: 20px;
     font-size: 14px;
     background: var(--color-bg-alt);
-  }
-  
-  /* Indicador de Escritura */
-  #typingIndicator {
+}
+
+/* Indicador de Escritura */
+#typingIndicator {
     padding: 5px 10px;
     font-style: italic;
     color: var(--color-system);
     text-align: center;
     animation: fadeIn 0.3s ease;
-  }
-  
-  /* Mensajes del Sistema */
-  .system-message {
+}
+
+/* Mensajes del Sistema */
+.system-message {
     text-align: center;
     margin: 10px 0;
     padding: 8px 12px;
@@ -783,26 +824,26 @@
     font-style: italic;
     color: var(--color-system);
     font-size: 0.9em;
-  }
-  
-  /* Botón de Micrófono */
-  #micButton {
+}
+
+/* Botón de Micrófono */
+#micButton {
     background: transparent;
     border: 1px solid var(--color-primary);
     color: var(--color-primary);
-  }
-  
-  #micButton.recording {
+}
+
+#micButton.recording {
     background: var(--color-danger);
     color: white;
     border: none;
     animation: pulse 1.5s infinite;
-  }
-  
-  /* ==========================================================================
-     Modal de Grupo
-     ========================================================================== */
-  .modal {
+}
+
+/* ==========================================================================
+   Modal de Grupo
+   ========================================================================== */
+.modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -814,9 +855,9 @@
     align-items: center;
     z-index: 1000;
     backdrop-filter: blur(4px);
-  }
-  
-  .modal-content {
+}
+
+.modal-content {
     background: white;
     border-radius: 16px;
     padding: 24px;
@@ -825,16 +866,16 @@
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: var(--shadow);
-  }
-  
-  .selected-users {
+}
+
+.selected-users {
     background: var(--color-bg);
     border-radius: 8px;
     padding: 12px;
     margin: 12px 0;
-  }
-  
-  .selected-user-item {
+}
+
+.selected-user-item {
     background: var(--color-user-left);
     color: var(--color-primary-dark);
     padding: 6px 12px;
@@ -843,171 +884,171 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-  }
-  
-  .remove-user {
+}
+
+.remove-user {
     cursor: pointer;
     padding: 2px 6px;
     border-radius: 50%;
     background: rgba(0, 0, 0, 0.1);
-  }
-  
-  /* ==========================================================================
-     Animaciones Adicionales
-     ========================================================================== */
-  @keyframes fadeIn {
+}
+
+/* ==========================================================================
+   Animaciones Adicionales
+   ========================================================================== */
+@keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
-  }
-  
-  @keyframes wave {
+}
+
+@keyframes wave {
     0%, 60%, 100% { transform: translateY(0); }
     30% { transform: translateY(-10px); }
-  }
-  
-  @keyframes pulse {
+}
+
+@keyframes pulse {
     0% { transform: scale(1); }
     50% { transform: scale(1.1); }
     100% { transform: scale(1); }
-  }
-  
-  @keyframes spin {
+}
+
+@keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
-  }
-  
-  /* ==========================================================================
-     Ajustes Responsive Adicionales
-     ========================================================================== */
-  @media (max-width: 768px) {
+}
+
+/* ==========================================================================
+   Ajustes Responsive Adicionales
+   ========================================================================== */
+@media (max-width: 768px) {
     .back-button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-  
+
     .modal-content {
-      width: 95%;
-      padding: 20px;
-      margin: 10px;
+        width: 95%;
+        padding: 20px;
+        margin: 10px;
     }
-  
+
     #titulo-wave {
-      font-size: 1.8rem;
+        font-size: 1.8rem;
     }
-  
+
     .auth-container {
-      padding: 1.5rem 1rem;
+        padding: 1.5rem 1rem;
     }
-  
+
     .selected-users {
-      max-height: 150px;
-      overflow-y: auto;
+        max-height: 150px;
+        overflow-y: auto;
     }
-  }
-  
-  /* ==========================================================================
-     Ajustes iOS Adicionales
-     ========================================================================== */
-  @supports (-webkit-touch-callout: none) {
+}
+
+/* ==========================================================================
+   Ajustes iOS Adicionales
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
     .modal-content {
-      max-height: calc(100vh - 100px);
+        max-height: calc(100vh - 100px);
     }
-  
+
     .search-container {
-      position: sticky;
-      top: calc(var(--header-height) + var(--safe-area-top));
+        position: sticky;
+        top: calc(var(--header-height) + var(--safe-area-top));
     }
-  
+
     #authScreen {
-      padding-top: var(--safe-area-top);
-      padding-bottom: var(--safe-area-bottom);
+        padding-top: var(--safe-area-top);
+        padding-bottom: var(--safe-area-bottom);
     }
-  }
-  
-  /* ==========================================================================
-     Estados y Utilidades Adicionales
-     ========================================================================== */
-  .chat-item.group-chat {
+}
+
+/* ==========================================================================
+   Estados y Utilidades Adicionales
+   ========================================================================== */
+.chat-item.group-chat {
     background: var(--color-bg-alt);
     border-left: 3px solid var(--color-primary-light);
-  }
-  
-  .chat-updated {
+}
+
+.chat-updated {
     animation: highlightChat 2s ease;
-  }
-  
-  @keyframes highlightChat {
+}
+
+@keyframes highlightChat {
     0% { background-color: var(--color-user-left); }
     100% { background-color: var(--color-bg); }
-  }
-  
-  /* Ajustes de accesibilidad */
-  button:focus-visible,
-  input:focus-visible,
-  select:focus-visible {
+}
+
+/* Ajustes de accesibilidad */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
-  }
-  
-  /* Estados de error */
-  .error-message {
+}
+
+/* Estados de error */
+.error-message {
     color: var(--color-danger);
     font-size: 0.9rem;
     margin-top: 0.5rem;
     text-align: center;
-  }
-  
-  /* Estados de carga */
-  .loading {
+}
+
+/* Estados de carga */
+.loading {
     opacity: 0.7;
     pointer-events: none;
-  }
-  
-  /* Ajustes de scroll para iOS */
-  .messages-list,
-  .chat-list,
-  .modal-content {
+}
+
+/* Ajustes de scroll para iOS */
+.messages-list,
+.chat-list,
+.modal-content {
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
-  }
-  
-  /* ==========================================================================
-     Header Actions y Botones
-     ========================================================================== */
-  .header-actions {
+}
+
+/* ==========================================================================
+   Header Actions y Botones
+   ========================================================================== */
+.header-actions {
     display: flex;
     align-items: center;
     gap: 8px;
     margin-left: auto;
-  }
-  
-  #createGroup {
+}
+
+#createGroup {
     background: #2e7d32;
-  }
-  
-  #createGroup:hover {
+}
+
+#createGroup:hover {
     background: #1b5e20;
-  }
-  
-  #logoutBtn {
+}
+
+#logoutBtn {
     background: var(--color-danger);
-  }
-  
-  #logoutBtn:hover {
+}
+
+#logoutBtn:hover {
     background: #dc2626;
-  }
-  
-  /* ==========================================================================
-     Chat Details y Elementos de Usuario
-     ========================================================================== */
-  .chat-details {
+}
+
+/* ==========================================================================
+   Chat Details y Elementos de Usuario
+   ========================================================================== */
+.chat-details {
     flex: 1;
     min-width: 0;
     overflow: hidden;
-  }
-  
-  .chat-name {
+}
+
+.chat-name {
     font-weight: 600;
     font-size: 0.95rem;
     color: var(--color-primary-dark);
@@ -1015,37 +1056,37 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  
-  .last-message {
+}
+
+.last-message {
     color: #667781;
     font-size: 0.85rem;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-  
-  .last-message-time {
+}
+
+.last-message-time {
     font-size: 0.75rem;
     color: #667781;
     white-space: nowrap;
     align-self: flex-start;
     margin-top: 2px;
-  }
-  
-  /* ==========================================================================
-     Búsqueda de Usuarios y Resultados
-     ========================================================================== */
-  .search-instruction {
+}
+
+/* ==========================================================================
+   Búsqueda de Usuarios y Resultados
+   ========================================================================== */
+.search-instruction {
     padding: 1rem;
     text-align: center;
     color: #666;
     font-size: 14px;
     background: #f8f9fa;
     border-bottom: 1px solid #f0f2f5;
-  }
-  
-  .chat-item.search-result {
+}
+
+.chat-item.search-result {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1053,36 +1094,36 @@
     gap: 12px;
     cursor: default;
     transition: background 0.2s;
-  }
-  
-  .chat-item.search-result:hover {
+}
+
+.chat-item.search-result:hover {
     background: var(--color-user-left);
-  }
-  
-  .chat-item.search-result .user-info {
+}
+
+.chat-item.search-result .user-info {
     flex: 1;
     min-width: 0;
     padding-right: 8px;
-  }
-  
-  .chat-item.search-result .user-name {
+}
+
+.chat-item.search-result .user-name {
     font-weight: 600;
     color: var(--color-text);
     margin-bottom: 2px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  
-  .chat-item.search-result .user-email {
+}
+
+.chat-item.search-result .user-email {
     font-size: 0.85rem;
     color: #667781;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  
-  .start-chat-btn {
+}
+
+.start-chat-btn {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -1096,19 +1137,19 @@
     transition: all 0.2s ease;
     white-space: nowrap;
     flex-shrink: 0;
-  }
-  
-  .start-chat-btn:hover {
+}
+
+.start-chat-btn:hover {
     background: var(--color-primary-dark);
     transform: translateY(-1px);
-  }
-  
-  .start-chat-btn i {
+}
+
+.start-chat-btn i {
     font-size: 1rem;
-  }
-  
-  /* Ajustes móviles para resultados de búsqueda */
-  @media (max-width: 768px) {
+}
+
+/* Ajustes móviles para resultados de búsqueda */
+@media (max-width: 768px) {
     .chat-item.search-result {
         padding: 10px 12px;
     }
@@ -1132,114 +1173,114 @@
             padding: 8px;
         }
     }
-  }
-  
-  /* ==========================================================================
-     Grupo y Modal de Creación
-     ========================================================================== */
-  .group-form {
+}
+
+/* ==========================================================================
+   Grupo y Modal de Creación
+   ========================================================================== */
+.group-form {
     display: flex;
     flex-direction: column;
     gap: 16px;
-  }
-  
-  .group-form input {
+}
+
+.group-form input {
     width: 100%;
     padding: 12px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
     font-size: 1rem;
-  }
-  
-  .group-button {
+}
+
+.group-button {
     display: flex;
     align-items: center;
     gap: 10px;
     color: var(--color-primary-dark);
     font-weight: 500;
-  }
-  
-  .group-button i {
+}
+
+.group-button i {
     font-size: 1.2rem;
-  }
-  
-  .modal-buttons {
+}
+
+.modal-buttons {
     display: flex;
     gap: 12px;
     margin-top: 24px;
-  }
-  
-  #createGroupBtn,
-  #cancelGroupBtn {
+}
+
+#createGroupBtn,
+#cancelGroupBtn {
     flex: 1;
     padding: 12px;
     border-radius: 8px;
     font-weight: 500;
     transition: var(--transition);
-  }
-  
-  #createGroupBtn {
+}
+
+#createGroupBtn {
     background: var(--color-primary);
     color: white;
-  }
-  
-  #createGroupBtn:disabled {
+}
+
+#createGroupBtn:disabled {
     background: #c7d2fe;
     cursor: not-allowed;
-  }
-  
-  #cancelGroupBtn {
+}
+
+#cancelGroupBtn {
     background: #f3f4f6;
     color: #4b5563;
     border: 1px solid #e5e7eb;
-  }
-  
-  /* ==========================================================================
-     Mensajes y Estados de Chat
-     ========================================================================== */
-  .message-sender {
+}
+
+/* ==========================================================================
+   Mensajes y Estados de Chat
+   ========================================================================== */
+.message-sender {
     font-size: 0.75em;
     color: var(--color-primary-dark);
     margin-bottom: 2px;
     font-weight: 500;
-  }
-  
-  .message-sender.sent {
+}
+
+.message-sender.sent {
     text-align: right;
-  }
-  
-  .message-content {
+}
+
+.message-content {
     display: flex;
     align-items: flex-end;
     gap: 3px;
     position: relative;
-  }
-  
-  .message-flag {
+}
+
+.message-flag {
     font-size: 0.7em;
     margin: 0 3px;
-  }
-  
-  .message-time {
+}
+
+.message-time {
     font-size: 0.65em;
     color: rgba(134, 150, 160, 0.9);
     margin: 0 3px 1px 3px;
     white-space: nowrap;
-  }
-  
-  /* ==========================================================================
-     Audio Messages
-     ========================================================================== */
-  .audio-message {
+}
+
+/* ==========================================================================
+   Audio Messages
+   ========================================================================== */
+.audio-message {
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 8px;
     background: var(--color-bg-alt);
     border-radius: 8px;
-  }
-  
-  .audio-message .play-button {
+}
+
+.audio-message .play-button {
     width: 36px;
     height: 36px;
     border-radius: 50%;
@@ -1250,46 +1291,46 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  .audio-message .waveform {
+}
+
+.audio-message .waveform {
     flex: 1;
     height: 40px;
     background: var(--color-primary-light);
     opacity: 0.3;
     border-radius: 4px;
-  }
-  
-  .audio-message .transcription {
+}
+
+.audio-message .transcription {
     font-style: italic;
     margin-top: 4px;
     font-size: 0.9em;
     color: var(--color-text);
-  }
-  
-  /* ==========================================================================
-     Ajustes de Teclado para iOS
-     ========================================================================== */
-  .keyboard-open body {
+}
+
+/* ==========================================================================
+   Ajustes de Teclado para iOS
+   ========================================================================== */
+.keyboard-open body {
     height: calc(100% - var(--keyboard-height, 0px));
-  }
-  
-  .keyboard-open #mainScreen {
+}
+
+.keyboard-open #mainScreen {
     height: calc(100% - var(--keyboard-height, 0px));
-  }
-  
-  .keyboard-open .messages-list {
+}
+
+.keyboard-open .messages-list {
     height: calc(100vh - var(--header-height) - var(--message-input-height) - var(--keyboard-height, 0px));
-  }
-  
-  .keyboard-open .message-input {
+}
+
+.keyboard-open .message-input {
     bottom: var(--keyboard-height, 0px);
-  }
-  
-  /* ==========================================================================
-     Ajustes de Pantalla Completa
-     ========================================================================== */
-  .screen {
+}
+
+/* ==========================================================================
+   Ajustes de Pantalla Completa
+   ========================================================================== */
+.screen {
     position: fixed;
     top: 0;
     left: 0;
@@ -1299,51 +1340,51 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease;
-  }
-  
-  .screen.active {
+}
+
+.screen.active {
     display: flex;
     opacity: 1;
     visibility: visible;
-  }
-  
-  /* ==========================================================================
-     Z-Index Hierarchy
-     ========================================================================== */
-  .loading-screen { z-index: 1000; }
-  .modal { z-index: 900; }
-  .chat-header { z-index: 800; }
-  .message-input { z-index: 700; }
-  .search-container { z-index: 600; }
-  .sidebar { z-index: 500; }
-  
-  /* ==========================================================================
-     Transiciones y Efectos
-     ========================================================================== */
-  .fade-enter {
+}
+
+/* ==========================================================================
+   Z-Index Hierarchy
+   ========================================================================== */
+.loading-screen { z-index: 1000; }
+.modal { z-index: 900; }
+.chat-header { z-index: 800; }
+.message-input { z-index: 700; }
+.search-container { z-index: 600; }
+.sidebar { z-index: 500; }
+
+/* ==========================================================================
+   Transiciones y Efectos
+   ========================================================================== */
+.fade-enter {
     opacity: 0;
     transform: translateY(20px);
-  }
-  
-  .fade-enter-active {
+}
+
+.fade-enter-active {
     opacity: 1;
     transform: translateY(0);
     transition: opacity 0.3s, transform 0.3s;
-  }
-  
-  /* ==========================================================================
-     Ajustes de Accesibilidad
-     ========================================================================== */
-  @media (prefers-reduced-motion: reduce) {
+}
+
+/* ==========================================================================
+   Ajustes de Accesibilidad
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
     * {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
     }
-  }
-  
-  .screen-reader-only {
+}
+
+.screen-reader-only {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -1352,13 +1393,13 @@
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
-  }
-  
-  /* ==========================================================================
-     Headers y Safe Areas
-     ========================================================================== */
-  .user-header,
-  .chat-header {
+}
+
+/* ==========================================================================
+   Headers y Safe Areas
+   ========================================================================== */
+.user-header,
+.chat-header {
     height: var(--header-height);
     padding: 12px 15px;
     background-color: #fff;
@@ -1370,130 +1411,130 @@
     top: 0;
     z-index: 10;
     border-bottom: 1px solid var(--color-border);
-  }
-  
-  .chat-header {
+}
+
+.chat-header {
     background-color: var(--color-bg-alt);
-  }
-  
-  /* ==========================================================================
-     Ajustes iOS
-     ========================================================================== */
-  @supports (-webkit-touch-callout: none) {
+}
+
+/* ==========================================================================
+   Ajustes iOS
+   ========================================================================== */
+@supports (-webkit-touch-callout: none) {
     /* Headers en iOS */
     .user-header,
     .chat-header {
-      height: calc(var(--header-height) + var(--safe-area-top));
-      padding-top: calc(var(--safe-area-top) + 8px);
-      background-color: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+        height: calc(var(--header-height) + var(--safe-area-top));
+        padding-top: calc(var(--safe-area-top) + 8px);
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
     }
-  
+
     .chat-header {
-      background-color: rgba(246, 250, 247, 0.95);
+        background-color: rgba(246, 250, 247, 0.95);
     }
-  
+
     /* Ajustes específicos para diferentes modelos de iPhone */
     @media screen and 
-      /* iPhone X, XS, 11 Pro */
-      (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
-      /* iPhone XR, 11 */
-      (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
-      /* iPhone XS Max, 11 Pro Max */
-      (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3),
-      /* iPhone 12 y posteriores */
-      (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
-      (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3),
-      (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3),
-      (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
-      
-      :root {
-        --safe-area-top: env(safe-area-inset-top, 47px);
-        --safe-area-bottom: env(safe-area-inset-bottom, 34px);
-      }
-  
-      .user-header,
-      .chat-header {
-        padding-top: calc(env(safe-area-inset-top) + 8px);
-        height: calc(var(--header-height) + env(safe-area-inset-top));
-        border-bottom: 0.5px solid rgba(0, 0, 0, 0.2);
-      }
-  
-      /* Ajustar contenido debajo del header */
-      .chat-list {
-        height: calc(100% - (var(--header-height) + env(safe-area-inset-top)));
-        padding-bottom: env(safe-area-inset-bottom);
-      }
-  
-      .messages-list {
-        height: calc(100% - (var(--header-height) + env(safe-area-inset-top)) - var(--message-input-height));
-        padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
-      }
+        /* iPhone X, XS, 11 Pro */
+        (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
+        /* iPhone XR, 11 */
+        (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
+        /* iPhone XS Max, 11 Pro Max */
+        (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3),
+        /* iPhone 12 y posteriores */
+        (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
+        (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3),
+        (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3),
+        (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
+        
+        :root {
+            --safe-area-top: env(safe-area-inset-top, 47px);
+            --safe-area-bottom: env(safe-area-inset-bottom, 34px);
+        }
+
+        .user-header,
+        .chat-header {
+            padding-top: calc(env(safe-area-inset-top) + 8px);
+            height: calc(var(--header-height) + env(safe-area-inset-top));
+            border-bottom: 0.5px solid rgba(0, 0, 0, 0.2);
+        }
+
+        /* Ajustar contenido debajo del header */
+        .chat-list {
+            height: calc(100% - (var(--header-height) + env(safe-area-inset-top)));
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .messages-list {
+            height: calc(100% - (var(--header-height) + env(safe-area-inset-top)) - var(--message-input-height));
+            padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+        }
     }
-  }
-  
-  /* ==========================================================================
-     Scrollbars
-     ========================================================================== */
-  /* Scrollbar para Firefox */
-  .chat-list,
-  .messages-list {
+}
+
+/* ==========================================================================
+   Scrollbars
+   ========================================================================== */
+/* Scrollbar para Firefox */
+.chat-list,
+.messages-list {
     scrollbar-width: thin;
     scrollbar-color: var(--color-primary) transparent;
-  }
-  
-  /* Scrollbar para Chrome/Safari/Edge */
-  .chat-list::-webkit-scrollbar,
-  .messages-list::-webkit-scrollbar {
+}
+
+/* Scrollbar para Chrome/Safari/Edge */
+.chat-list::-webkit-scrollbar,
+.messages-list::-webkit-scrollbar {
     width: 6px;
     height: 6px;
-  }
-  
-  .chat-list::-webkit-scrollbar-track,
-  .messages-list::-webkit-scrollbar-track {
+}
+
+.chat-list::-webkit-scrollbar-track,
+.messages-list::-webkit-scrollbar-track {
     background: transparent;
-  }
-  
-  .chat-list::-webkit-scrollbar-thumb,
-  .messages-list::-webkit-scrollbar-thumb {
+}
+
+.chat-list::-webkit-scrollbar-thumb,
+.messages-list::-webkit-scrollbar-thumb {
     background: var(--color-primary);
     border-radius: 3px;
-  }
-  
-  /* Scrollbar para iOS */
-  @supports (-webkit-touch-callout: none) {
+}
+
+/* Scrollbar para iOS */
+@supports (-webkit-touch-callout: none) {
     .chat-list,
     .messages-list {
-      /* Habilitar scrollbar en iOS */
-      -webkit-overflow-scrolling: touch;
-      overflow-y: auto;
-      
-      /* Estilizar scrollbar */
-      &::-webkit-scrollbar {
-        -webkit-appearance: none;
-        width: 6px;
-      }
-      
-      &::-webkit-scrollbar-track {
-        background: transparent;
-        border-radius: 3px;
-      }
-      
-      &::-webkit-scrollbar-thumb {
-        background: var(--color-primary);
-        border-radius: 3px;
-      }
-      
-      /* Asegurar que el scroll sea suave */
-      scroll-behavior: smooth;
+        /* Habilitar scrollbar en iOS */
+        -webkit-overflow-scrolling: touch;
+        overflow-y: auto;
+        
+        /* Estilizar scrollbar */
+        &::-webkit-scrollbar {
+            -webkit-appearance: none;
+            width: 6px;
+        }
+        
+        &::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 3px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+            background: var(--color-primary);
+            border-radius: 3px;
+        }
+        
+        /* Asegurar que el scroll sea suave */
+        scroll-behavior: smooth;
     }
-  }
-  
-  /* ==========================================================================
-     Diálogo de confirmación
-     ========================================================================== */
-  .delete-confirm-dialog {
+}
+
+/* ==========================================================================
+   Diálogo de confirmación
+   ========================================================================== */
+.delete-confirm-dialog {
     position: fixed;
     top: 50%;
     left: 50%;
@@ -1506,21 +1547,21 @@
     max-width: 90%;
     width: 280px;
     text-align: center;
-  }
-  
-  .delete-confirm-dialog p {
+}
+
+.delete-confirm-dialog p {
     color: var(--color-text);
     font-size: 0.95rem;
     margin-bottom: 16px;
-  }
-  
-  .delete-confirm-dialog .dialog-buttons {
+}
+
+.delete-confirm-dialog .dialog-buttons {
     display: flex;
     gap: 8px;
     justify-content: flex-end;
-  }
-  
-  .delete-confirm-dialog button {
+}
+
+.delete-confirm-dialog button {
     padding: 6px 12px;
     border-radius: 6px;
     border: none;
@@ -1528,27 +1569,27 @@
     font-size: 0.9rem;
     font-weight: 500;
     transition: all 0.2s ease;
-  }
-  
-  .delete-confirm-dialog .confirm-delete {
+}
+
+.delete-confirm-dialog .confirm-delete {
     background: var(--color-danger);
     color: white;
-  }
-  
-  .delete-confirm-dialog .confirm-delete:hover {
+}
+
+.delete-confirm-dialog .confirm-delete:hover {
     background: #c62828;
-  }
-  
-  .delete-confirm-dialog .cancel-delete {
+}
+
+.delete-confirm-dialog .cancel-delete {
     background: #f5f5f5;
     color: var(--color-text);
-  }
-  
-  .delete-confirm-dialog .cancel-delete:hover {
+}
+
+.delete-confirm-dialog .cancel-delete:hover {
     background: #eeeeee;
-  }
-  
-  .dialog-backdrop {
+}
+
+.dialog-backdrop {
     position: fixed;
     top: 0;
     left: 0;
@@ -1557,12 +1598,12 @@
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(2px);
     z-index: 999;
-  }
-  
-  /* ==========================================================================
-     Ajustes móviles para el botón de borrar
-     ========================================================================== */
-  @media (max-width: 768px) {
+}
+
+/* ==========================================================================
+   Ajustes móviles para el botón de borrar
+   ========================================================================== */
+@media (max-width: 768px) {
     .delete-chat-btn {
         opacity: 0.6;
         padding: 8px;
@@ -1571,5 +1612,5 @@
     .delete-chat-btn i {
         font-size: 1rem;
     }
-  }
+}
   
