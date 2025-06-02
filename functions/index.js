@@ -1,7 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
-// Inicializar Firebase Admin
+// Inicializar admin con credenciales por defecto
 admin.initializeApp();
 
 exports.sendMessageNotification = functions.firestore
@@ -73,92 +73,55 @@ exports.sendMessageNotification = functions.firestore
 
             console.log('👤 Remitente:', senderName);
 
-            // Construir la notificación
-            const notification = {
-                title: `Nuevo mensaje de ${senderName}`,
-                body: message.text,
-                icon: '/images/icon-192.png'
-            };
-
-            const payload = {
-                notification,
-                data: {
-                    chatId,
-                    messageId: context.params.messageId,
-                    type: 'new_message',
-                    click_action: 'FLUTTER_NOTIFICATION_CLICK'
-                }
-            };
-
-            console.log('📬 Enviando notificación:', payload);
-
-            // Enviar la notificación
-            try {
-                const response = await admin.messaging().sendMulticast({
-                    tokens,
-                    ...payload
-                });
-
-                console.log('✅ Resultado del envío:', {
-                    success: response.successCount,
-                    failure: response.failureCount,
-                    responses: response.responses
-                });
-
-                // Manejar tokens inválidos
-                const invalidTokens = [];
-                response.responses.forEach((resp, idx) => {
-                    if (!resp.success) {
-                        console.error('❌ Error al enviar a token:', {
-                            token: tokens[idx],
-                            error: resp.error
-                        });
-                        if (resp.error.code === 'messaging/invalid-registration-token' ||
-                            resp.error.code === 'messaging/registration-token-not-registered') {
-                            invalidTokens.push(tokens[idx]);
+            // Enviar notificaciones una por una en lugar de en lote
+            const results = await Promise.all(tokens.map(async (token) => {
+                try {
+                    const message = {
+                        token,
+                        notification: {
+                            title: `Nuevo mensaje de ${senderName}`,
+                            body: message.text
+                        },
+                        data: {
+                            chatId,
+                            messageId: context.params.messageId,
+                            type: 'new_message'
+                        },
+                        android: {
+                            priority: 'high'
+                        },
+                        apns: {
+                            payload: {
+                                aps: {
+                                    contentAvailable: true
+                                }
+                            }
                         }
-                    }
-                });
+                    };
 
-                // Eliminar tokens inválidos
-                if (invalidTokens.length > 0) {
-                    console.log('🗑️ Eliminando tokens inválidos:', invalidTokens);
-                    const batch = admin.firestore().batch();
-                    
-                    const tokenQuerySnapshots = await Promise.all(
-                        invalidTokens.map(token =>
-                            admin.firestore()
-                                .collection('users')
-                                .where('fcmToken', '==', token)
-                                .get()
-                        )
-                    );
-
-                    tokenQuerySnapshots.forEach(querySnapshot => {
-                        querySnapshot.docs.forEach(doc => {
-                            batch.update(doc.ref, {
-                                fcmToken: admin.firestore.FieldValue.delete()
-                            });
-                        });
+                    const result = await admin.messaging().send(message);
+                    console.log('✅ Notificación enviada exitosamente:', result);
+                    return { success: true, messageId: result };
+                } catch (error) {
+                    console.error('❌ Error al enviar notificación:', {
+                        token,
+                        error: error.message,
+                        errorCode: error.code
                     });
-
-                    await batch.commit();
-                    console.log('✅ Tokens inválidos eliminados');
+                    return { success: false, error };
                 }
+            }));
 
-                return {
-                    success: response.successCount,
-                    failure: response.failureCount
-                };
+            const successCount = results.filter(r => r.success).length;
+            const failureCount = results.length - successCount;
 
-            } catch (sendError) {
-                console.error('❌ Error al enviar notificación:', {
-                    error: sendError.message,
-                    code: sendError.code,
-                    details: sendError.details
-                });
-                throw sendError;
-            }
+            console.log('📊 Resumen de envío:', {
+                total: results.length,
+                success: successCount,
+                failure: failureCount
+            });
+
+            return { successCount, failureCount };
 
         } catch (error) {
             console.error('❌ Error general en la función:', {
