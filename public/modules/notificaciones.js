@@ -1,7 +1,7 @@
 import { messaging, db } from './firebase.js';
 import { getCurrentUser } from './state.js';
-import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { onMessage, getToken } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
+import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js';
 
 export async function initializeNotifications() {
     console.log('🔄 Iniciando configuración de notificaciones...');
@@ -12,6 +12,17 @@ export async function initializeNotifications() {
     }
 
     try {
+        // Registrar el Service Worker primero
+        if ('serviceWorker' in navigator) {
+            try {
+                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                console.log('✅ Service Worker registrado:', registration);
+            } catch (error) {
+                console.error('❌ Error al registrar Service Worker:', error);
+                return;
+            }
+        }
+
         console.log('🔐 Solicitando permiso de notificaciones...');
         const permission = await Notification.requestPermission();
         console.log('📱 Estado del permiso:', permission);
@@ -39,16 +50,6 @@ export async function initializeNotifications() {
             console.log('✅ Token guardado en Firestore');
         }
 
-        // Registrar el Service Worker si no está registrado
-        if ('serviceWorker' in navigator) {
-            try {
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                console.log('✅ Service Worker registrado:', registration);
-            } catch (error) {
-                console.error('❌ Error al registrar Service Worker:', error);
-            }
-        }
-
     } catch (error) {
         console.error('❌ Error al inicializar notificaciones:', error);
     }
@@ -58,18 +59,18 @@ export async function initializeNotifications() {
         console.log('🔔 Mensaje recibido en primer plano:', payload);
         
         // Mostrar notificación incluso en primer plano
-        if (Notification.permission === 'granted') {
-            const notificationTitle = payload.notification.title;
-            const notificationOptions = {
-                body: payload.notification.body,
-                icon: '/images/icon-192.png',
-                badge: '/images/icon-72.png',
-                vibrate: [200, 100, 200],
-                tag: 'new-message',
-                data: payload.data
-            };
-
+        if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
             navigator.serviceWorker.ready.then(registration => {
+                const notificationTitle = payload.notification.title;
+                const notificationOptions = {
+                    body: payload.notification.body,
+                    icon: '/images/icon-192.png',
+                    badge: '/images/icon-72.png',
+                    vibrate: [200, 100, 200],
+                    tag: 'new-message',
+                    data: payload.data
+                };
+
                 registration.showNotification(notificationTitle, notificationOptions);
             });
         }
