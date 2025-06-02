@@ -12,8 +12,8 @@ const firebaseConfig = {
 
 console.log('🔧 Service Worker inicializándose...');
 
+// Inicializar Firebase
 firebase.initializeApp(firebaseConfig);
-console.log('✅ Firebase inicializado en Service Worker');
 
 const messaging = firebase.messaging();
 console.log('✅ Firebase Messaging inicializado en Service Worker');
