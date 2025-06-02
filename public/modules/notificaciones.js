@@ -1,7 +1,7 @@
 import { messaging, db } from './firebase.js';
 import { getCurrentUser } from './state.js';
-import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js';
-import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js';
+import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
 export async function initializeNotifications() {
     console.log('🔄 Iniciando configuración de notificaciones...');
@@ -57,7 +57,7 @@ export async function initializeNotifications() {
 
     } catch (error) {
         console.error('❌ Error al inicializar notificaciones:', error);
-        throw error; // Propagar el error para mejor debugging
+        throw error;
     }
 
     // Recibir mensajes mientras la app está en primer plano
@@ -82,3 +82,4 @@ export async function initializeNotifications() {
         }
     });
 }
+
