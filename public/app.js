@@ -2564,3 +2564,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // Aplicar al cargar por defecto
     applyTheme();
 });
+
+const themeSelectMain = document.getElementById("themeSelectMain");
+
+if (themeSelectMain) {
+    themeSelectMain.addEventListener("change", () => {
+        const selectedTheme = themeSelectMain.value; // banderas, elegante, elegante2, creativo
+        const currentLang = document.getElementById("languageSelectMain").value || "es";
+
+        // Quitar cualquier clase de tema anterior
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith("theme-set-")) {
+                document.body.classList.remove(cls);
+            }
+        });
+
+        // Aplicar nueva clase combinada
+        document.body.classList.add(`theme-set-${selectedTheme}`);
+        document.body.classList.add(`theme-${currentLang}`);
+    });
+}
+
