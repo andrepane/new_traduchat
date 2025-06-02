@@ -17,6 +17,7 @@
   --color-user-right: #fde1d9;
   --color-system: #8e8e8e;
   --color-system-bg: #faf2e3cc;
+  --color-text: #4a3b00;
 }
 
 .theme-set-banderas.theme-en {
@@ -30,6 +31,7 @@
   --color-user-right: #d4dfea;
   --color-system: #a3a9b1;
   --color-system-bg: #eef3facc;
+   --color-text: #1a2d48;
 }
 
 .theme-set-banderas.theme-it {
@@ -43,6 +45,7 @@
   --color-user-right: #ffe9e9;
   --color-system: #9ea9a2;
   --color-system-bg: #f0f8f2cc;
+   --color-text: #1f4a33;
 }
 
 /* =============================================================
@@ -60,6 +63,7 @@
   --color-user-right: #dfcef7;
   --color-system: #9c9cae;
   --color-system-bg: #f2eefacc;
+   --color-text: #443c5c; 
 }
 
 .theme-set-elegante.theme-en {
@@ -73,6 +77,7 @@
   --color-user-right: #d0e3f7;
   --color-system: #9aa7b5;
   --color-system-bg: #eef3facc;
+   --color-text: #2c4564;
 }
 
 .theme-set-elegante.theme-it {
@@ -86,6 +91,7 @@
   --color-user-right: #f5cfcf;
   --color-system: #a89e9e;
   --color-system-bg: #fff1f1cc;
+   --color-text: #6c3f3f;
 }
 
 /* =============================================================
@@ -103,6 +109,7 @@
   --color-user-right: #ffddb8;
   --color-system: #a08877;
   --color-system-bg: #fff1e7cc;
+   --color-text: #5e3b19;
 }
 
 .theme-set-creativo.theme-en {
@@ -116,6 +123,7 @@
   --color-user-right: #b2ebf2;
   --color-system: #779fa1;
   --color-system-bg: #e8f8facc;
+   --color-text: #02575e; 
 }
 
 .theme-set-creativo.theme-it {
@@ -129,6 +137,7 @@
   --color-user-right: #fdd5ed;
   --color-system: #a98ca2;
   --color-system-bg: #fff0f7cc;
+   --color-text: #6a3262; 
 }
 
 /* =============================================================
@@ -147,6 +156,7 @@
   --color-user-right: #d0e8d0;
   --color-system: #8e9e8e;
   --color-system-bg: #f0f6f0cc;
+   --color-text: #3c553c; 
 }
 
 .theme-set-elegante2.theme-en {
@@ -160,6 +170,7 @@
   --color-user-right: #cdd9e4;
   --color-system: #8a9aa7;
   --color-system-bg: #eef3f7cc;
+   --color-text: #2e3f51; 
 }
 
 .theme-set-elegante2.theme-it {
@@ -173,6 +184,7 @@
   --color-user-right: #f1e1ce;
   --color-system: #a89f96;
   --color-system-bg: #f7f1eacc;
+   --color-text: #5c4433;
 }
 
 
