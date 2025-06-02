@@ -38,6 +38,7 @@ const translations = {
           themeBanderas: "Colores de bandera",
           themeElegante: "Pastel elegante",
           themeCreativo: "Creativo vibrante",
+        themeElegante2: "Brisa de té",
         
         // Idiomas
         languageEs: 'Español',
@@ -123,6 +124,7 @@ const translations = {
   themeBanderas: "Flag colors",
   themeElegante: "Elegant pastel",
   themeCreativo: "Creative vibrant",
+        themeElegante2_en: "Tea Breeze",
         
         // Languages
         languageEs: 'Spanish',
@@ -208,6 +210,7 @@ const translations = {
   themeBanderas: "Colori della bandiera",
   themeElegante: "Pastello elegante",
   themeCreativo: "Creativo e vivace",
+        themeElegante2_it: "Brezza di tè",
         
         // Lingue
         languageEs: 'Spagnolo',
