@@ -158,9 +158,15 @@
 
             // Inicializar Messaging
             try {
-                window.messaging = getMessaging(app);
+                const messaging = getMessaging(app);
+                if (messaging) {
+                    window.messaging = messaging;
+                    console.log('✅ Firebase Messaging inicializado y asignado a window.messaging');
+                } else {
+                    console.warn('⚠️ No se pudo obtener la instancia de Firebase Messaging');
+                }
             } catch (error) {
-                console.warn('Firebase Messaging no está soportado en este navegador');
+                console.error('❌ Error al inicializar Firebase Messaging:', error);
             }
 
         } catch (error) {
