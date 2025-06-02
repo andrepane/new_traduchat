@@ -2,45 +2,135 @@
    Variables CSS Globales
    ========================================================================== */
    
-/* Tema Español */
-.theme-es {
-      --color-primary: #c62828;         /* rojo bandera */
-      --color-primary-dark: #8e0000;
-      --color-primary-light: #f9a825;   /* amarillo cálido */
-      --color-bg: #fffdf5;
-      --color-bg-alt: #ffffffcc;
-      --color-border: #f4d9b0;
-      --color-user-left: #fff2e0;
-      --color-user-right: #fde1d9;
-      --color-system: #8e8e8e;
-      --color-system-bg: #faf2e3cc;
-    }
+/* =============================================================
+   Tema visual: BANDERAS
+   ============================================================= */
 
-    .theme-en {
-      --color-primary: #274472;         /* azul marino suave */
-      --color-primary-dark: #1b314f;
-      --color-primary-light: #d94f4f;   /* rojo apagado */
-      --color-bg: #f3f5fa;
-      --color-bg-alt: #ffffffcc;
-      --color-border: #ccd9e7;
-      --color-user-left: #e6edf7;
-      --color-user-right: #d4dfea;
-      --color-system: #a3a9b1;
-      --color-system-bg: #eef3facc;
-    }
+.theme-set-banderas.theme-es {
+  --color-primary: #c62828;
+  --color-primary-dark: #8e0000;
+  --color-primary-light: #f9a825;
+  --color-bg: #fffdf5;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #f4d9b0;
+  --color-user-left: #fff2e0;
+  --color-user-right: #fde1d9;
+  --color-system: #8e8e8e;
+  --color-system-bg: #faf2e3cc;
+}
 
-    .theme-it {
-      --color-primary: #3fa66b;         /* verde tricolor */
-      --color-primary-dark: #2e7d4f;
-      --color-primary-light: #d87272;   /* rojo claro */
-      --color-bg: #f6fcf9;
-      --color-bg-alt: #ffffffcc;
-      --color-border: #d6eadd;
-      --color-user-left: #e8f6ef;
-      --color-user-right: #ffe9e9;
-      --color-system: #9ea9a2;
-      --color-system-bg: #f0f8f2cc;
-    }
+.theme-set-banderas.theme-en {
+  --color-primary: #274472;
+  --color-primary-dark: #1b314f;
+  --color-primary-light: #d94f4f;
+  --color-bg: #f3f5fa;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #ccd9e7;
+  --color-user-left: #e6edf7;
+  --color-user-right: #d4dfea;
+  --color-system: #a3a9b1;
+  --color-system-bg: #eef3facc;
+}
+
+.theme-set-banderas.theme-it {
+  --color-primary: #3fa66b;
+  --color-primary-dark: #2e7d4f;
+  --color-primary-light: #d87272;
+  --color-bg: #f6fcf9;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #d6eadd;
+  --color-user-left: #e8f6ef;
+  --color-user-right: #ffe9e9;
+  --color-system: #9ea9a2;
+  --color-system-bg: #f0f8f2cc;
+}
+
+/* =============================================================
+   Tema visual: ELEGANTE (pastel moderno)
+   ============================================================= */
+
+.theme-set-elegante.theme-es {
+  --color-primary: #a68dce;
+  --color-primary-dark: #7b6fa6;
+  --color-primary-light: #d8c9f2;
+  --color-bg: #f9f7fc;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #dcd1ef;
+  --color-user-left: #ede5fa;
+  --color-user-right: #dfcef7;
+  --color-system: #9c9cae;
+  --color-system-bg: #f2eefacc;
+}
+
+.theme-set-elegante.theme-en {
+  --color-primary: #5c88c4;
+  --color-primary-dark: #3f6da8;
+  --color-primary-light: #a6c4e6;
+  --color-bg: #f4f8fb;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #d2e3f0;
+  --color-user-left: #e6eef8;
+  --color-user-right: #d0e3f7;
+  --color-system: #9aa7b5;
+  --color-system-bg: #eef3facc;
+}
+
+.theme-set-elegante.theme-it {
+  --color-primary: #d77c7c;
+  --color-primary-dark: #b55b5b;
+  --color-primary-light: #efb3b3;
+  --color-bg: #fff6f6;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #f3d3d3;
+  --color-user-left: #ffeaea;
+  --color-user-right: #f5cfcf;
+  --color-system: #a89e9e;
+  --color-system-bg: #fff1f1cc;
+}
+
+/* =============================================================
+   Tema visual: CREATIVO (colorido y vibrante)
+   ============================================================= */
+
+.theme-set-creativo.theme-es {
+  --color-primary: #ff8c42;
+  --color-primary-dark: #d67636;
+  --color-primary-light: #ffd1a9;
+  --color-bg: #fff8f0;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #ffdcbf;
+  --color-user-left: #fff0e0;
+  --color-user-right: #ffddb8;
+  --color-system: #a08877;
+  --color-system-bg: #fff1e7cc;
+}
+
+.theme-set-creativo.theme-en {
+  --color-primary: #00bcd4;
+  --color-primary-dark: #0097a7;
+  --color-primary-light: #a7e6ec;
+  --color-bg: #f0fcfd;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #c2eef3;
+  --color-user-left: #e0f7fa;
+  --color-user-right: #b2ebf2;
+  --color-system: #779fa1;
+  --color-system-bg: #e8f8facc;
+}
+
+.theme-set-creativo.theme-it {
+  --color-primary: #ce4b99;
+  --color-primary-dark: #a2387b;
+  --color-primary-light: #f5b0d8;
+  --color-bg: #fff4fa;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #f8cce5;
+  --color-user-left: #ffe5f4;
+  --color-user-right: #fdd5ed;
+  --color-system: #a98ca2;
+  --color-system-bg: #fff0f7cc;
+}
+
 
 
 :root {
