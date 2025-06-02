@@ -2607,13 +2607,34 @@ async function showAddMembersModal(chatData) {
     // Agregar miembros
     addMembersBtn.addEventListener('click', async () => {
         try {
-            await addMembersToGroup(chatData.id, Array.from(selectedUsers));
+            console.log('Iniciando proceso de agregar miembros...');
+            const selectedMembersArray = Array.from(selectedUsers);
+            
+            if (selectedMembersArray.length === 0) {
+                throw new Error('No hay usuarios seleccionados');
+            }
+
+            // Deshabilitar el botón mientras se procesa
+            addMembersBtn.disabled = true;
+            addMembersBtn.textContent = getTranslation('adding', userLanguage);
+
+            await addMembersToGroup(chatData.id, selectedMembersArray);
+            
+            // Limpiar selección y cerrar modal
+            selectedUsers.clear();
             modal.remove();
+            
             // Mostrar mensaje de éxito
             alert(getTranslation('membersAdded', userLanguage));
         } catch (error) {
             console.error('Error al agregar miembros:', error);
-            showError('errorAddMembers');
+            alert(getTranslation('errorAddMembers', userLanguage));
+        } finally {
+            // Restaurar el botón
+            if (addMembersBtn) {
+                addMembersBtn.disabled = false;
+                addMembersBtn.textContent = getTranslation('addMembers', userLanguage);
+            }
         }
     });
 
@@ -2637,50 +2658,80 @@ async function showAddMembersModal(chatData) {
 
 // Función para agregar miembros al grupo
 async function addMembersToGroup(chatId, newMembers) {
+    console.log('Iniciando addMembersToGroup:', { chatId, newMembers });
+    
     try {
         const currentUser = getCurrentUser();
         if (!currentUser) {
+            console.error('No hay usuario autenticado');
             throw new Error('No hay usuario autenticado');
         }
 
+        console.log('Usuario actual:', currentUser.uid);
+
         // Obtener datos actuales del chat
         const chatRef = doc(db, 'chats', chatId);
+        console.log('Obteniendo documento del chat:', chatId);
+        
         const chatDoc = await getDoc(chatRef);
         
         if (!chatDoc.exists()) {
+            console.error('Chat no encontrado:', chatId);
             throw new Error('Chat no encontrado');
         }
 
         const chatData = chatDoc.data();
+        console.log('Datos del chat obtenidos:', chatData);
         
         // Verificar que es un grupo
         if (chatData.type !== 'group') {
+            console.error('El chat no es un grupo');
             throw new Error('El chat no es un grupo');
         }
 
+        // Verificar que hay nuevos miembros para agregar
+        if (!newMembers || newMembers.length === 0) {
+            console.error('No hay nuevos miembros para agregar');
+            throw new Error('No hay nuevos miembros para agregar');
+        }
+
+        console.log('Miembros actuales:', chatData.participants);
+        console.log('Nuevos miembros a agregar:', newMembers);
+
         // Agregar nuevos miembros a la lista de participantes
         const updatedParticipants = [...new Set([...chatData.participants, ...newMembers.map(m => m.id)])];
+        console.log('Lista actualizada de participantes:', updatedParticipants);
 
         // Actualizar el documento del chat
+        console.log('Actualizando documento del chat...');
         await updateDoc(chatRef, {
             participants: updatedParticipants
         });
 
         // Crear mensaje de sistema para notificar nuevos miembros
         const newMembersEmails = newMembers.map(m => m.email).join(', ');
-        await addDoc(collection(db, 'chats', chatId, 'messages'), {
+        console.log('Creando mensaje del sistema sobre nuevos miembros...');
+        
+        const messagesRef = collection(db, 'chats', chatId, 'messages');
+        await addDoc(messagesRef, {
             text: `${currentUser.email} ${getTranslation('addedMembers', userLanguage)}: ${newMembersEmails}`,
             type: 'system',
             timestamp: serverTimestamp(),
             senderId: 'system'
         });
 
+        console.log('Actualización completada exitosamente');
+
         // Actualizar la interfaz
         const updatedChatDoc = await getDoc(chatRef);
-        await setupGroupChatInterface(updatedChatDoc.data());
+        if (updatedChatDoc.exists()) {
+            await setupGroupChatInterface(updatedChatDoc.data());
+            console.log('Interfaz actualizada exitosamente');
+        }
 
+        return true;
     } catch (error) {
-        console.error('Error al agregar miembros:', error);
-        throw error;
+        console.error('Error detallado en addMembersToGroup:', error);
+        throw new Error(`Error al agregar miembros: ${error.message}`);
     }
 }
