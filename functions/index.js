@@ -69,37 +69,49 @@ exports.sendMessageNotification = functions.firestore
             // Obtener el nombre del remitente
             const senderDoc = await admin.firestore().collection('users').doc(message.senderId).get();
             const senderData = senderDoc.data();
-            const senderName = senderData?.username || senderData?.email || 'Usuario';
+            const senderName = senderData?.username || senderData?.email?.split('@')[0] || 'Usuario';
 
             console.log('👤 Remitente:', senderName);
 
-            // Enviar notificaciones una por una en lugar de en lote
+            // Enviar notificaciones una por una
             const results = await Promise.all(tokens.map(async (token) => {
                 try {
-                    const message = {
-                        token,
+                    const notificationMessage = {
+                        token: token,
                         notification: {
                             title: `Nuevo mensaje de ${senderName}`,
                             body: message.text
                         },
                         data: {
-                            chatId,
+                            chatId: chatId,
                             messageId: context.params.messageId,
                             type: 'new_message'
                         },
                         android: {
-                            priority: 'high'
+                            priority: 'high',
+                            notification: {
+                                clickAction: 'FLUTTER_NOTIFICATION_CLICK',
+                                priority: 'high',
+                                sound: 'default'
+                            }
                         },
-                        apns: {
-                            payload: {
-                                aps: {
-                                    contentAvailable: true
-                                }
+                        webpush: {
+                            headers: {
+                                Urgency: 'high'
+                            },
+                            notification: {
+                                icon: '/images/icon-192.png',
+                                badge: '/images/icon-72.png',
+                                vibrate: [200, 100, 200],
+                                requireInteraction: true
+                            },
+                            fcmOptions: {
+                                link: `/?chatId=${chatId}`
                             }
                         }
                     };
 
-                    const result = await admin.messaging().send(message);
+                    const result = await admin.messaging().send(notificationMessage);
                     console.log('✅ Notificación enviada exitosamente:', result);
                     return { success: true, messageId: result };
                 } catch (error) {
@@ -124,11 +136,7 @@ exports.sendMessageNotification = functions.firestore
             return { successCount, failureCount };
 
         } catch (error) {
-            console.error('❌ Error general en la función:', {
-                error: error.message,
-                code: error.code,
-                stack: error.stack
-            });
-            throw error;
+            console.error('❌ Error general al enviar notificaciones:', error);
+            return { error: error.message };
         }
     }); 
