@@ -2553,17 +2553,29 @@ document.addEventListener("DOMContentLoaded", () => {
     const themeSelect = document.getElementById("themeSelect");
 
     function applyTheme() {
-        const lang = languageSelect.value;   // es, en, it
-        const theme = themeSelect.value;     // banderas, elegante, creativo
+        const lang = languageSelect.value;
+        const theme = themeSelect.value;
+
+        // 👉 Guardar en localStorage
+        localStorage.setItem("selectedLanguage", lang);
+        localStorage.setItem("selectedTheme", theme);
+
+        // 👉 Aplicar clases al <body>
         document.body.className = `theme-set-${theme} theme-${lang}`;
     }
 
     languageSelect.addEventListener("change", applyTheme);
     themeSelect.addEventListener("change", applyTheme);
 
-    // Aplicar al cargar por defecto
+    // 👉 Restaurar valores si existen en localStorage
+    const savedLang = localStorage.getItem("selectedLanguage");
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedLang) languageSelect.value = savedLang;
+    if (savedTheme) themeSelect.value = savedTheme;
+
     applyTheme();
 });
+
 
 /*
 const themeSelectMain = document.getElementById("themeSelectMain");
