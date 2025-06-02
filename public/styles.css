@@ -703,6 +703,7 @@ body {
 #titulo-wave span {
     display: inline-block;
     animation: wave 1.5s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 0.1s);
 }
 
 /* Campos de autenticación */
