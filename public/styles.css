@@ -471,6 +471,26 @@ body {
     min-width: 0;
 }
 
+/* Selects más pequeños en pantallas pequeñas */
+@media (max-width: 420px) {
+    .language-select-main {
+        padding: 2px 20px 2px 6px;
+        font-size: 0.75rem;
+        min-width: 60px;
+    }
+
+    #userInfo {
+        max-width: 80px;
+        font-size: 0.75rem;
+    }
+
+    /* Si tu header es flex, permitimos wrap */
+    .header {
+        flex-wrap: wrap;
+        gap: 0.3rem;
+    }
+}
+
 /* ==========================================================================
    Lista de Chats
    ========================================================================== */
