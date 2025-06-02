@@ -2547,3 +2547,20 @@ togglePassword.addEventListener("click", () => {
     togglePassword.textContent = isHidden ? "🙈" : "👁️";
 });
 
+
+document.addEventListener("DOMContentLoaded", () => {
+    const languageSelect = document.getElementById("languageSelect");
+    const themeSelect = document.getElementById("themeSelect");
+
+    function applyTheme() {
+        const lang = languageSelect.value;   // es, en, it
+        const theme = themeSelect.value;     // banderas, elegante, creativo
+        document.body.className = `theme-set-${theme} theme-${lang}`;
+    }
+
+    languageSelect.addEventListener("change", applyTheme);
+    themeSelect.addEventListener("change", applyTheme);
+
+    // Aplicar al cargar por defecto
+    applyTheme();
+});
