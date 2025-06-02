@@ -131,6 +131,51 @@
   --color-system-bg: #fff0f7cc;
 }
 
+/* =============================================================
+   Tema visual: ELEGANTE 2 (pastel moderno)
+   ============================================================= */
+
+
+.theme-set-elegante2.theme-es {
+  --color-primary: #7ca57c;         /* verde té matcha */
+  --color-primary-dark: #5b8c5b;
+  --color-primary-light: #cfe4cf;
+  --color-bg: #f8fbf8;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #dbe8db;
+  --color-user-left: #eef6ee;
+  --color-user-right: #d0e8d0;
+  --color-system: #8e9e8e;
+  --color-system-bg: #f0f6f0cc;
+}
+
+.theme-set-elegante2.theme-en {
+  --color-primary: #5f758e;         /* azul grisáceo suave */
+  --color-primary-dark: #4c6073;
+  --color-primary-light: #a8bacd;
+  --color-bg: #f4f6f8;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #d8dfe7;
+  --color-user-left: #e7edf3;
+  --color-user-right: #cdd9e4;
+  --color-system: #8a9aa7;
+  --color-system-bg: #eef3f7cc;
+}
+
+.theme-set-elegante2.theme-it {
+  --color-primary: #c5a27e;         /* beige tierra elegante */
+  --color-primary-dark: #a28263;
+  --color-primary-light: #e3c9a9;
+  --color-bg: #faf8f5;
+  --color-bg-alt: #ffffffcc;
+  --color-border: #e4dcd2;
+  --color-user-left: #f9f4ed;
+  --color-user-right: #f1e1ce;
+  --color-system: #a89f96;
+  --color-system-bg: #f7f1eacc;
+}
+
+
 
 
 :root {
