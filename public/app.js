@@ -544,6 +544,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setUserLanguage(lang);
                 translateInterface(lang);
+                // Asegurarnos de que el tema se actualice con el idioma correcto
+                updateTheme(lang);
                 if (languageSelect) languageSelect.value = lang;
                 if (languageSelectMain) languageSelectMain.value = lang;
 
@@ -558,6 +560,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const lang = getUserLanguage();
             setUserLanguage(lang);
             translateInterface(lang);
+            // Actualizar el tema incluso cuando no hay usuario autenticado
+            updateTheme(lang);
 
             if (languageSelect) languageSelect.value = lang;
             if (languageSelectMain) languageSelectMain.value = lang;
@@ -623,6 +627,10 @@ function showMainScreen() {
     document.getElementById('authScreen').classList.remove('active');
     document.getElementById('mainScreen').classList.add('active');
     toggleChatList(true); // Mostrar la lista de chats por defecto
+    
+    // Asegurarnos de que el tema esté actualizado
+    const currentLang = getUserLanguage();
+    updateTheme(currentLang);
 }
 
 // Función para limpiar el estado del chat
@@ -2512,6 +2520,8 @@ async function syncUserLanguage(user) {
                 console.log('📥 Idioma encontrado en la base de datos:', userData.language);
                 setUserLanguage(userData.language);
                 translateInterface(userData.language);
+                // Actualizar el tema según el idioma
+                updateTheme(userData.language);
             } else {
                 // Si no hay idioma en la base de datos, usar el del state
                 const currentLanguage = getUserLanguage();
@@ -2520,6 +2530,8 @@ async function syncUserLanguage(user) {
                     language: currentLanguage,
                     lastUpdated: serverTimestamp()
                 });
+                // Actualizar el tema según el idioma actual
+                updateTheme(currentLanguage);
             }
         }
     } catch (error) {
