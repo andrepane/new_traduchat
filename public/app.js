@@ -246,9 +246,10 @@ function updateUserInfo(user) {
     }
 
     const name = user.username || user.email?.split('@')[0] || 'Usuario';
-    const userInfoElement = document.getElementById('userInfo');
-    if (userInfoElement) {
-        userInfoElement.textContent = name;
+    const settingsUsername = document.getElementById('settingsUsername');
+    if (settingsUsername) {
+        settingsUsername.value = name;
+        settingsUsername.setAttribute('readonly', true);
     }
 }
 
@@ -2755,5 +2756,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.reload();
     });
 });
+
 
 
