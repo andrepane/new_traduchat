@@ -247,6 +247,13 @@ function updateUserInfo(user) {
 
     const name = user.username || user.email?.split('@')[0] || 'Usuario';
     userInfo.textContent = name;
+
+    // Actualizar también el campo en ajustes
+    const settingsUsername = document.getElementById('settingsUsername');
+    if (settingsUsername) {
+        settingsUsername.value = name;
+        settingsUsername.setAttribute('readonly', true);
+    }
 }
 
 
