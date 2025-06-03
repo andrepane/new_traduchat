@@ -1180,8 +1180,10 @@
       }
   
       .search-container {
-          position: sticky;
-          top: calc(var(--header-height) + var(--safe-area-top));
+          padding-top: max(10px, env(safe-area-inset-top));
+          background: rgba(255, 255, 255, 0.95);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
       }
   
       #authScreen {
@@ -2020,8 +2022,7 @@
    /* Ajustes iOS */
    @supports (-webkit-touch-callout: none) {
        .bottom-nav {
-           height: calc(65px + env(safe-area-inset-bottom));
-           padding-bottom: env(safe-area-inset-bottom);
+           padding-bottom: max(20px, env(safe-area-inset-bottom));
        }
 
        .view-container {
