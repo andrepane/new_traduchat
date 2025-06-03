@@ -114,8 +114,7 @@ const newChatBtn = document.getElementById('newChat');
 const userInfo = document.getElementById('userInfo');
 const currentChatInfo = document.getElementById('currentChatInfo');
 
-const logoutBtn = document.getElementById('logoutBtn');
-
+const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
 
 // Referencias adicionales para móvil
 const backButton = document.getElementById('backToChats');
@@ -2007,7 +2006,7 @@ async function handleLogout() {
 }
 
 // Evento para el botón de cerrar sesión
-logoutBtn.addEventListener('click', handleLogout);
+settingsLogoutBtn.addEventListener('click', handleLogout);
 
 // Evento para el botón de volver
 document.addEventListener('DOMContentLoaded', () => {
@@ -2751,11 +2750,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Cerrar sesión desde ajustes
-    settingsLogoutBtn.addEventListener('click', function() {
-        localStorage.clear();
-        window.location.reload();
-    });
+    settingsLogoutBtn.addEventListener('click', handleLogout);
 });
-
-
 
