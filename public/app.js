@@ -456,10 +456,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const languageSelect = document.getElementById('languageSelect');
     const languageSelectMain = document.getElementById('languageSelectMain');
+    const themeSelectMain = document.getElementById('themeSelectMain');
+
+    // Restaurar tema guardado
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedTheme) {
+        if (themeSelectMain) themeSelectMain.value = savedTheme;
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith("theme-set-")) {
+                document.body.classList.remove(cls);
+            }
+        });
+        document.body.classList.add(`theme-set-${savedTheme}`);
+    }
 
     // Inicializar el tema según el idioma actual
     const currentLang = getUserLanguage();
-    updateTheme(currentLang);
+    document.body.classList.add(`theme-${currentLang}`);
 
     const handleLanguageChange = async (newLang) => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
@@ -470,7 +483,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Actualizar el tema según el nuevo idioma
-        updateTheme(newLang);
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith('theme-')) {
+                document.body.classList.remove(cls);
+            }
+        });
+        const currentTheme = localStorage.getItem("selectedTheme") || "banderas";
+        document.body.classList.add(`theme-set-${currentTheme}`);
+        document.body.classList.add(`theme-${newLang}`);
 
         await setUserLanguage(newLang);
         translateInterface(newLang);
@@ -2575,6 +2595,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
     applyTheme();
 });
+
+
+// Funcionalidad del selector de tema
+const themeSelectMain = document.getElementById("themeSelectMain");
+
+if (themeSelectMain) {
+    // Restaurar tema guardado
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedTheme) {
+        themeSelectMain.value = savedTheme;
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith("theme-set-")) {
+                document.body.classList.remove(cls);
+            }
+        });
+        document.body.classList.add(`theme-set-${savedTheme}`);
+    }
+
+    themeSelectMain.addEventListener("change", () => {
+        const selectedTheme = themeSelectMain.value;
+        const currentLang = document.getElementById("languageSelectMain").value || "es";
+
+        // Guardar en localStorage
+        localStorage.setItem("selectedTheme", selectedTheme);
+
+        // Quitar cualquier clase de tema anterior
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith("theme-set-")) {
+                document.body.classList.remove(cls);
+            }
+        });
+
+        // Aplicar nueva clase combinada
+        document.body.classList.add(`theme-set-${selectedTheme}`);
+        document.body.classList.add(`theme-${currentLang}`);
+    });
+}
 
 
 /*
