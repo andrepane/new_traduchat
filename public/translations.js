@@ -37,9 +37,9 @@ const translations = {
         errorLoadingChats: 'Error al cargar los chats',
           selectTheme: "Seleccionar tema",
           themeBanderas: "Colores de bandera",
-          themeElegante: "Pastel elegante",
-          themeCreativo: "Creativo vibrante",
-        themeElegante2: "Brisa de té",
+          themeElegante: "Pastel",
+          themeCreativo: "Creativo",
+        themeElegante2: "Elegante",
         
         // Idiomas
         languageEs: 'Español',
@@ -132,9 +132,9 @@ const translations = {
         errorLoadingChats: 'Error loading chats',
           selectTheme: "Select theme",
   themeBanderas: "Flag colors",
-  themeElegante: "Elegant pastel",
-  themeCreativo: "Creative vibrant",
-        themeElegante2: "Tea Breeze",
+  themeElegante: "Pastel",
+  themeCreativo: "Creative",
+        themeElegante2: "Elegant",
         
         // Languages
         languageEs: 'Spanish',
@@ -227,9 +227,9 @@ const translations = {
         errorLoadingChats: 'Errore nel caricamento delle chat',
          selectTheme: "Seleziona tema",
   themeBanderas: "Colori della bandiera",
-  themeElegante: "Pastello elegante",
-  themeCreativo: "Creativo e vivace",
-        themeElegante2: "Brezza di tè",
+  themeElegante: "Pastello",
+  themeCreativo: "Creativo",
+        themeElegante2: "Elegante",
         
         // Lingue
         languageEs: 'Spagnolo',
