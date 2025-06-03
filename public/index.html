@@ -100,6 +100,83 @@
             <div id="chatList" class="chat-list">
                 <!-- Los chats se cargarán aquí dinámicamente -->
             </div>
+
+            <!-- Página de Ajustes -->
+            <div id="settingsPage" class="settings-page hidden">
+                <div class="settings-header">
+                    <button class="back-button" id="backFromSettings">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 data-translate="settings">Ajustes</h2>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- Sección de Perfil -->
+                    <div class="settings-section">
+                        <h3 data-translate="profile">Perfil</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-user"></i>
+                            <div class="settings-item-content">
+                                <label data-translate="username">Nombre de usuario</label>
+                                <input type="text" id="settingsUsername" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Idioma -->
+                    <div class="settings-section">
+                        <h3 data-translate="language">Idioma</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-language"></i>
+                            <div class="settings-item-content">
+                                <label data-translate="selectLanguage">Seleccionar idioma</label>
+                                <select id="settingsLanguage" class="settings-select">
+                                    <option value="es" data-translate="languageEs">Español</option>
+                                    <option value="en" data-translate="languageEn">Inglés</option>
+                                    <option value="it" data-translate="languageIt">Italiano</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Tema -->
+                    <div class="settings-section">
+                        <h3 data-translate="theme">Tema</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-palette"></i>
+                            <div class="settings-item-content">
+                                <label data-translate="selectTheme">Seleccionar tema</label>
+                                <select id="settingsTheme" class="settings-select">
+                                    <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
+                                    <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
+                                    <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
+                                    <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Información -->
+                    <div class="settings-section">
+                        <h3 data-translate="about">Acerca de</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="settings-item-content">
+                                <span class="app-version">TraduChat v1.0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Cerrar Sesión -->
+                    <div class="settings-section">
+                        <button id="settingsLogoutBtn" class="settings-logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span data-translate="logout">Cerrar sesión</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Nueva barra de navegación -->
             <nav class="bottom-nav">
                 <button class="nav-button" id="btnChats">
