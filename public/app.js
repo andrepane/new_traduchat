@@ -572,6 +572,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         hideLoadingScreen();
     });
+
+    // Inicializar selectores de tema
+    const themeSelect = document.getElementById("themeSelect");
+    const themeSelectMain = document.getElementById("themeSelectMain");
+
+    // Restaurar tema guardado
+    const savedTheme = localStorage.getItem("selectedTheme") || "banderas";
+    const initialLang = getUserLanguage();
+
+    // Aplicar tema inicial
+    updateThemeAndLanguage(savedTheme, initialLang);
+
+    // Event listener para el selector de tema en la pantalla de inicio
+    if (themeSelect) {
+        themeSelect.addEventListener("change", () => {
+            const selectedTheme = themeSelect.value;
+            const lang = getUserLanguage();
+            updateThemeAndLanguage(selectedTheme, lang);
+        });
+    }
+
+    // Event listener para el selector de tema en ajustes
+    if (themeSelectMain) {
+        themeSelectMain.addEventListener("change", () => {
+            const selectedTheme = themeSelectMain.value;
+            const lang = getUserLanguage();
+            updateThemeAndLanguage(selectedTheme, lang);
+        });
+    }
 });
 
 
@@ -636,11 +665,19 @@ function updateThemeAndLanguage(theme, lang) {
     document.body.classList.add(`theme-set-${theme}`);
     document.body.classList.add(`theme-${lang}`);
 
-    // Actualizar los selectores si existen
+    // Guardar tema en localStorage
+    localStorage.setItem("selectedTheme", theme);
+
+    // Actualizar TODOS los selectores de tema si existen
+    const themeSelect = document.getElementById("themeSelect");
     const themeSelectMain = document.getElementById("themeSelectMain");
-    const languageSelectMain = document.getElementById("languageSelectMain");
-    
+    if (themeSelect) themeSelect.value = theme;
     if (themeSelectMain) themeSelectMain.value = theme;
+
+    // Actualizar TODOS los selectores de idioma si existen
+    const languageSelect = document.getElementById("languageSelect");
+    const languageSelectMain = document.getElementById("languageSelectMain");
+    if (languageSelect) languageSelect.value = lang;
     if (languageSelectMain) languageSelectMain.value = lang;
 }
 
@@ -2633,21 +2670,8 @@ if (themeSelectMain) {
 
     themeSelectMain.addEventListener("change", () => {
         const selectedTheme = themeSelectMain.value;
-        const currentLang = document.getElementById("languageSelectMain").value || "es";
-
-        // Guardar en localStorage
-        localStorage.setItem("selectedTheme", selectedTheme);
-
-        // Quitar cualquier clase de tema anterior
-        document.body.classList.forEach(cls => {
-            if (cls.startsWith("theme-set-")) {
-                document.body.classList.remove(cls);
-            }
-        });
-
-        // Aplicar nueva clase combinada
-        document.body.classList.add(`theme-set-${selectedTheme}`);
-        document.body.classList.add(`theme-${currentLang}`);
+        const lang = getUserLanguage();
+        updateThemeAndLanguage(selectedTheme, lang);
     });
 }
 
@@ -2723,6 +2747,5 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.reload();
     });
 });
-
 
 
