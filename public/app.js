@@ -456,19 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const languageSelect = document.getElementById('languageSelect');
     const languageSelectMain = document.getElementById('languageSelectMain');
-    const themeSelectMain = document.getElementById('themeSelectMain');
-
-    // Restaurar tema guardado
-    const savedTheme = localStorage.getItem("selectedTheme");
-    if (savedTheme) {
-        if (themeSelectMain) themeSelectMain.value = savedTheme;
-        document.body.classList.forEach(cls => {
-            if (cls.startsWith("theme-set-")) {
-                document.body.classList.remove(cls);
-            }
-        });
-        document.body.classList.add(`theme-set-${savedTheme}`);
-    }
 
     // Inicializar el tema según el idioma actual
     const currentLang = getUserLanguage();
@@ -648,9 +635,40 @@ function showMainScreen() {
     document.getElementById('mainScreen').classList.add('active');
     toggleChatList(true); // Mostrar la lista de chats por defecto
     
-    // Asegurarnos de que el tema esté actualizado
-    const currentLang = getUserLanguage();
-    updateTheme(currentLang);
+    // Inicializar el selector de tema
+    const themeSelectMain = document.getElementById("themeSelectMain");
+    if (themeSelectMain) {
+        // Restaurar tema guardado
+        const savedTheme = localStorage.getItem("selectedTheme");
+        if (savedTheme) {
+            themeSelectMain.value = savedTheme;
+            document.body.classList.forEach(cls => {
+                if (cls.startsWith("theme-set-")) {
+                    document.body.classList.remove(cls);
+                }
+            });
+            document.body.classList.add(`theme-set-${savedTheme}`);
+        }
+
+        themeSelectMain.addEventListener("change", () => {
+            const selectedTheme = themeSelectMain.value;
+            const currentLang = document.getElementById("languageSelectMain").value || "es";
+
+            // Guardar en localStorage
+            localStorage.setItem("selectedTheme", selectedTheme);
+
+            // Quitar cualquier clase de tema anterior
+            document.body.classList.forEach(cls => {
+                if (cls.startsWith("theme-set-")) {
+                    document.body.classList.remove(cls);
+                }
+            });
+
+            // Aplicar nueva clase combinada
+            document.body.classList.add(`theme-set-${selectedTheme}`);
+            document.body.classList.add(`theme-${currentLang}`);
+        });
+    }
 }
 
 // Función para limpiar el estado del chat
@@ -2705,4 +2723,5 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.reload();
     });
 });
+
 
