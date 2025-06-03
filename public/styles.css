@@ -311,14 +311,11 @@
   
   /* Pantalla Principal */
   #mainScreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
+      display: none;
       height: 100%;
-      background: var(--color-bg);
-      display: flex;
-      flex-direction: column;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
   }
   
   #mainScreen.active {
@@ -1003,30 +1000,21 @@
   /* Búsqueda */
   .search-container {
       position: sticky;
-      top: 0;
+      top: var(--header-height);
       padding: 10px;
       background: #fff;
       z-index: 99;
       border-bottom: 1px solid var(--color-border);
   }
   
-  #searchContacts,
-  #searchPrivateChats {
+  #searchContacts {
       width: 100%;
       height: 40px;
-      padding: 8px 16px;
+      padding: 8px 12px;
       border: 1px solid var(--color-border);
       border-radius: 20px;
       font-size: 14px;
-      background: var(--color-bg);
-      transition: var(--transition);
-  }
-  
-  #searchContacts:focus,
-  #searchPrivateChats:focus {
-      border-color: var(--color-primary);
-      outline: none;
-      background: #fff;
+      background: var(--color-bg-alt);
   }
   
   /* Indicador de Escritura */
@@ -1180,10 +1168,8 @@
       }
   
       .search-container {
-          padding-top: max(10px, env(safe-area-inset-top));
-          background: rgba(255, 255, 255, 0.95);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
+          position: sticky;
+          top: calc(var(--header-height) + var(--safe-area-top));
       }
   
       #authScreen {
@@ -1865,164 +1851,60 @@
   }
   
   /* ==========================================================================
-     Nuevas Vistas y Navegación
+     Barra de Navegación
      ========================================================================== */
-
-   /* Vista Container */
-   .view-container {
-       display: none;
-       flex: 1;
-       height: calc(100% - var(--header-height));
-       position: relative;
-       background: var(--color-bg);
-       overflow: hidden;
-   }
-
-   .view-container.active {
-       display: flex;
-       flex-direction: column;
-   }
-
-   /* Chat List Container */
-   .chat-list-container {
-       flex: 1;
-       display: flex;
-       flex-direction: column;
-       background: #fff;
-       overflow: hidden;
-   }
-
-   /* Search Container */
-   .search-container {
-       position: sticky;
-       top: 0;
-       padding: 10px;
-       background: #fff;
-       z-index: 99;
-   }
-
-   /* Chat List */
-   .chat-list {
-       flex: 1;
-       overflow-y: auto;
-       background: #fff;
-       padding: 10px;
-       -webkit-overflow-scrolling: touch;
-   }
-
-   /* Barra de Navegación */
-   .bottom-nav {
-       position: fixed;
-       bottom: 0;
-       left: 0;
-       right: 0;
-       height: 65px;
-       background: rgba(255, 255, 255, 0.95);
-       display: flex;
-       justify-content: space-around;
-       align-items: center;
-       border-top: 1px solid var(--color-border);
-       z-index: 1000;
-       backdrop-filter: blur(10px);
-       -webkit-backdrop-filter: blur(10px);
-   }
-
-   .nav-btn {
-       display: flex;
-       flex-direction: column;
-       align-items: center;
-       justify-content: center;
-       padding: 10px;
-       color: #98a6a9;
-       background: none;
-       border: none;
-       cursor: pointer;
-       transition: all 0.2s ease;
-       width: 33.33%;
-       gap: 4px;
-   }
-
-   .nav-btn i {
-       font-size: 24px;
-       margin-bottom: 2px;
-   }
-
-   .nav-btn span {
-       font-size: 13px;
-       font-weight: 500;
-   }
-
-   .nav-btn.active {
-       color: var(--color-primary);
-   }
-
-   .nav-btn:hover {
-       color: var(--color-primary-dark);
-   }
-
-   /* Vista de Ajustes */
-   .settings-container {
-       padding: 20px;
-       max-width: 600px;
-       margin: 0 auto;
-       width: 100%;
-   }
-
-   .settings-section {
-       background: var(--color-bg-alt);
-       border-radius: var(--radius);
-       padding: 20px;
-       margin-bottom: 20px;
-       border: 1px solid var(--color-border);
-   }
-
-   .settings-item {
-       margin-bottom: 20px;
-   }
-
-   .settings-item:last-child {
-       margin-bottom: 0;
-   }
-
-   .settings-item label {
-       display: block;
-       margin-bottom: 8px;
-       color: var(--color-text);
-       font-weight: 500;
-   }
-
-   /* Ajustes responsive */
-   @media (max-width: 768px) {
-       #mainScreen {
-           height: 100%;
-       }
-
-       .view-container {
-           height: calc(100% - 65px - env(safe-area-inset-bottom));
-       }
-
-       .chat-list {
-           padding-bottom: calc(10px + env(safe-area-inset-bottom));
-       }
-
-       /* Ajustes para el teclado virtual */
-       .keyboard-open .bottom-nav {
-           display: none;
-       }
-
-       .keyboard-open .chat-list {
-           padding-bottom: 10px;
-       }
-   }
-
-   /* Ajustes iOS */
-   @supports (-webkit-touch-callout: none) {
-       .bottom-nav {
-           padding-bottom: max(20px, env(safe-area-inset-bottom));
-       }
-
-       .view-container {
-           padding-bottom: calc(65px + env(safe-area-inset-bottom));
-       }
-   }
+  .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 350px; /* Mismo ancho que el sidebar */
+      height: 60px;
+      background: var(--color-bg-alt);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      border-top: 1px solid var(--color-border);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      z-index: 600;
+  }
+  
+  .nav-button {
+      background: transparent;
+      border: none;
+      color: var(--color-primary);
+      padding: 10px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+  }
+  
+  .nav-button i {
+      font-size: 1.3rem;
+  }
+  
+  .nav-button:hover {
+      color: var(--color-primary-dark);
+      background: var(--color-user-left);
+  }
+  
+  .nav-button.active {
+      color: var(--color-primary-dark);
+  }
+  
+  /* Ajuste del padding inferior de la lista de chat para la barra de navegación */
+  .chat-list {
+      padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  /* Ajustes para móvil */
+  @media (max-width: 768px) {
+      .bottom-nav {
+          width: 100%;
+      }
+  }
   
