@@ -2073,3 +2073,20 @@
       }
   }
   
+  .readonly-input {
+      background-color: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      color: #374151;
+      cursor: default;
+      padding: 8px 12px;
+      border-radius: 6px;
+      width: 100%;
+      font-size: 14px;
+  }
+  
+  .readonly-input:focus {
+      outline: none;
+      border-color: #e5e7eb;
+      box-shadow: none;
+  }
+  
