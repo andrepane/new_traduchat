@@ -1858,7 +1858,7 @@
       bottom: 0;
       left: 0;
       width: 350px; /* Mismo ancho que el sidebar */
-      height: 60px;
+      height: 49px; /* Reducida de 60px a 49px para mejor ajuste en iOS */
       background: var(--color-bg-alt);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
@@ -1866,7 +1866,7 @@
       justify-content: space-around;
       align-items: center;
       border-top: 1px solid var(--color-border);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-bottom: 0;
       z-index: 600;
   }
   
@@ -1874,8 +1874,9 @@
       background: transparent;
       border: none;
       color: var(--color-primary);
-      padding: 10px;
-      border-radius: 50%;
+      padding: 8px;
+      height: 100%;
+      border-radius: 0;
       cursor: pointer;
       transition: var(--transition);
       display: flex;
@@ -1884,7 +1885,8 @@
   }
   
   .nav-button i {
-      font-size: 1.3rem;
+      font-size: 1.2rem; /* Reducido de 1.3rem */
+      margin-bottom: 2px;
   }
   
   .nav-button:hover {
@@ -1898,13 +1900,41 @@
   
   /* Ajuste del padding inferior de la lista de chat para la barra de navegación */
   .chat-list {
-      padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(55px + env(safe-area-inset-bottom, 0px));
   }
   
   /* Ajustes para móvil */
   @media (max-width: 768px) {
       .bottom-nav {
           width: 100%;
+      }
+  }
+  
+  /* Ajustes específicos para iOS */
+  @supports (-webkit-touch-callout: none) {
+      .bottom-nav {
+          height: calc(49px + env(safe-area-inset-bottom, 0px));
+          padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+
+      .nav-button {
+          padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      }
+
+      /* Ajuste adicional para iPhone con notch */
+      @media screen and 
+          (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
+          (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
+          (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3),
+          (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
+          (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) {
+          .bottom-nav {
+              height: calc(49px + env(safe-area-inset-bottom, 34px));
+          }
+          
+          .nav-button i {
+              margin-bottom: -10px; /* Ajuste para centrar mejor los iconos en iOS */
+          }
       }
   }
   
