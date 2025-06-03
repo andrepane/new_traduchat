@@ -951,6 +951,10 @@ async function setupRealtimeChats() {
                         if (chat.id === currentChat) {
                             chatElement.classList.add('active');
                         }
+                        // Añadir clase 'unread' si el chat tiene mensajes no leídos para el usuario actual
+                        if (chat.unreadBy && chat.unreadBy[currentUser.uid]) {
+                            chatElement.classList.add('unread');
+                        }
 
                         let chatName = '';
                         if (chat.type === 'group') {
@@ -1445,6 +1449,15 @@ async function openChat(chatId) {
     lastVisibleMessage = null;
 
     currentChat = chatId;
+    try {
+    await updateDoc(doc(db, 'chats', chatId), {
+        [`unreadBy.${currentUser.uid}`]: false
+    });
+    console.log(`✅ Mensajes marcados como leídos para el usuario ${currentUser.uid}`);
+} catch (error) {
+    console.error('❌ Error al marcar como leído:', error);
+}
+
     
     try {
         // Obtener información del chat
@@ -1765,7 +1778,6 @@ function displaySystemMessage(messageData) {
     messagesList.scrollTop = messagesList.scrollHeight;
 }
 
-// Función para enviar mensaje
 async function sendMessage(text) {
     console.log('📤 Intentando enviar mensaje:', text);
     if (!text.trim() || !currentChat) {
@@ -1783,50 +1795,62 @@ async function sendMessage(text) {
         // Obtener el idioma actual del usuario desde la base de datos
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
-        
+
         console.log('👤 Usuario actual:', user.email, 'Idioma:', currentLanguage);
-        
-        // Crear el mensaje con el idioma correcto
+
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
             senderEmail: user.email,
             timestamp: serverTimestamp(),
-            language: currentLanguage, // Asegurar que se guarda el idioma correcto
+            language: currentLanguage,
             translations: {}
         };
 
         console.log('💾 Guardando mensaje en idioma original:', currentLanguage);
-        // Enviar el mensaje
+
         const messagesRef = collection(db, 'chats', currentChat, 'messages');
         const docRef = await addDoc(messagesRef, messageData);
         console.log('✅ Mensaje enviado con ID:', docRef.id);
-        
-        // Actualizar último mensaje del chat
+
+        // 🔥 NUEVO: actualizar último mensaje y estado de lectura
         const chatRef = doc(db, 'chats', currentChat);
-        await updateDoc(chatRef, {
-            lastMessage: text.trim(),
-            lastMessageTime: serverTimestamp()
-        });
-        
-        // Limpiar el input
-        messageInput.value = '';
-        
-        // Obtener información del chat
         const chatDoc = await getDoc(chatRef);
         const chatData = chatDoc.data();
+
         const isGroupChat = chatData.type === 'group';
-        
-        // Determinar los idiomas necesarios para traducción
+        let receiverIds = [];
+
+        if (isGroupChat) {
+            receiverIds = chatData.participants.filter(uid => uid !== user.uid);
+        } else {
+            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
+            if (otherUserId) receiverIds = [otherUserId];
+        }
+
+        // Crear objeto 'unreadBy'
+        const unreadByUpdate = {};
+        receiverIds.forEach(uid => unreadByUpdate[`unreadBy.${uid}`] = true);
+        unreadByUpdate[`unreadBy.${user.uid}`] = false;
+
+        // Actualizar doc de chat
+        await updateDoc(chatRef, {
+            lastMessage: text.trim(),
+            lastMessageTime: serverTimestamp(),
+            ...unreadByUpdate // 🔥 NUEVO
+        });
+
+        // Limpiar input
+        messageInput.value = '';
+
+        // 🔁 Traducción (sin cambios)
         let targetLanguages = new Set();
-        
+
         if (isGroupChat) {
             console.log('👥 Chat grupal detectado, obteniendo idiomas de participantes...');
-            // Para grupos, obtener los idiomas únicos de todos los participantes
             const participantsData = await Promise.all(
                 chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
             );
-            
             participantsData.forEach(participantDoc => {
                 if (participantDoc.exists()) {
                     const participantLang = participantDoc.data().language || 'en';
@@ -1837,7 +1861,6 @@ async function sendMessage(text) {
             });
         } else {
             console.log('👤 Chat individual detectado, obteniendo idioma del otro usuario...');
-            // Para chats individuales, solo traducir al idioma del otro usuario
             const otherUserId = chatData.participants.find(uid => uid !== user.uid);
             if (otherUserId) {
                 const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
@@ -1849,14 +1872,14 @@ async function sendMessage(text) {
                 }
             }
         }
-        
+
         console.log('🎯 Idiomas objetivo para traducción:', Array.from(targetLanguages));
-        // Realizar las traducciones necesarias
+
         for (const targetLang of targetLanguages) {
             try {
                 console.log(`🔄 Traduciendo mensaje a ${targetLang}...`);
                 const translation = await translateText(text, targetLang, currentLanguage);
-                
+
                 if (translation === 'LIMIT_EXCEEDED') {
                     console.warn('⚠️ Límite de traducción excedido');
                     await updateDoc(doc(messagesRef, docRef.id), {
@@ -1885,6 +1908,7 @@ async function sendMessage(text) {
         showError('errorGeneric');
     }
 }
+
 
 let typingTimeout = null;
 let unsubscribeTypingStatus = null;
