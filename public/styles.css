@@ -2106,18 +2106,4 @@
       font-weight: 600;
   }
   
-  /* Eliminar estilos específicos de grupos que ya no necesitamos */
-  .groups-page,
-  .groups-header,
-  .groups-content,
-  .groups-list,
-  .group-item,
-  .group-item:hover,
-  .group-item-avatar,
-  .group-item-info,
-  .group-item-name,
-  .group-item-members {
-      /* Eliminar estos estilos ya que usaremos los de settings */
-      all: unset;
-  }
-  
+
