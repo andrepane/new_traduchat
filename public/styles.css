@@ -493,8 +493,8 @@
       background-color: #fff;
       -webkit-overflow-scrolling: touch;
       padding: 10px;
-      padding-bottom: calc(55px + env(safe-area-inset-bottom, 0px));
-      height: calc(100vh - var(--header-height) - 49px - env(safe-area-inset-bottom, 0px));
+      padding-bottom: calc(65px + env(safe-area-inset-bottom, 0px));
+      height: calc(100vh - var(--header-height) - env(safe-area-inset-bottom, 0px));
       position: relative;
       z-index: 1;
       scrollbar-width: thin;
@@ -1862,7 +1862,7 @@
       bottom: 0;
       left: 0;
       width: 350px;
-      height: 49px;
+      height: 55px;
       background: var(--color-bg-alt);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
@@ -1870,7 +1870,6 @@
       justify-content: space-around;
       align-items: center;
       border-top: 1px solid var(--color-border);
-      padding-bottom: 0;
       z-index: 600;
   }
   
@@ -1878,84 +1877,53 @@
       background: transparent;
       border: none;
       color: var(--color-primary);
-      padding: 8px;
-      height: 44px;
-      width: 44px;
-      border-radius: 0;
+      padding: 10px;
       cursor: pointer;
       transition: var(--transition);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-bottom: env(safe-area-inset-bottom, 0px);
   }
   
   .nav-button i {
-      font-size: 1.2rem;
-      line-height: 1;
-      position: relative;
-      top: 0;
+      font-size: 1.5rem;
   }
   
   .nav-button:hover {
       color: var(--color-primary-dark);
-      background: var(--color-user-left);
   }
   
   .nav-button.active {
       color: var(--color-primary-dark);
   }
   
-  /* Ajustes para Android y otros dispositivos */
-  @media (max-width: 768px) {
-      .bottom-nav {
-          width: 100%;
-      }
-  
-      .chat-list {
-          height: calc(100vh - var(--header-height) - 49px);
-          padding-bottom: calc(55px + 10px);
-      }
+  /* Ajuste del contenedor de la lista de chat */
+  .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      background-color: #fff;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px;
+      padding-bottom: calc(65px + env(safe-area-inset-bottom, 0px));
+      height: calc(100vh - var(--header-height) - env(safe-area-inset-bottom, 0px));
   }
   
   /* Ajustes específicos para iOS */
   @supports (-webkit-touch-callout: none) {
       .bottom-nav {
-          height: calc(49px + env(safe-area-inset-bottom));
-          border-top: 0.5px solid rgba(0, 0, 0, 0.2);
-          background: rgba(255, 255, 255, 0.95);
+          height: calc(55px + env(safe-area-inset-bottom));
+          padding-bottom: env(safe-area-inset-bottom);
       }
-  
-      .nav-button {
-          margin-top: 3px;
+
+      .chat-list {
+          padding-bottom: calc(65px + env(safe-area-inset-bottom));
       }
+  }
   
-      .nav-button i {
-          top: -2px;
-      }
-  
-      /* Ajustes específicos para iPhones con notch/Dynamic Island */
-      @media screen and 
-          (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3),
-          (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2),
-          (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3),
-          (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3),
-          (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3),
-          (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3),
-          (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) {
-          
-          .bottom-nav {
-              padding-bottom: env(safe-area-inset-bottom);
-          }
-  
-          .nav-button {
-              height: 32px;
-              margin-bottom: calc(env(safe-area-inset-bottom) - 5px);
-          }
-  
-          .chat-list {
-              height: calc(100vh - var(--header-height) - 49px - env(safe-area-inset-bottom));
-          }
+  /* Ajustes para móvil */
+  @media (max-width: 768px) {
+      .bottom-nav {
+          width: 100%;
       }
   }
   
