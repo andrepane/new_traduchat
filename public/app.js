@@ -855,106 +855,166 @@ function showDeleteConfirmDialog(chatId, chatElement) {
 // Función para cargar chats en tiempo real
 async function setupRealtimeChats() {
     console.log('🔄 Configurando escucha de chats en tiempo real');
-
+    
+    // Cancelar suscripción anterior si existe
     if (unsubscribeChats) {
         console.log('📤 Cancelando suscripción anterior de chats');
         unsubscribeChats();
         unsubscribeChats = null;
     }
 
-    if (!db || !getCurrentUser()) return;
+    // Limpiar la lista de chats
+    if (chatList) {
+        chatList.innerHTML = '';
+    }
 
     const currentUser = getCurrentUser();
-    const userLanguage = getUserLanguage();
+    const currentLang = document.getElementById('languageSelect')?.value || 
+                       document.getElementById('languageSelectMain')?.value || 
+                       getUserLanguage();
 
-    const q = query(
-        collection(db, 'chats'),
-        where('participants', 'array-contains', currentUser.uid),
-        orderBy('lastMessageTime', 'desc')
-    );
-
-    unsubscribeChats = onSnapshot(q, async (snapshot) => {
-        console.log('📥 Actualización de chats detectada');
-        if (!chatList) return;
-
-        chatList.innerHTML = ''; // Borrar la lista completa
-
-        if (snapshot.empty) {
-            const noChatsDiv = document.createElement('div');
-            noChatsDiv.className = 'chat-item';
-            noChatsDiv.setAttribute('data-translate', 'noChats');
-            noChatsDiv.textContent = getTranslation('noChats', userLanguage);
-            chatList.appendChild(noChatsDiv);
-            return;
+    if (!db || !currentUser) {
+        console.error('❌ Firestore o usuario no inicializados');
+        if (chatList) {
+            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', currentLang)}</div>`;
         }
+        return;
+    }
 
-        for (const docSnap of snapshot.docs) {
+    try {
+        console.log('🔍 Configurando consulta de chats para usuario:', currentUser.uid);
+        
+        // Set para mantener un registro de los chats ya mostrados
+        const displayedChats = new Set();
+        
+        const q = query(
+            collection(db, 'chats'),
+            where('participants', 'array-contains', currentUser.uid),
+            orderBy('lastMessageTime', 'desc')
+        );
+
+        // Crear nueva suscripción
+        unsubscribeChats = onSnapshot(q, async (snapshot) => {
             try {
-                const chat = { id: docSnap.id, ...docSnap.data() };
-                const chatElement = document.createElement('div');
-                chatElement.className = 'chat-item';
-                chatElement.setAttribute('data-chat-id', chat.id);
-
-                if (chat.type === 'group') chatElement.classList.add('group-chat');
-                if (chat.id === currentChat) chatElement.classList.add('active');
-                if (chat.unreadBy && chat.unreadBy[currentUser.uid]) {
-                    chatElement.classList.add('unread');
+                console.log('📥 Actualización de chats detectada');
+                
+                // Limpiar lista actual solo si no hay chats mostrados
+                if (chatList && displayedChats.size === 0) {
+                    chatList.innerHTML = '';
+                }
+                
+                if (snapshot.empty) {
+                    if (chatList && displayedChats.size === 0) {
+                        const noChatsDiv = document.createElement('div');
+                        noChatsDiv.className = 'chat-item';
+                        noChatsDiv.setAttribute('data-translate', 'noChats');
+                        noChatsDiv.textContent = getTranslation('noChats', currentLang);
+                        chatList.innerHTML = '';
+                        chatList.appendChild(noChatsDiv);
+                    }
+                    return;
                 }
 
-                let chatName = '';
-                if (chat.type === 'group') {
-                    chatName = chat.name;
-                } else {
-                    const otherUserId = chat.participants.find(id => id !== currentUser.uid);
-                    if (otherUserId) {
-                        const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                        if (otherUserDoc.exists()) {
-                            const otherUserData = otherUserDoc.data();
-                            chatName = otherUserData.username || otherUserData.email.split('@')[0];
+                // Procesar chats
+                const chats = [];
+                snapshot.forEach(doc => {
+                    // Evitar duplicados usando el Set
+                    if (!displayedChats.has(doc.id)) {
+                        const chatData = doc.data();
+                        chats.push({
+                            id: doc.id,
+                            ...chatData,
+                            lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
+                        });
+                        displayedChats.add(doc.id);
+                    }
+                });
+
+                // Ordenar chats por tiempo del último mensaje
+                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+
+                // Mostrar chats
+                for (const chat of chats) {
+                    try {
+                        // Verificar si el chat ya está mostrado
+                        if (document.querySelector(`[data-chat-id="${chat.id}"]`)) {
+                            continue;
                         }
+
+                        const chatElement = document.createElement('div');
+                        chatElement.className = 'chat-item';
+                        chatElement.setAttribute('data-chat-id', chat.id);
+                        
+                        if (chat.type === 'group') {
+                            chatElement.classList.add('group-chat');
+                        }
+                        if (chat.id === currentChat) {
+                            chatElement.classList.add('active');
+                        }
+
+                        let chatName = '';
+                        if (chat.type === 'group') {
+                            chatName = chat.name;
+                        } else {
+                            const otherUserId = chat.participants.find(id => id !== currentUser.uid);
+                            if (otherUserId) {
+                                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                                if (otherUserDoc.exists()) {
+                                    const otherUserData = otherUserDoc.data();
+                                    chatName = otherUserData.username || otherUserData.email.split('@')[0];
+                                }
+                            }
+                        }
+
+                        const lastMessageTime = chat.lastMessageTime ? 
+                            chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                        chatElement.innerHTML = `
+                            <div class="chat-info">
+                                <div class="chat-details">
+                                    <div class="chat-name">${chatName}</div>
+                                    <div class="last-message">${chat.lastMessage || ''}</div>
+                                </div>
+                                <div class="last-message-time">${lastMessageTime}</div>
+                            </div>
+                            <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        `;
+
+                        // Evento para borrar chat
+                        const deleteBtn = chatElement.querySelector('.delete-chat-btn');
+                        deleteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            showDeleteConfirmDialog(chat.id, chatElement);
+                        });
+
+                        chatElement.addEventListener('click', () => {
+                            console.log('👆 Abriendo chat:', chat.id);
+                            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+                            chatElement.classList.add('active');
+                            openChat(chat.id);
+                        });
+
+                        if (chatList) {
+                            chatList.appendChild(chatElement);
+                        }
+                    } catch (error) {
+                        console.error('❌ Error al procesar chat individual:', error);
                     }
                 }
-
-                const lastMessageTime = chat.lastMessageTime ?
-                    chat.lastMessageTime.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-                chatElement.innerHTML = `
-                    <div class="chat-info">
-                        <div class="chat-details">
-                            <div class="chat-name">${chatName}</div>
-                            <div class="last-message">${chat.lastMessage || ''}</div>
-                        </div>
-                        <div class="last-message-time">${lastMessageTime}</div>
-                    </div>
-                    <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                `;
-
-                chatElement.addEventListener('click', () => {
-                    document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-                    chatElement.classList.add('active');
-                    openChat(chat.id);
-                });
-
-                const deleteBtn = chatElement.querySelector('.delete-chat-btn');
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showDeleteConfirmDialog(chat.id, chatElement);
-                });
-
-                chatList.appendChild(chatElement);
             } catch (error) {
-                console.error('❌ Error al procesar chat individual:', error);
+                console.error('❌ Error al procesar actualización de chats:', error);
+                if (chatList && displayedChats.size === 0) {
+                    chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+                }
             }
-        }
-    }, error => {
-        console.error('❌ Error en la suscripción de chats:', error);
-        if (chatList) {
-            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
-        }
-    });
-}
+        }, error => {
+            console.error('❌ Error en la suscripción de chats:', error);
+            if (chatList && displayedChats.size === 0) {
+                chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+            }
+        });
 
     } catch (error) {
         console.error('❌ Error al configurar escucha de chats:', error);
@@ -1385,15 +1445,6 @@ async function openChat(chatId) {
     lastVisibleMessage = null;
 
     currentChat = chatId;
-    try {
-    await updateDoc(doc(db, 'chats', chatId), {
-        [`unreadBy.${currentUser.uid}`]: false
-    });
-    console.log(`✅ Mensajes marcados como leídos para el usuario ${currentUser.uid}`);
-} catch (error) {
-    console.error('❌ Error al marcar como leído:', error);
-}
-
     
     try {
         // Obtener información del chat
@@ -1714,6 +1765,7 @@ function displaySystemMessage(messageData) {
     messagesList.scrollTop = messagesList.scrollHeight;
 }
 
+// Función para enviar mensaje
 async function sendMessage(text) {
     console.log('📤 Intentando enviar mensaje:', text);
     if (!text.trim() || !currentChat) {
@@ -1731,62 +1783,50 @@ async function sendMessage(text) {
         // Obtener el idioma actual del usuario desde la base de datos
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
-
+        
         console.log('👤 Usuario actual:', user.email, 'Idioma:', currentLanguage);
-
+        
+        // Crear el mensaje con el idioma correcto
         const messageData = {
             text: text.trim(),
             senderId: user.uid,
             senderEmail: user.email,
             timestamp: serverTimestamp(),
-            language: currentLanguage,
+            language: currentLanguage, // Asegurar que se guarda el idioma correcto
             translations: {}
         };
 
         console.log('💾 Guardando mensaje en idioma original:', currentLanguage);
-
+        // Enviar el mensaje
         const messagesRef = collection(db, 'chats', currentChat, 'messages');
         const docRef = await addDoc(messagesRef, messageData);
         console.log('✅ Mensaje enviado con ID:', docRef.id);
-
-        // 🔥 NUEVO: actualizar último mensaje y estado de lectura
+        
+        // Actualizar último mensaje del chat
         const chatRef = doc(db, 'chats', currentChat);
-        const chatDoc = await getDoc(chatRef);
-        const chatData = chatDoc.data();
-
-        const isGroupChat = chatData.type === 'group';
-        let receiverIds = [];
-
-        if (isGroupChat) {
-            receiverIds = chatData.participants.filter(uid => uid !== user.uid);
-        } else {
-            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
-            if (otherUserId) receiverIds = [otherUserId];
-        }
-
-        // Crear objeto 'unreadBy'
-        const unreadByUpdate = {};
-        receiverIds.forEach(uid => unreadByUpdate[`unreadBy.${uid}`] = true);
-        unreadByUpdate[`unreadBy.${user.uid}`] = false;
-
-        // Actualizar doc de chat
         await updateDoc(chatRef, {
             lastMessage: text.trim(),
-            lastMessageTime: serverTimestamp(),
-            ...unreadByUpdate // 🔥 NUEVO
+            lastMessageTime: serverTimestamp()
         });
-
-        // Limpiar input
+        
+        // Limpiar el input
         messageInput.value = '';
-
-        // 🔁 Traducción (sin cambios)
+        
+        // Obtener información del chat
+        const chatDoc = await getDoc(chatRef);
+        const chatData = chatDoc.data();
+        const isGroupChat = chatData.type === 'group';
+        
+        // Determinar los idiomas necesarios para traducción
         let targetLanguages = new Set();
-
+        
         if (isGroupChat) {
             console.log('👥 Chat grupal detectado, obteniendo idiomas de participantes...');
+            // Para grupos, obtener los idiomas únicos de todos los participantes
             const participantsData = await Promise.all(
                 chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
             );
+            
             participantsData.forEach(participantDoc => {
                 if (participantDoc.exists()) {
                     const participantLang = participantDoc.data().language || 'en';
@@ -1797,6 +1837,7 @@ async function sendMessage(text) {
             });
         } else {
             console.log('👤 Chat individual detectado, obteniendo idioma del otro usuario...');
+            // Para chats individuales, solo traducir al idioma del otro usuario
             const otherUserId = chatData.participants.find(uid => uid !== user.uid);
             if (otherUserId) {
                 const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
@@ -1808,14 +1849,14 @@ async function sendMessage(text) {
                 }
             }
         }
-
+        
         console.log('🎯 Idiomas objetivo para traducción:', Array.from(targetLanguages));
-
+        // Realizar las traducciones necesarias
         for (const targetLang of targetLanguages) {
             try {
                 console.log(`🔄 Traduciendo mensaje a ${targetLang}...`);
                 const translation = await translateText(text, targetLang, currentLanguage);
-
+                
                 if (translation === 'LIMIT_EXCEEDED') {
                     console.warn('⚠️ Límite de traducción excedido');
                     await updateDoc(doc(messagesRef, docRef.id), {
@@ -1844,7 +1885,6 @@ async function sendMessage(text) {
         showError('errorGeneric');
     }
 }
-
 
 let typingTimeout = null;
 let unsubscribeTypingStatus = null;
@@ -2712,4 +2752,5 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cerrar sesión desde ajustes
     settingsLogoutBtn.addEventListener('click', handleLogout);
 });
+
 
