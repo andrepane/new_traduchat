@@ -469,15 +469,9 @@ document.addEventListener('DOMContentLoaded', () => {
             stopRecording();
         }
 
-        // Actualizar el tema según el nuevo idioma
-        document.body.classList.forEach(cls => {
-            if (cls.startsWith('theme-')) {
-                document.body.classList.remove(cls);
-            }
-        });
+        // Actualizar el tema con el nuevo idioma
         const currentTheme = localStorage.getItem("selectedTheme") || "banderas";
-        document.body.classList.add(`theme-set-${currentTheme}`);
-        document.body.classList.add(`theme-${newLang}`);
+        updateThemeAndLanguage(currentTheme, newLang);
 
         await setUserLanguage(newLang);
         translateInterface(newLang);
@@ -629,44 +623,50 @@ document.addEventListener('gesturestart', function(e) {
     e.preventDefault();
 });
 
+// Función para actualizar el tema y el idioma
+function updateThemeAndLanguage(theme, lang) {
+    // Limpiar todas las clases de tema e idioma
+    document.body.classList.forEach(cls => {
+        if (cls.startsWith('theme-set-') || cls.startsWith('theme-')) {
+            document.body.classList.remove(cls);
+        }
+    });
+
+    // Aplicar el nuevo tema y el idioma
+    document.body.classList.add(`theme-set-${theme}`);
+    document.body.classList.add(`theme-${lang}`);
+
+    // Actualizar los selectores si existen
+    const themeSelectMain = document.getElementById("themeSelectMain");
+    const languageSelectMain = document.getElementById("languageSelectMain");
+    
+    if (themeSelectMain) themeSelectMain.value = theme;
+    if (languageSelectMain) languageSelectMain.value = lang;
+}
+
 // Función para mostrar la pantalla principal
 function showMainScreen() {
     document.getElementById('authScreen').classList.remove('active');
     document.getElementById('mainScreen').classList.add('active');
-    toggleChatList(true); // Mostrar la lista de chats por defecto
+    toggleChatList(true);
     
     // Inicializar el selector de tema
     const themeSelectMain = document.getElementById("themeSelectMain");
     if (themeSelectMain) {
         // Restaurar tema guardado
-        const savedTheme = localStorage.getItem("selectedTheme");
-        if (savedTheme) {
-            themeSelectMain.value = savedTheme;
-            document.body.classList.forEach(cls => {
-                if (cls.startsWith("theme-set-")) {
-                    document.body.classList.remove(cls);
-                }
-            });
-            document.body.classList.add(`theme-set-${savedTheme}`);
-        }
+        const savedTheme = localStorage.getItem("selectedTheme") || "banderas";
+        const currentLang = getUserLanguage();
+        updateThemeAndLanguage(savedTheme, currentLang);
 
         themeSelectMain.addEventListener("change", () => {
             const selectedTheme = themeSelectMain.value;
             const currentLang = document.getElementById("languageSelectMain").value || "es";
-
+            
             // Guardar en localStorage
             localStorage.setItem("selectedTheme", selectedTheme);
-
-            // Quitar cualquier clase de tema anterior
-            document.body.classList.forEach(cls => {
-                if (cls.startsWith("theme-set-")) {
-                    document.body.classList.remove(cls);
-                }
-            });
-
-            // Aplicar nueva clase combinada
-            document.body.classList.add(`theme-set-${selectedTheme}`);
-            document.body.classList.add(`theme-${currentLang}`);
+            
+            // Actualizar tema e idioma
+            updateThemeAndLanguage(selectedTheme, currentLang);
         });
     }
 }
@@ -2723,5 +2723,6 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.reload();
     });
 });
+
 
 
