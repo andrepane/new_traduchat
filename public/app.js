@@ -246,13 +246,9 @@ function updateUserInfo(user) {
     }
 
     const name = user.username || user.email?.split('@')[0] || 'Usuario';
-    userInfo.textContent = name;
-
-    // Actualizar también el campo en ajustes
-    const settingsUsername = document.getElementById('settingsUsername');
-    if (settingsUsername) {
-        settingsUsername.value = name;
-        settingsUsername.setAttribute('readonly', true);
+    const userInfoElement = document.getElementById('userInfo');
+    if (userInfoElement) {
+        userInfoElement.textContent = name;
     }
 }
 
@@ -2717,13 +2713,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mostrar página de ajustes
     btnSettings.addEventListener('click', function() {
-        settingsPage.classList.remove('hidden');
-        chatList.classList.add('hidden');
-        
-        // Cargar valores actuales
-        settingsUsername.value = localStorage.getItem('username') || '';
-        settingsLanguage.value = localStorage.getItem('language') || 'es';
-        settingsTheme.value = localStorage.getItem('theme-set') || 'banderas';
+        const currentUser = getCurrentUser();
+        if (settingsPage && chatList) {
+            settingsPage.classList.remove('hidden');
+            chatList.classList.add('hidden');
+            
+            // Actualizar el nombre de usuario en ajustes
+            if (settingsUsername && currentUser) {
+                const name = currentUser.username || currentUser.email?.split('@')[0] || 'Usuario';
+                settingsUsername.value = name;
+                settingsUsername.setAttribute('readonly', true);
+            }
+        }
     });
 
     // Volver de ajustes
