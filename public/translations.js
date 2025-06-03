@@ -87,7 +87,15 @@ const translations = {
         addMembers: 'Agregar miembros',
         membersAdded: 'Miembros agregados exitosamente',
         errorAddMembers: 'Error al agregar miembros',
-        addedMembers: 'ha agregado a los miembros'
+        addedMembers: 'ha agregado a los miembros',
+        
+        // Ajustes
+        settings: 'Ajustes',
+        profile: 'Perfil',
+        language: 'Idioma',
+        theme: 'Tema',
+        about: 'Acerca de',
+        developer: 'Desarrollado por Andrea Panepinto',
     },
     en: {
         // Authentication
@@ -173,7 +181,15 @@ const translations = {
         addMembers: 'Add members',
         membersAdded: 'Members added successfully',
         errorAddMembers: 'Error adding members',
-        addedMembers: 'has added members'
+        addedMembers: 'has added members',
+        
+        // Settings
+        settings: 'Settings',
+        profile: 'Profile',
+        language: 'Language',
+        theme: 'Theme',
+        about: 'About',
+        developer: 'Developed by Andrea Panepinto',
     },
     it: {
         // Autenticazione
@@ -259,7 +275,15 @@ const translations = {
         addMembers: 'Aggiungi membri',
         membersAdded: 'Membri aggiunti con successo',
         errorAddMembers: 'Errore durante l\'aggiunta dei membri',
-        addedMembers: 'ha aggiunto i membri'
+        addedMembers: 'ha aggiunto i membri',
+        
+        // Impostazioni
+        settings: 'Impostazioni',
+        profile: 'Profilo',
+        language: 'Lingua',
+        theme: 'Tema',
+        about: 'Informazioni',
+        developer: 'Sviluppato da Andrea Panepinto',
     }
 };
 
