@@ -15,7 +15,7 @@
     <link rel="icon" type="image/png" sizes="512x512" href="images/icon-512.png">
     <link rel="apple-touch-icon" href="images/icon-192.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-      <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Pantalla de carga -->
@@ -40,79 +40,110 @@
             </div>
 
             <!-- Selector de tema -->
-          <div class="theme-selector">
-          <label data-translate="selectTheme">Seleccionar tema</label>
-          <select id="themeSelect" class="theme-select">
-            <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
-            <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
-            <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
-            <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
-          </select>
-        </div>
-
-
+            <div class="theme-selector">
+                <label data-translate="selectTheme">Seleccionar tema</label>
+                <select id="themeSelect" class="theme-select">
+                    <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
+                    <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
+                    <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
+                    <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
+                </select>
+            </div>
 
             <input type="email" id="emailInput" data-translate="email" placeholder="Correo electrónico" />
             <input type="text" id="usernameInput" data-translate="username" placeholder="Nombre de usuario" />
-<div class="password-wrapper">
-    <input type="password" id="passwordInput" data-translate="password" placeholder="Contraseña" />
-    <button type="button" id="togglePassword" aria-label="Mostrar contraseña">👁️</button>
-</div>
+            <div class="password-wrapper">
+                <input type="password" id="passwordInput" data-translate="password" placeholder="Contraseña" />
+                <button type="button" id="togglePassword" aria-label="Mostrar contraseña">👁️</button>
+            </div>
             <button id="loginBtn" data-translate="loginRegister">Registrar/Iniciar Sesión</button>
         </div>
     </div>
 
     <!-- Pantalla principal -->
     <div id="mainScreen" class="screen">
-        <!-- Sidebar con lista de chats -->
-        <div class="sidebar">
-            <div class="user-header">
-                <div class="user-info">
-                    <span id="userInfo">Cargando...</span>
-                    <select id="languageSelectMain" class="language-select-main">
-                        <option value="es" data-translate="languageEs">Español</option>
-                        <option value="en" data-translate="languageEn">Inglés</option>
-                        <option value="it" data-translate="languageIt">Italiano</option>
-                    </select>
-                        <!-- Selector de tema 
-                    <select id="themeSelectMain" class="theme-select-main">
-                        <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
-                        <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
-                        <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
-                        <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
-                    </select> -->
+        <!-- Vista de chats individuales -->
+        <div id="privateChatsView" class="view-container active">
+            <div class="chat-list-container">
+                <div class="search-container">
+                    <input type="text" id="searchPrivateChats" data-translate="searchPlaceholder" placeholder="Buscar chat" />
                 </div>
-                <div class="header-actions">
-                    <button id="createGroup" class="icon-button" title="Crear grupo">
-                        <i class="fas fa-users"></i>
-                    </button>
-                    <button id="newChat" class="icon-button" title="Nuevo chat" data-translate="newChat">
-                        <i class="fa-solid fa-plus"></i> 
-                    </button>
-                    <button id="logoutBtn" class="icon-button" title="Cerrar sesión">
-                        <i class="fas fa-sign-out-alt"></i>
-                    </button>
+                <div id="chatList" class="chat-list">
+                    <!-- Los chats individuales se cargarán aquí -->
                 </div>
-            </div>
-            <div class="search-container">
-                <input type="text" id="searchContacts" data-translate="search" placeholder="Buscar o iniciar nuevo chat" />
-            </div>
-            <div id="chatList" class="chat-list">
-                <!-- Los chats se cargarán aquí dinámicamente -->
             </div>
         </div>
 
-        <!-- Contenedor del chat -->
+        <!-- Vista de grupos -->
+        <div id="groupChatsView" class="view-container">
+            <div class="chat-list-container">
+                <div class="group-header">
+                    <button id="createGroup" class="icon-button" title="Crear grupo">
+                        <i class="fas fa-plus"></i>
+                        <span data-translate="createNewGroup">Crear nuevo grupo</span>
+                    </button>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchGroupChats" data-translate="searchPlaceholder" placeholder="Buscar grupo" />
+                </div>
+                <div id="groupChatslist" class="chat-list">
+                    <!-- Los grupos se cargarán aquí -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Vista de ajustes -->
+        <div id="settingsView" class="view-container">
+            <div class="settings-container">
+                <div class="settings-header">
+                    <h2 data-translate="settings">Ajustes</h2>
+                </div>
+                
+                <div class="user-profile settings-section">
+                    <div class="profile-info">
+                        <i class="fas fa-user profile-icon"></i>
+                        <span id="userInfo">Cargando...</span>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <label data-translate="selectLanguage">Seleccionar idioma</label>
+                        <select id="languageSelectMain" class="language-select-main">
+                            <option value="es" data-translate="languageEs">Español</option>
+                            <option value="en" data-translate="languageEn">Inglés</option>
+                            <option value="it" data-translate="languageIt">Italiano</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-item">
+                        <label data-translate="selectTheme">Seleccionar tema</label>
+                        <select id="themeSelectMain" class="theme-select-main">
+                            <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
+                            <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
+                            <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
+                            <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
+                        </select>
+                    </div>
+
+                    <button id="logoutBtn" class="settings-button">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span data-translate="logout">Cerrar Sesión</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor del chat activo -->
         <div class="chat-container">
             <div class="chat-header">
                 <button class="back-button" id="backToChats">
-                    <span class="material-icons">arrow_back</span>
+                    <i class="fas fa-arrow-left"></i>
                 </button>
                 <div id="currentChatInfo" data-translate="selectChat">Selecciona un chat para comenzar</div>
             </div>
             <div id="messagesList" class="messages-list">
-            <div id="typingIndicator" style="display:none; font-style: italic; padding: 5px 10px; color: #555;"></div>
-
+                <div id="typingIndicator" style="display:none;"></div>
                 <!-- Los mensajes se cargarán aquí dinámicamente -->
             </div>
             <div class="message-input">
@@ -125,6 +156,22 @@
                 </button>
             </div>
         </div>
+
+        <!-- Nueva barra de navegación inferior -->
+        <nav class="bottom-nav">
+            <button class="nav-btn active" data-view="privateChats">
+                <i class="fas fa-comment"></i>
+                <span data-translate="privateChats">Chats</span>
+            </button>
+            <button class="nav-btn" data-view="groupChats">
+                <i class="fas fa-users"></i>
+                <span data-translate="groupChats">Grupos</span>
+            </button>
+            <button class="nav-btn" data-view="settings">
+                <i class="fas fa-cog"></i>
+                <span data-translate="settings">Ajustes</span>
+            </button>
+        </nav>
     </div>
 
     <!-- Material Icons -->
