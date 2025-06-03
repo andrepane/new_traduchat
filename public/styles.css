@@ -2046,6 +2046,15 @@
       opacity: 0.7;
   }
   
+  .app-developer {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--color-text);
+      opacity: 0.6;
+      margin-top: 4px;
+      font-style: italic;
+  }
+  
   .settings-logout-btn {
       width: 100%;
       padding: 15px;
@@ -2088,5 +2097,12 @@
       outline: none;
       border-color: #e5e7eb;
       box-shadow: none;
+  }
+  
+  .user-header h2,
+  .settings-header h2 {
+      font-size: 1.2rem;
+      color: var(--color-primary-dark);
+      font-weight: 600;
   }
   
