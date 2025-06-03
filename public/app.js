@@ -113,56 +113,8 @@ const searchInput = document.getElementById('searchContacts');
 const newChatBtn = document.getElementById('newChat');
 const userInfo = document.getElementById('userInfo');
 const currentChatInfo = document.getElementById('currentChatInfo');
+
 const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
-
-// Referencias para la navegación
-const btnChats = document.getElementById('btnChats');
-const btnGroups = document.getElementById('btnGroups');
-const btnSettings = document.getElementById('btnSettings');
-const settingsPage = document.getElementById('settingsPage');
-const groupsPage = document.getElementById('groupsPage');
-const backFromSettings = document.getElementById('backFromSettings');
-const backFromGroups = document.getElementById('backFromGroups');
-
-// Función para manejar la navegación
-function handleNavigation(section) {
-    // Remover clase active de todos los botones
-    btnChats.classList.remove('active');
-    btnGroups.classList.remove('active');
-    btnSettings.classList.remove('active');
-
-    // Ocultar todas las páginas
-    settingsPage.classList.add('hidden');
-    groupsPage.classList.add('hidden');
-    chatList.style.display = 'block';
-
-    // Mostrar la sección correspondiente
-    switch(section) {
-        case 'chats':
-            btnChats.classList.add('active');
-            break;
-        case 'groups':
-            btnGroups.classList.add('active');
-            groupsPage.classList.remove('hidden');
-            chatList.style.display = 'none';
-            break;
-        case 'settings':
-            btnSettings.classList.add('active');
-            settingsPage.classList.remove('hidden');
-            chatList.style.display = 'none';
-            break;
-    }
-}
-
-// Event Listeners para la navegación
-btnChats.addEventListener('click', () => handleNavigation('chats'));
-btnGroups.addEventListener('click', () => handleNavigation('groups'));
-btnSettings.addEventListener('click', () => handleNavigation('settings'));
-backFromSettings.addEventListener('click', () => handleNavigation('chats'));
-backFromGroups.addEventListener('click', () => handleNavigation('chats'));
-
-// Inicializar la vista de chats como activa
-handleNavigation('chats');
 
 // Referencias adicionales para móvil
 const backButton = document.getElementById('backToChats');
@@ -2800,5 +2752,4 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cerrar sesión desde ajustes
     settingsLogoutBtn.addEventListener('click', handleLogout);
 });
-
 
