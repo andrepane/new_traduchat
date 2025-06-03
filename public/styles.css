@@ -2105,5 +2105,11 @@
       color: var(--color-primary-dark);
       font-weight: 600;
   }
-  
+
+.chat-item.unread {
+  background-color: rgba(0, 200, 100, 0.08);
+  font-weight: bold;
+  border-left: 4px solid #00c864;
+}
+
 
