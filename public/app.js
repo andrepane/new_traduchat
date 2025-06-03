@@ -2599,4 +2599,53 @@ if (themeSelectMain) {
 }
 */
 
+// Funcionalidad de la página de ajustes
+document.addEventListener('DOMContentLoaded', function() {
+    const settingsPage = document.getElementById('settingsPage');
+    const btnSettings = document.getElementById('btnSettings');
+    const backFromSettings = document.getElementById('backFromSettings');
+    const settingsUsername = document.getElementById('settingsUsername');
+    const settingsLanguage = document.getElementById('settingsLanguage');
+    const settingsTheme = document.getElementById('settingsTheme');
+    const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+
+    // Mostrar página de ajustes
+    btnSettings.addEventListener('click', function() {
+        settingsPage.classList.remove('hidden');
+        chatList.classList.add('hidden');
+        
+        // Cargar valores actuales
+        settingsUsername.value = localStorage.getItem('username') || '';
+        settingsLanguage.value = localStorage.getItem('language') || 'es';
+        settingsTheme.value = localStorage.getItem('theme-set') || 'banderas';
+    });
+
+    // Volver de ajustes
+    backFromSettings.addEventListener('click', function() {
+        settingsPage.classList.add('hidden');
+        chatList.classList.remove('hidden');
+    });
+
+    // Cambiar idioma desde ajustes
+    settingsLanguage.addEventListener('change', function() {
+        const newLanguage = this.value;
+        localStorage.setItem('language', newLanguage);
+        document.documentElement.setAttribute('lang', newLanguage);
+        document.body.className = `theme-${localStorage.getItem('theme-set')} theme-${newLanguage}`;
+        updateTranslations();
+    });
+
+    // Cambiar tema desde ajustes
+    settingsTheme.addEventListener('change', function() {
+        const newTheme = this.value;
+        localStorage.setItem('theme-set', newTheme);
+        document.body.className = `theme-${newTheme} theme-${localStorage.getItem('language')}`;
+    });
+
+    // Cerrar sesión desde ajustes
+    settingsLogoutBtn.addEventListener('click', function() {
+        localStorage.clear();
+        window.location.reload();
+    });
+});
 
