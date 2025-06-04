@@ -887,6 +887,11 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
             constraints.push(where('type', '==', chatType));
         }
 
+
+        // Firestore requires a composite index for ordering with array-contains.
+        // To avoid index errors we sort the chats client-side instead.
+
+
         const q = query(collection(db, 'chats'), ...constraints);
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
@@ -1720,6 +1725,7 @@ function getChatReadTimes() {
 }
 
 // Funciones auxiliares para la interfaz
+
 async function setupGroupChatInterface(chatData) {
     const participantsInfo = await Promise.all(
         chatData.participants.map(async (userId) => {

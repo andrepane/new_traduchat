@@ -520,6 +520,7 @@
       text-overflow: ellipsis;
       color: #333;
   }
+
   
   
   /* ==========================================================================
@@ -1289,6 +1290,14 @@
   #createGroup:hover {
       background: #1b5e20;
   }
+
+
+
+  /* Botón para añadir miembros */
+  #addMembersBtn {
+      font-size: 0.75rem;
+  }
+
 
   
   #logoutBtn {
