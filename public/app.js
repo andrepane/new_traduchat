@@ -38,7 +38,7 @@ import {
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 
-import { translations, getTranslation, translateInterface, animateTitleWave, getTypingText } from './translations.js';
+import { translations, getTranslation, translateInterface, animateTitleWave, getTypingText, getTypingMessage } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
 import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
@@ -1546,10 +1546,10 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
         console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
 
         if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
-            const typingText = getTypingText(currentLang);
             const username = typingStatus.username || typingStatus.userId;
+            const typingMessage = getTypingMessage(username, currentLang);
             console.log('💬 Usuario escribiendo:', username);
-            showTypingIndicator(`${username} ${typingText}`);
+            showTypingIndicator(typingMessage);
         } else {
             console.log('💬 Nadie está escribiendo');
             hideTypingIndicator();
