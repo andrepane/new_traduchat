@@ -386,5 +386,12 @@ export function getTypingText(lang) {
     return fallbackMessages[lang] || 'is typing...';
 }
 
+export function getTypingMessage(username, lang) {
+    if (translations[lang] && translations[lang].userIsTyping) {
+        return translations[lang].userIsTyping.replace('{user}', username);
+    }
+    return `${username} ${getTypingText(lang)}`;
+}
+
 // Exportar todo junto al final
 export { translations, getTranslation, translateInterface, animateTitleWave };
