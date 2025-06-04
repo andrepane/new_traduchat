@@ -1272,6 +1272,12 @@
       background: #1b5e20;
   }
 
+
+  /* Botón para añadir miembros */
+  #addMembersBtn {
+      font-size: 0.75rem;
+  }
+
   
   #logoutBtn {
       background: var(--color-danger);
