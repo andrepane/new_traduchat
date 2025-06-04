@@ -540,10 +540,11 @@
       scrollbar-color: var(--color-primary) transparent;
   }
   
-  .chat-item {
-      display: flex;
-      align-items: center;
-      background-color: var(--color-bg);
+.chat-item.unread {
+    background-color: var(--color-unread);
+    border-left: 4px solid var(--color-primary-dark);
+    font-weight: bold;
+}
       padding: 15px;
       border-radius: var(--radius);
       border-left: 3px solid var(--color-primary-dark);
@@ -2119,7 +2120,7 @@
   }
   
   /* Ajustes iOS */
-  @supports (-webkit-touch-callout: none) {
+  border-left: 4px solid var(--color-primary-dark);
       .settings-header {
           padding-top: calc(var(--safe-area-top) + 12px);
           height: calc(var(--header-height) + var(--safe-area-top));

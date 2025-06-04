@@ -107,6 +107,9 @@ const phoneInput = document.getElementById('phoneNumber');
 const countrySelect = document.getElementById('countryCode');
 const loginBtn = document.getElementById('loginBtn');
 const chatList = document.getElementById('chatList');
+const groupsListEl = document.getElementById('groupsList');
+const groupsPage = document.getElementById('groupsPage');
+const settingsPage = document.getElementById('settingsPage');
 const messageInput = document.getElementById('messageInput');
 const sendMessageBtn = document.getElementById('sendMessage');
 const messagesList = document.getElementById('messagesList');
@@ -115,11 +118,13 @@ const newChatBtn = document.getElementById('newChat');
 const userInfo = document.getElementById('userInfo');
 const currentChatInfo = document.getElementById('currentChatInfo');
 
-const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
-
-// Referencias adicionales para móvil
-const backButton = document.getElementById('backToChats');
-const addMembersBtn = document.getElementById('addMembersBtn');
+let unsubscribeMessages = null; // Variable para almacenar la función de cancelación de suscripción
+let typingTimeouts = {};
+let lastSender = null;
+let unsubscribeChats = null;
+let initialLoadComplete = false; // Variable para controlar la carga inicial de mensajes
+let currentListType = 'individual';
+let inMemoryReadTimes = {};
 const sidebar = document.querySelector('.sidebar');
 
 // Variables globales
@@ -1675,10 +1680,14 @@ async function loadMoreMessages(chatId) {
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
         // Guardar la posición actual del scroll
-        const scrollHeight = messagesList.scrollHeight;
-        const scrollTop = messagesList.scrollTop;
-
-        // Mostrar mensajes en orden cronológico al inicio de la lista
+        inMemoryReadTimes = times;
+        console.warn('LocalStorage unavailable, storing in memory', e);
+        inMemoryReadTimes[chatId] = Date.now();
+        const stored = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
+        inMemoryReadTimes = stored;
+        return stored;
+        console.warn('LocalStorage unavailable, using in-memory times', e);
+        return inMemoryReadTimes;
         messages.reverse().forEach(async messageData => {
             const messageElement = document.createElement('div');
             if (messageData.type === 'system') {
@@ -2060,9 +2069,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (currentChat) {
                 showAddMembersModal(currentChat, currentChatParticipants);
             }
-        });
-        addBtn.classList.add('hidden');
-    }
+        if (currentChat) {
+            markChatAsRead(currentChat);
+        }
+
+        // Recargar la lista correspondiente
+        if (currentListType === 'group') {
+            if (groupsPage) groupsPage.classList.remove('hidden');
+            if (chatList) chatList.classList.add('hidden');
+            setupRealtimeChats(groupsListEl, 'group');
+        } else {
+            if (groupsPage) groupsPage.classList.add('hidden');
+            if (chatList) chatList.classList.remove('hidden');
+            setupRealtimeChats(chatList, 'individual');
+        }
+    } else {
 });
 
 // Función para manejar la navegación entre vistas
@@ -2860,22 +2881,22 @@ if (themeSelectMain) {
     }
 
     themeSelectMain.addEventListener("change", () => {
-        const selectedTheme = themeSelectMain.value;
-        const lang = getUserLanguage();
-        updateThemeAndLanguage(selectedTheme, lang);
-    });
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const btnSettings = document.querySelectorAll('#btnSettings');
+    const btnChats = document.querySelectorAll('#btnChats');
+    const btnGroups = document.querySelectorAll('#btnGroups');
+    const backFromSettings = document.getElementById('backFromSettings');
+    const backFromGroups = document.getElementById('backFromGroups');
+    const settingsUsername = document.getElementById('settingsUsername');
+    const settingsLanguage = document.getElementById('settingsLanguage');
+    const settingsTheme = document.getElementById('settingsTheme');
+    const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
 
-
-/*
-const themeSelectMain = document.getElementById("themeSelectMain");
-
-if (themeSelectMain) {
-    themeSelectMain.addEventListener("change", () => {
-        const selectedTheme = themeSelectMain.value; // banderas, elegante, elegante2, creativo
-        const currentLang = document.getElementById("languageSelectMain").value || "es";
-
-        // Quitar cualquier clase de tema anterior
+                currentListType = 'individual';
+                currentListType = 'group';
+                setupRealtimeChats(groupsListEl, 'group');
+                currentListType = 'individual';
+                currentListType = 'individual';
         document.body.classList.forEach(cls => {
             if (cls.startsWith("theme-set-")) {
                 document.body.classList.remove(cls);
