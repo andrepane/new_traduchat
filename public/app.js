@@ -173,18 +173,18 @@ function formatTime(seconds) {
 // Función para iniciar el temporizador
 function startTimer(duration) {
     let timeLeft = duration;
-    timerElement.textContent = `Código válido por: ${formatTime(timeLeft)}`;
+    timerElement.textContent = getTranslation('codeValidFor', getUserLanguage(), formatTime(timeLeft));
     
     clearInterval(timerInterval);
     timerInterval = setInterval(() => {
         timeLeft--;
-        timerElement.textContent = `Código válido por: ${formatTime(timeLeft)}`;
+        timerElement.textContent = getTranslation('codeValidFor', getUserLanguage(), formatTime(timeLeft));
         
         if (timeLeft <= 0) {
             clearInterval(timerInterval);
             verificationCode = null;
             resendCodeBtn.disabled = false;
-            timerElement.textContent = 'Código expirado';
+            timerElement.textContent = getTranslation('codeExpired', getUserLanguage());
         }
     }, 1000);
 }
@@ -193,7 +193,7 @@ function startTimer(duration) {
 function simulateSendSMS(phoneNumber, code) {
     console.log(`Código enviado a ${phoneNumber}: ${code}`);
     // En una implementación real, aquí se llamaría a un servicio de SMS
-    alert(`Para fines de demostración, tu código es: ${code}`);
+    alert(getTranslation('demoVerificationCode', getUserLanguage(), code));
 }
 
 // Función para enviar el código vía API
@@ -215,7 +215,7 @@ async function sendVerificationCode(phoneNumber) {
         return true;
     } catch (error) {
         console.error('Error al enviar código:', error);
-        alert('Error al enviar el código: ' + error.message);
+        alert(getTranslation('errorSendingCode', getUserLanguage(), error.message));
         return false;
     }
 }
@@ -235,7 +235,7 @@ async function verifyCode(phoneNumber, code) {
         return data.success;
     } catch (error) {
         console.error('Error al verificar código:', error);
-        alert('Error al verificar el código: ' + error.message);
+        alert(getTranslation('errorVerifyingCode', getUserLanguage(), error.message));
         return false;
     }
 }
@@ -308,7 +308,7 @@ loginBtn.addEventListener('click', async () => {
 
     const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
     if (!usernameRegex.test(username)) {
-        alert('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos, y debe tener entre 3 y 20 caracteres');
+        alert(getTranslation('errorUsernameChars', getUserLanguage()));
         return;
     }
 
@@ -354,7 +354,7 @@ loginBtn.addEventListener('click', async () => {
                 showError('errorNetwork');
                 break;
             case 'auth/too-many-requests':
-                alert('Demasiados intentos. Intenta más tarde.');
+                alert(getTranslation('errorTooManyAttempts', getUserLanguage()));
                 break;
             default:
                 showError('errorGeneric');
