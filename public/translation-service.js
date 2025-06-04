@@ -56,10 +56,19 @@ function saveCache() {
 // Función para traducir texto
 export async function translateText(text, targetLanguage, sourceLanguage = 'auto') {
     console.log(`🔄 Traduciendo texto de ${sourceLanguage} a ${targetLanguage}:`, text);
-    
+
+    const cacheKey = `${text}|${sourceLanguage}|${targetLanguage}`;
+    const cached = translationCache[cacheKey];
+    if (cached) {
+        console.log('🗄️ Traducción obtenida del caché:', cached.translatedText);
+        cached.timestamp = new Date().getTime();
+        saveCache();
+        return cached.translatedText;
+    }
+
     try {
         const response = await fetch(`https://magicloops.dev/api/loop/1f32ffbd-1eb5-4e1c-ab57-f0a322e5a1c3/run?text=${encodeURIComponent(text)}&targetLanguage=${targetLanguage}&sourceLanguage=${sourceLanguage}`);
-        
+
         if (!response.ok) {
             if (response.status === 429) {
                 console.warn('⚠️ Límite de traducción excedido');
@@ -70,7 +79,15 @@ export async function translateText(text, targetLanguage, sourceLanguage = 'auto
 
         const data = await response.json();
         console.log('✅ Traducción completada:', data);
-        return data.translatedText || text;
+        const result = data.translatedText || text;
+
+        translationCache[cacheKey] = {
+            translatedText: result,
+            timestamp: new Date().getTime()
+        };
+        saveCache();
+
+        return result;
     } catch (error) {
         console.error('❌ Error en la traducción:', error);
         return text;
