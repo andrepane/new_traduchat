@@ -1,7 +1,7 @@
 {
   "name": "traduchat-wa",
   "version": "1.0.0",
-  "description": "Chat multilingüe tipo WhatsApp",
+  "description": "Chat multilingüe",
   "main": "app.js",
   "type": "module",
   "scripts": {
