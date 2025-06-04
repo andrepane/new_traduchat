@@ -1704,10 +1704,17 @@ async function syncUserLanguage(user) {
                 console.log('📤 Guardando idioma actual en la base de datos:', currentLanguage);
                 await updateDoc(doc(db, 'users', user.uid), {
                     language: currentLanguage,
-        document.body.classList.add(`theme-${currentLang}`);
-    });
+                    lastUpdated: serverTimestamp()
+                });
+                // Actualizar el tema según el idioma actual
+                updateTheme(currentLanguage);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error al sincronizar idioma:', error);
+    }
 }
-*/
+
 
 // Funcionalidad de la página de ajustes
 document.addEventListener('DOMContentLoaded', function() {
