@@ -161,6 +161,30 @@
                 </div>
             </div>
 
+            <!-- Página de Grupos -->
+            <div id="groupsPage" class="groups-page hidden">
+                <div class="groups-header">
+                    <button class="back-button" id="backFromGroups">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 data-translate="groups">Grupos</h2>
+                    <div class="header-actions">
+                        <button id="createGroupFromGroups" class="icon-button" title="Crear grupo">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        <button id="newGroupChat" class="icon-button" title="Nuevo chat" data-translate="newChat">
+                            <i class="fa-solid fa-plus"></i> 
+                        </button>
+                    </div>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="searchGroups" data-translate="search" placeholder="Buscar o iniciar nuevo chat" />
+                </div>
+                <div id="groupsList" class="chat-list">
+                    <!-- Los grupos se cargarán aquí dinámicamente -->
+                </div>
+            </div>
+
             <!-- Nueva barra de navegación -->
             <nav class="bottom-nav">
                 <button class="nav-button" id="btnChats">
