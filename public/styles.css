@@ -1080,10 +1080,14 @@
   /* Indicador de Escritura */
   #typingIndicator {
       padding: 5px 10px;
+      margin: 5px;
       font-style: italic;
       color: var(--color-system);
       text-align: center;
       animation: fadeIn 0.3s ease;
+      position: sticky;
+      bottom: 0;
+      background: var(--color-bg-alt);
   }
   
   /* Mensajes del Sistema */

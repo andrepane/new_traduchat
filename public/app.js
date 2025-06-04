@@ -1521,44 +1521,16 @@ async function openChat(chatId) {
 
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
-const newMessagesQuery = query(
-    messagesRef,
-    orderBy('timestamp', 'desc'),
-    limit(1)
-);
+        const newMessagesQuery = query(
+            messagesRef,
+            orderBy('timestamp', 'desc'),
+            limit(1)
+        );
 
-unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
-    if (unsubscribeTypingStatus) {
-        unsubscribeTypingStatus();
-    }
-
-    unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
-        if (!chatDoc.exists()) return;
-
-        const data = chatDoc.data();
-        const typingStatus = data.typingStatus;
-        console.log('📝 Estado de escritura recibido:', typingStatus);
-
-        const currentLang = document.getElementById('languageSelect')?.value || 
-                           document.getElementById('languageSelectMain')?.value || 
-                           getUserLanguage();
-
-        console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
-
-        if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
-            const typingText = getTypingText(currentLang);
-            const username = typingStatus.username || typingStatus.userId;
-            console.log('💬 Usuario escribiendo:', username);
-            showTypingIndicator(`${username} ${typingText}`);
-        } else {
-            console.log('💬 Nadie está escribiendo');
-            hideTypingIndicator();
-        }
-    });
-
-    snapshot.docChanges().forEach(async change => {
-        if (change.type === 'added') {
-            const messageData = { ...change.doc.data(), id: change.doc.id };
+        unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
+            snapshot.docChanges().forEach(async change => {
+                if (change.type === 'added') {
+                    const messageData = { ...change.doc.data(), id: change.doc.id };
             
             // Evitar duplicados
             if (lastProcessedMessageId === messageData.id) {
@@ -1577,9 +1549,12 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
                 messagesList.scrollTop = messagesList.scrollHeight;
             }
             markChatAsRead(chatId);
-        }
-    });
-});
+                }
+            });
+        });
+
+        // Suscripción a estado de escritura
+        subscribeTypingStatus(chatId);
 
 
     } catch (error) {
@@ -1950,6 +1925,36 @@ async function setTypingStatus(isTyping) {
     } catch (error) {
         console.error('❌ Error actualizando estado de escritura:', error);
     }
+}
+
+function subscribeTypingStatus(chatId) {
+    if (unsubscribeTypingStatus) {
+        unsubscribeTypingStatus();
+    }
+
+    unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
+        if (!chatDoc.exists()) return;
+
+        const data = chatDoc.data();
+        const typingStatus = data.typingStatus;
+        console.log('📝 Estado de escritura recibido:', typingStatus);
+
+        const currentLang = document.getElementById('languageSelect')?.value ||
+            document.getElementById('languageSelectMain')?.value ||
+            getUserLanguage();
+
+        console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
+
+        if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
+            const typingText = getTypingText(currentLang);
+            const username = typingStatus.username || typingStatus.userId;
+            console.log('💬 Usuario escribiendo:', username);
+            showTypingIndicator(`${username} ${typingText}`);
+        } else {
+            console.log('💬 Nadie está escribiendo');
+            hideTypingIndicator();
+        }
+    });
 }
 
 function handleTyping() {
