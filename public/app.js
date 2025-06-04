@@ -2753,4 +2753,51 @@ document.addEventListener('DOMContentLoaded', function() {
     settingsLogoutBtn.addEventListener('click', handleLogout);
 });
 
+// Funciones para la navegación entre páginas
+function showChatsPage() {
+    document.getElementById('chatList').style.display = 'block';
+    document.getElementById('settingsPage').classList.add('hidden');
+    document.getElementById('groupsPage').classList.add('hidden');
+    
+    // Actualizar estados de los botones
+    document.getElementById('btnChats').classList.add('active');
+    document.getElementById('btnGroups').classList.remove('active');
+    document.getElementById('btnSettings').classList.remove('active');
+}
+
+function showGroupsPage() {
+    document.getElementById('chatList').style.display = 'none';
+    document.getElementById('settingsPage').classList.add('hidden');
+    document.getElementById('groupsPage').classList.remove('hidden');
+    
+    // Actualizar estados de los botones
+    document.getElementById('btnChats').classList.remove('active');
+    document.getElementById('btnGroups').classList.add('active');
+    document.getElementById('btnSettings').classList.remove('active');
+}
+
+// Event listeners para la navegación
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing code ...
+
+    // Botón de grupos
+    document.getElementById('btnGroups').addEventListener('click', showGroupsPage);
+    
+    // Botón de chats (actualizar el existente si ya existe)
+    document.getElementById('btnChats').addEventListener('click', showChatsPage);
+    
+    // Botón de volver desde grupos
+    document.getElementById('backFromGroups').addEventListener('click', showChatsPage);
+});
+
+// Inicialización de la aplicación
+function initializeApp() {
+    // ... existing code ...
+    
+    // Inicializar estado de navegación
+    document.getElementById('groupsPage').classList.add('hidden');
+    document.getElementById('btnChats').classList.add('active');
+    
+    // ... rest of initialization code ...
+}
 
