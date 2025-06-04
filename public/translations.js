@@ -16,6 +16,7 @@ const translations = {
         logoutSuccess: 'Has cerrado sesión correctamente',
         noPhone: 'Sin teléfono',
         listening: 'Escuchando...',
+        chats: 'Chats',
         
         // Mensajes de error/éxito
         errorEmptyFields: 'Por favor, completa todos los campos',
@@ -36,9 +37,9 @@ const translations = {
         errorLoadingChats: 'Error al cargar los chats',
           selectTheme: "Seleccionar tema",
           themeBanderas: "Colores de bandera",
-          themeElegante: "Pastel elegante",
-          themeCreativo: "Creativo vibrante",
-        themeElegante2: "Brisa de té",
+          themeElegante: "Pastel",
+          themeCreativo: "Creativo",
+        themeElegante2: "Elegante",
         
         // Idiomas
         languageEs: 'Español',
@@ -88,7 +89,15 @@ const translations = {
         membersAdded: 'Miembros agregados exitosamente',
         errorAddMembers: 'Error al agregar miembros',
         addedMembers: 'ha agregado a los miembros',
-        groups: 'Grupos'
+        groups: 'Groups',
+        
+        // Ajustes
+        settings: 'Ajustes',
+        profile: 'Perfil',
+        language: 'Idioma',
+        theme: 'Tema',
+        about: 'Acerca de',
+        developer: 'Desarrollado por Andrea Panepinto',
     },
     en: {
         // Authentication
@@ -103,6 +112,7 @@ const translations = {
         logoutConfirm: 'Are you sure you want to logout?',
         logoutSuccess: 'You have successfully logged out',
         listening: 'Listening...',
+        chats: 'Chats',
         
         // Error/success messages
         errorEmptyFields: 'Please fill in all fields',
@@ -123,9 +133,9 @@ const translations = {
         errorLoadingChats: 'Error loading chats',
           selectTheme: "Select theme",
   themeBanderas: "Flag colors",
-  themeElegante: "Elegant pastel",
-  themeCreativo: "Creative vibrant",
-        themeElegante2: "Tea Breeze",
+  themeElegante: "Pastel",
+  themeCreativo: "Creative",
+        themeElegante2: "Elegant",
         
         // Languages
         languageEs: 'Spanish',
@@ -175,7 +185,17 @@ const translations = {
         membersAdded: 'Members added successfully',
         errorAddMembers: 'Error adding members',
         addedMembers: 'has added members',
-        groups: 'Groups'
+        groups: 'Groups',
+
+
+        
+        // Settings
+        settings: 'Settings',
+        profile: 'Profile',
+        language: 'Language',
+        theme: 'Theme',
+        about: 'About',
+        developer: 'Developed by Andrea Panepinto',
     },
     it: {
         // Autenticazione
@@ -191,6 +211,7 @@ const translations = {
         logoutConfirm: 'Sei sicuro di voler disconnetterti?',
         logoutSuccess: 'Disconnessione effettuata con successo',
         listening: 'In ascolto...',
+        chats: 'Chat',
         
         // Messaggi di errore/successo
         errorEmptyFields: 'Per favore, compila tutti i campi',
@@ -210,9 +231,9 @@ const translations = {
         errorLoadingChats: 'Errore nel caricamento delle chat',
          selectTheme: "Seleziona tema",
   themeBanderas: "Colori della bandiera",
-  themeElegante: "Pastello elegante",
-  themeCreativo: "Creativo e vivace",
-        themeElegante2: "Brezza di tè",
+  themeElegante: "Pastello",
+  themeCreativo: "Creativo",
+        themeElegante2: "Elegante",
         
         // Lingue
         languageEs: 'Spagnolo',
@@ -262,7 +283,15 @@ const translations = {
         membersAdded: 'Membri aggiunti con successo',
         errorAddMembers: 'Errore durante l\'aggiunta dei membri',
         addedMembers: 'ha aggiunto i membri',
-        groups: 'Gruppi'
+        groups: 'Gruppi',
+        
+        // Impostazioni
+        settings: 'Impostazioni',
+        profile: 'Profilo',
+        language: 'Lingua',
+        theme: 'Tema',
+        about: 'Informazioni',
+        developer: 'Sviluppato da Andrea Panepinto',
     }
 };
 
