@@ -48,31 +48,6 @@ import { startAuthListener, setUserLanguage } from './modules/auth.js';
 import { initializeNotifications } from './modules/notificaciones.js';
 
 import {
-    setupRealtimeChats,
-    openChat,
-    loadInitialMessages,
-    loadMoreMessages,
-    sendMessage,
-    setTypingStatus,
-    handleTyping,
-    showTypingIndicator,
-    hideTypingIndicator,
-    markChatAsRead,
-    getChatReadTimes
-} from './modules/chat.js';
-
-import {
-    showAuthScreen,
-    showMainScreen,
-    showLoadingScreen,
-    hideLoadingScreen,
-    toggleChatList,
-    updateTheme,
-    updateThemeAndLanguage,
-    showError
-} from './modules/ui.js';
-
-import {
     getUserLanguage,
     getCurrentUser
 } from './modules/state.js';
@@ -266,6 +241,9 @@ async function verifyCode(phoneNumber, code) {
 }
 
 // Función para mostrar mensajes de error
+function showError(errorKey) {
+    alert(getTranslation(errorKey, userLanguage));
+}
 
 // Función para actualizar la información del usuario
 function updateUserInfo(user) {
@@ -284,6 +262,12 @@ function updateUserInfo(user) {
 
 
 // Función para actualizar el tema según el idioma
+function updateTheme(lang) {
+    // Remover clases de tema anteriores
+    document.body.classList.remove('theme-es', 'theme-en', 'theme-it');
+    // Agregar la nueva clase de tema
+    document.body.classList.add(`theme-${lang}`);
+}
 
 // Manejadores de eventos para el cambio de idioma
 if (languageSelect) languageSelect.value = userLanguage;
@@ -464,6 +448,11 @@ async function updateUserData(user, username, isNewUser) {
 }
 
 // Función para mostrar la pantalla de autenticación
+function showAuthScreen() {
+    document.getElementById('mainScreen').classList.remove('active');
+    document.getElementById('authScreen').classList.add('active');
+    document.body.classList.remove('in-chat');
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM Cargado');
@@ -627,8 +616,160 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Funciones de UI mejoradas
+function showLoadingScreen() {
+    document.querySelector('.loading-screen').style.display = 'flex';
+}
+
+function hideLoadingScreen() {
+    document.querySelector('.loading-screen').style.display = 'none';
+}
+
+// Función para ajustar el diseño en móvil
+function adjustMobileLayout() {
+    // Añadir meta viewport para evitar zoom en inputs
+    let viewportMeta = document.querySelector('meta[name="viewport"]');
+    if (!viewportMeta) {
+        viewportMeta = document.createElement('meta');
+        viewportMeta.name = 'viewport';
+        document.head.appendChild(viewportMeta);
+    }
+    viewportMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+
+    // Ajustar scroll en mensajes cuando aparece el teclado
+    if (window.innerWidth <= 768) {
+        const messagesList = document.querySelector('.messages-list');
+        if (messagesList) {
+            setTimeout(() => {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }, 100);
+        }
+    }
+}
+
+// Asegurarse de que el teclado virtual no cause problemas
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) {
+        const messagesList = document.querySelector('.messages-list');
+        if (messagesList) {
+            setTimeout(() => {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }, 100);
+        }
+    }
+});
+
+// Prevenir zoom en inputs en iOS
+document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+});
 
 // Función para actualizar el tema y el idioma
+function updateThemeAndLanguage(theme, lang) {
+    // Limpiar todas las clases de tema e idioma
+    document.body.classList.forEach(cls => {
+        if (cls.startsWith('theme-set-') || cls.startsWith('theme-')) {
+            document.body.classList.remove(cls);
+        }
+    });
+
+    // Aplicar el nuevo tema y el idioma
+    document.body.classList.add(`theme-set-${theme}`);
+    document.body.classList.add(`theme-${lang}`);
+
+    // Guardar tema en localStorage
+    localStorage.setItem("selectedTheme", theme);
+
+    // Actualizar TODOS los selectores de tema si existen
+    const themeSelect = document.getElementById("themeSelect");
+    const themeSelectMain = document.getElementById("themeSelectMain");
+    if (themeSelect) themeSelect.value = theme;
+    if (themeSelectMain) themeSelectMain.value = theme;
+
+    // Actualizar TODOS los selectores de idioma si existen
+    const languageSelect = document.getElementById("languageSelect");
+    const languageSelectMain = document.getElementById("languageSelectMain");
+    if (languageSelect) languageSelect.value = lang;
+    if (languageSelectMain) languageSelectMain.value = lang;
+}
+
+// Función para mostrar la pantalla principal
+function showMainScreen() {
+    document.getElementById('authScreen').classList.remove('active');
+    document.getElementById('mainScreen').classList.add('active');
+    toggleChatList(true);
+    
+    // Inicializar el selector de tema
+    const themeSelectMain = document.getElementById("themeSelectMain");
+    if (themeSelectMain) {
+        // Restaurar tema guardado
+        const savedTheme = localStorage.getItem("selectedTheme") || "banderas";
+        const currentLang = getUserLanguage();
+        updateThemeAndLanguage(savedTheme, currentLang);
+
+        themeSelectMain.addEventListener("change", () => {
+            const selectedTheme = themeSelectMain.value;
+            const currentLang = document.getElementById("languageSelectMain").value || "es";
+            
+            // Guardar en localStorage
+            localStorage.setItem("selectedTheme", selectedTheme);
+            
+            // Actualizar tema e idioma
+            updateThemeAndLanguage(selectedTheme, currentLang);
+        });
+    }
+}
+
+// Función para limpiar el estado del chat
+function resetChatState() {
+    console.log('🔄 Reseteando estado del chat');
+    
+    // Cancelar todas las suscripciones
+    if (unsubscribeMessagesFn) {
+        unsubscribeMessagesFn();
+        unsubscribeMessagesFn = null;
+    }
+    
+    if (unsubscribeChats) {
+        unsubscribeChats();
+        unsubscribeChats = null;
+    }
+
+    if (unsubscribeTypingStatus) {
+        unsubscribeTypingStatus();
+        unsubscribeTypingStatus = null;
+    }
+    
+    // Limpiar UI
+    if (messagesList) {
+        messagesList.innerHTML = '';
+    }
+    
+    if (messageInput) {
+        messageInput.value = '';
+    }
+    
+    if (currentChatInfo) {
+        currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+    }
+    
+    if (chatList) {
+        chatList.innerHTML = '';
+    }
+    
+    // Limpiar estado
+    currentChat = null;
+    lastSender = null;
+    lastProcessedMessageId = null;
+    initialLoadComplete = false;
+    allMessagesLoaded = false;
+    lastVisibleMessage = null;
+    
+    // Ocultar indicador de escritura
+    hideTypingIndicator();
+    setTypingStatus(false);
+    
+    console.log('✅ Estado del chat reseteado completamente');
+}
 
 // Función para borrar un chat
 async function deleteChat(chatId) {
@@ -720,6 +861,148 @@ function showDeleteConfirmDialog(chatId, chatElement) {
 }
 
 // Función para cargar chats en tiempo real
+async function setupRealtimeChats(container = chatList, chatType = null) {
+    console.log('🔄 Configurando escucha de chats en tiempo real');
+
+    if (unsubscribeChats) {
+        unsubscribeChats();
+        unsubscribeChats = null;
+    }
+
+    if (container) {
+        container.innerHTML = '';
+    }
+
+    const currentUser = getCurrentUser();
+    const currentLang = document.getElementById('languageSelect')?.value ||
+                       document.getElementById('languageSelectMain')?.value ||
+                       getUserLanguage();
+
+    if (!db || !currentUser) {
+        console.error('❌ Firestore o usuario no inicializados');
+        if (container) {
+            container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', currentLang)}</div>`;
+        }
+        return;
+    }
+
+    try {
+        const constraints = [where('participants', 'array-contains', currentUser.uid)];
+        if (chatType) {
+            constraints.push(where('type', '==', chatType));
+        }
+
+        const q = query(collection(db, 'chats'), ...constraints);
+
+        unsubscribeChats = onSnapshot(q, async (snapshot) => {
+            try {
+                if (container) container.innerHTML = '';
+
+                if (snapshot.empty) {
+                    if (container) {
+                        const noChatsDiv = document.createElement('div');
+                        noChatsDiv.className = 'chat-item';
+                        noChatsDiv.setAttribute('data-translate', 'noChats');
+                        noChatsDiv.textContent = getTranslation('noChats', currentLang);
+                        container.appendChild(noChatsDiv);
+                    }
+                    return;
+                }
+
+                const readTimes = getChatReadTimes();
+
+                const chats = await Promise.all(snapshot.docs.map(async docSnap => {
+                    const data = docSnap.data();
+                    let name = '';
+                    if (data.type === 'group') {
+                        name = data.name;
+                    } else {
+                        const otherId = data.participants.find(id => id !== currentUser.uid);
+                        if (otherId) {
+                            const otherDoc = await getDoc(doc(db, 'users', otherId));
+                            if (otherDoc.exists()) {
+                                const od = otherDoc.data();
+                                name = od.username || od.email.split('@')[0];
+                            }
+                        }
+                    }
+
+                    const lastMsgTime = data.lastMessageTime ? data.lastMessageTime.toDate() : new Date(0);
+                    const unread = lastMsgTime.getTime() > (readTimes[docSnap.id] || 0);
+
+                    return {
+                        id: docSnap.id,
+                        name,
+                        isUnread: unread,
+                        lastMessageTime: lastMsgTime,
+                        lastMessage: data.lastMessage || '',
+                        type: data.type,
+                        participants: data.participants
+                    };
+                }));
+
+                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+
+                for (const chat of chats) {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    chatElement.setAttribute('data-chat-id', chat.id);
+
+                    if (chat.type === 'group') chatElement.classList.add('group-chat');
+                    if (chat.id === currentChat) chatElement.classList.add('active');
+                    if (chat.isUnread) chatElement.classList.add('unread', 'chat-updated');
+
+                    const lastTime = chat.lastMessageTime ?
+                        chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    chatElement.innerHTML = `
+                        <div class="chat-info">
+                            <div class="chat-details">
+                                <div class="chat-name">${chat.name}</div>
+                                <div class="last-message">${chat.lastMessage}</div>
+                            </div>
+                            <div class="last-message-time">${lastTime}</div>
+                        </div>
+                        <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+
+                    const deleteBtn = chatElement.querySelector('.delete-chat-btn');
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showDeleteConfirmDialog(chat.id, chatElement);
+                    });
+
+                    chatElement.addEventListener('click', () => {
+                        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+                        chatElement.classList.remove('unread', 'chat-updated');
+                        chatElement.classList.add('active');
+                        openChat(chat.id);
+                    });
+
+                    if (container) container.appendChild(chatElement);
+                }
+            } catch (error) {
+                console.error('❌ Error al procesar actualización de chats:', error);
+                if (container) {
+                    container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+                }
+            }
+        }, error => {
+            console.error('❌ Error en la suscripción de chats:', error);
+            if (container) {
+                container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+            }
+        });
+
+    } catch (error) {
+        console.error('❌ Error al configurar escucha de chats:', error);
+        if (container) {
+            container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+        }
+    }
+}
 
 
 
@@ -958,6 +1241,747 @@ function debounce(func, wait) {
 }
 
 // Función para mostrar mensajes
+async function displayMessage(messageData) {
+    // Control de duplicados
+    if (!messageData.id) {
+        console.warn('⚠️ Mensaje sin ID, posible duplicado evitado:', messageData);
+        return;
+    }
+
+    const currentUser = getCurrentUser();
+    
+    if (!currentUser) {
+        console.error('❌ No hay usuario autenticado al mostrar mensaje');
+        return;
+    }
+
+    // Obtener el idioma actual del usuario desde la base de datos
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
+    
+    console.log('👤 Usuario actual:', currentUser.email, 'Idioma:', currentLanguage);
+
+    // Determinar qué texto mostrar basado en el idioma actual
+    let messageText = messageData.text;
+    const originalLanguage = messageData.language || 'en';
+    
+    // Solo traducir si:
+    // 1. El mensaje no es del usuario actual
+    // 2. El idioma original es diferente al idioma actual del usuario
+    if (messageData.senderId !== currentUser.uid && originalLanguage !== currentLanguage) {
+        console.log(`🔄 Traduciendo mensaje de ${originalLanguage} a ${currentLanguage}`);
+        
+        // Primero intentar usar una traducción existente
+        if (messageData.translations && messageData.translations[currentLanguage]) {
+            console.log('✅ Usando traducción existente para', currentLanguage);
+            messageText = messageData.translations[currentLanguage];
+        } else {
+            try {
+                console.log('🔄 Solicitando nueva traducción a', currentLanguage);
+                messageText = await translateText(messageData.text, currentLanguage, originalLanguage);
+                
+                // Guardar la traducción para uso futuro
+                if (messageText !== messageData.text) {
+                    const messagesRef = collection(db, 'chats', currentChat, 'messages');
+                    await updateDoc(doc(messagesRef, messageData.id), {
+                        [`translations.${currentLanguage}`]: messageText
+                    });
+                    console.log('✅ Nueva traducción guardada en la base de datos para', currentLanguage);
+                }
+            } catch (error) {
+                console.error('❌ Error al traducir mensaje:', error);
+                messageText = messageData.text + ' [Error de traducción]';
+            }
+        }
+    } else {
+        console.log('✅ Mostrando mensaje en idioma original:', originalLanguage);
+        // Si el mensaje es nuestro o está en nuestro idioma, mostrar el texto original
+        messageText = messageData.text;
+    }
+
+    // Mostrar la bandera del idioma original del mensaje
+    const flag = getFlagEmoji(originalLanguage);
+    
+    let timeString = '';
+    try {
+        const timestamp = messageData.timestamp ?
+            (typeof messageData.timestamp.toDate === 'function' ?
+                messageData.timestamp.toDate() :
+                new Date(messageData.timestamp)
+            ) : new Date();
+        timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (error) {
+        console.error('❌ Error al formatear timestamp:', error);
+        timeString = '';
+    }
+
+    // Obtener el tipo de chat actual
+    const chatDoc = await getDoc(doc(db, 'chats', currentChat));
+    const chatData = chatDoc.exists() ? chatDoc.data() : null;
+    const isGroupChat = chatData && chatData.type === 'group';
+
+    // Obtener el nombre del remitente para chats grupales
+    let senderName = '';
+    if (isGroupChat) {
+        try {
+            if (messageData.senderId === currentUser.uid) {
+                senderName = getTranslation('youMessage', currentLanguage);
+            } else {
+                const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
+                if (senderDoc.exists()) {
+                    const senderData = senderDoc.data();
+                    senderName = senderData.username || senderData.email.split('@')[0];
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error al obtener información del remitente:', error);
+        }
+    }
+
+    const messageElement = document.createElement('div');
+    messageElement.setAttribute('data-message-id', messageData.id);
+    const isSentByMe = messageData.senderId === currentUser.uid;
+    messageElement.className = `message ${isSentByMe ? 'sent' : 'received'}`;
+
+    if (messageData.type === 'audio') {
+        messageElement.innerHTML = `
+            ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
+            <div class="audio-message">
+                <button class="play-button">
+                    <span class="material-icons">play_arrow</span>
+                </button>
+                <div class="waveform"></div>
+                <audio src="${messageData.audioUrl}" preload="none"></audio>
+                <div class="transcription">${messageText}</div>
+            </div>
+            <span class="message-time">${timeString}</span>
+        `;
+
+        const playButton = messageElement.querySelector('.play-button');
+        const audio = messageElement.querySelector('audio');
+
+        playButton.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playButton.querySelector('.material-icons').textContent = 'pause';
+            } else {
+                audio.pause();
+                playButton.querySelector('.material-icons').textContent = 'play_arrow';
+            }
+        });
+
+        audio.addEventListener('ended', () => {
+            playButton.querySelector('.material-icons').textContent = 'play_arrow';
+        });
+    } else {
+        messageElement.innerHTML = `
+            ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
+            <div class="message-content">
+                <span class="message-flag">${flag}</span>
+                <span class="message-text">${messageText}</span>
+                <span class="message-time">${timeString}</span>
+            </div>
+        `;
+    }
+
+    if (messagesList) {
+        // Verificar si el mensaje anterior es del mismo remitente
+        const previousMessage = messagesList.lastElementChild;
+        if (
+            previousMessage &&
+            previousMessage.classList.contains('message') &&
+            previousMessage.getAttribute('data-sender-id') === messageData.senderId
+        ) {
+            messageElement.setAttribute('data-same-sender', 'true');
+        }
+
+        // Guardar el ID del remitente para comparaciones futuras
+        messageElement.setAttribute('data-sender-id', messageData.senderId);
+
+        messagesList.appendChild(messageElement);
+        messagesList.scrollTop = messagesList.scrollHeight;
+    } else {
+        console.error('❌ Lista de mensajes no encontrada');
+    }
+}
+
+// Función para abrir un chat
+async function openChat(chatId) {
+    console.log('Abriendo chat:', chatId);
+    
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+        console.error('No hay usuario autenticado al abrir chat');
+        return;
+    }
+
+    // Cancelar la suscripción anterior si existe
+    if (unsubscribeMessagesFn) {
+        unsubscribeMessagesFn();
+    }
+
+    // Resetear variables de paginación
+    isLoadingMore = false;
+    allMessagesLoaded = false;
+    lastVisibleMessage = null;
+
+    currentChat = chatId;
+
+    // Limpia cualquier manejador previo en la cabecera del chat
+    if (currentChatInfo) {
+        currentChatInfo.onclick = null;
+        currentChatInfo.removeAttribute('title');
+    }
+
+    
+    try {
+        // Obtener información del chat
+        const chatDoc = await getDoc(doc(db, 'chats', chatId));
+        if (!chatDoc.exists()) {
+            console.error('Chat no encontrado:', chatId);
+            return;
+        }
+
+        const chatData = chatDoc.data();
+        console.log('Datos del chat:', chatData);
+        currentChatParticipants = chatData.participants || [];
+        if (addMembersBtn) {
+            if (chatData.type === 'group') {
+                addMembersBtn.classList.remove('hidden');
+            } else {
+                addMembersBtn.classList.add('hidden');
+            }
+        }
+
+
+
+        // Limpiar mensajes anteriores
+        if (messagesList) {
+            messagesList.innerHTML = '';
+            
+            // Añadir el loader al inicio de la lista
+            const loaderDiv = document.createElement('div');
+            loaderDiv.id = 'messages-loader';
+            loaderDiv.className = 'messages-loader';
+            loaderDiv.style.display = 'none';
+            loaderDiv.innerHTML = '<div class="loader-spinner"></div>';
+            messagesList.appendChild(loaderDiv);
+
+            // Añadir observer para detectar cuando se llega arriba
+            const observer = new IntersectionObserver(async (entries) => {
+                if (entries[0].isIntersecting && !isLoadingMore && !allMessagesLoaded) {
+                    await loadMoreMessages(chatId);
+                }
+            }, { threshold: 0.1 });
+
+            observer.observe(loaderDiv);
+
+            // Añadir estilos para el loader si no existen
+            if (!document.querySelector('#loader-styles')) {
+            const style = document.createElement('style');
+                style.id = 'loader-styles';
+            style.textContent = `
+                    .messages-loader {
+                        text-align: center;
+                    padding: 10px;
+                    }
+                    .loader-spinner {
+                        width: 20px;
+                        height: 20px;
+                        border: 2px solid #f3f3f3;
+                        border-top: 2px solid #3498db;
+                        border-radius: 50%;
+                        animation: spin 1s linear infinite;
+                        margin: 0 auto;
+                    }
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+            }
+        }
+        
+        // Configurar la interfaz según el tipo de chat
+        if (chatData.type === 'group') {
+            await setupGroupChatInterface(chatData);
+        } else {
+            await setupIndividualChatInterface(chatData, currentUser);
+        }
+
+        // Cambiar a la vista del chat
+        toggleChatList(false);
+
+        // Cargar mensajes iniciales
+        await loadInitialMessages(chatId);
+        markChatAsRead(chatId);
+
+
+
+        // Suscribirse a nuevos mensajes
+        const messagesRef = collection(db, 'chats', chatId, 'messages');
+const newMessagesQuery = query(
+    messagesRef,
+    orderBy('timestamp', 'desc'),
+    limit(1)
+);
+
+unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
+    if (unsubscribeTypingStatus) {
+        unsubscribeTypingStatus();
+    }
+
+    unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
+        if (!chatDoc.exists()) return;
+
+        const data = chatDoc.data();
+        const typingStatus = data.typingStatus;
+        console.log('📝 Estado de escritura recibido:', typingStatus);
+
+        const currentLang = document.getElementById('languageSelect')?.value || 
+                           document.getElementById('languageSelectMain')?.value || 
+                           getUserLanguage();
+
+        console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
+
+        if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
+            const username = typingStatus.username || typingStatus.userId;
+            const typingMessage = getTypingMessage(username, currentLang);
+            console.log('💬 Usuario escribiendo:', username);
+            showTypingIndicator(typingMessage);
+        } else {
+            console.log('💬 Nadie está escribiendo');
+            hideTypingIndicator();
+        }
+    });
+
+    snapshot.docChanges().forEach(async change => {
+        if (change.type === 'added') {
+            const messageData = { ...change.doc.data(), id: change.doc.id };
+            
+            // Evitar duplicados
+            if (lastProcessedMessageId === messageData.id) {
+                return;
+            }
+            
+            // Actualizar el último mensaje procesado
+            lastProcessedMessageId = messageData.id;
+
+            if (messageData.type === 'system') {
+                displaySystemMessage(messageData);
+            } else {
+                await displayMessage(messageData);
+            }
+            if (messagesList) {
+                messagesList.scrollTop = messagesList.scrollHeight;
+            }
+            markChatAsRead(chatId);
+        }
+    });
+});
+
+
+    } catch (error) {
+        console.error('Error al abrir chat:', error);
+        showError('errorOpenChat');
+    }
+}
+
+// Función para cargar los mensajes iniciales
+async function loadInitialMessages(chatId) {
+    initialLoadComplete = false; // Resetear el estado de carga inicial
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+
+    const q = query(
+        messagesRef,
+        orderBy('timestamp', 'desc'),
+        limit(MESSAGES_PER_BATCH)
+    );
+
+    try {
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) {
+            allMessagesLoaded = true;
+            initialLoadComplete = true; // Marcar como completo incluso si no hay mensajes
+            return;
+        }
+
+        const messages = snapshot.docs.map(doc => ({
+            ...doc.data(),
+            id: doc.id
+        }));
+
+        lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
+        
+        // Si hay mensajes, guardar el ID del último para evitar duplicados
+        if (messages.length > 0) {
+            lastProcessedMessageId = messages[0].id; // Guardamos el ID del mensaje más reciente
+        }
+
+        // Ordenar por timestamp o usar 0 si no hay timestamp
+        messages.sort((a, b) => {
+            const timeA = a.timestamp?.toMillis?.() || 0;
+            const timeB = b.timestamp?.toMillis?.() || 0;
+            return timeA - timeB;
+        });
+
+        // Mostrar mensajes
+        await Promise.all(messages.map(async (messageData) => {
+            if (messageData.type === 'system') {
+                displaySystemMessage(messageData);
+            } else {
+                await displayMessage(messageData);
+            }
+        }));
+
+        messagesList.scrollTop = messagesList.scrollHeight;
+        
+        // Marcar la carga inicial como completa después de mostrar los mensajes
+        initialLoadComplete = true;
+        console.log('✅ Carga inicial completada, último mensaje procesado:', lastProcessedMessageId);
+    } catch (error) {
+        console.error('Error al cargar mensajes iniciales:', error);
+        showError('errorGeneric');
+        initialLoadComplete = true; // Marcar como completo incluso en caso de error
+    }
+}
+
+
+// Función para cargar más mensajes antiguos
+async function loadMoreMessages(chatId) {
+    if (isLoadingMore || allMessagesLoaded) return;
+
+    isLoadingMore = true;
+    const loaderDiv = document.getElementById('messages-loader');
+    if (loaderDiv) loaderDiv.style.display = 'block';
+
+    try {
+        const messagesRef = collection(db, 'chats', chatId, 'messages');
+        const q = query(
+            messagesRef,
+            orderBy('timestamp', 'desc'),
+            startAfter(lastVisibleMessage),
+            limit(MESSAGES_PER_BATCH)
+        );
+
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+            allMessagesLoaded = true;
+            if (loaderDiv) loaderDiv.style.display = 'none';
+            return;
+        }
+
+        const messages = [];
+        snapshot.forEach(doc => {
+            messages.push({ ...doc.data(), id: doc.id });
+        });
+
+        // Actualizar referencia al último mensaje
+        lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
+
+        // Guardar la posición actual del scroll
+        const scrollHeight = messagesList.scrollHeight;
+        const scrollTop = messagesList.scrollTop;
+
+        // Mostrar mensajes en orden cronológico al inicio de la lista
+        messages.reverse().forEach(async messageData => {
+            const messageElement = document.createElement('div');
+            if (messageData.type === 'system') {
+                await displaySystemMessage(messageData, messageElement);
+            } else {
+                await displayMessage(messageData, messageElement);
+            }
+            messagesList.insertBefore(messageElement, messagesList.firstChild);
+        });
+
+        // Mantener la posición del scroll
+        messagesList.scrollTop = messagesList.scrollHeight - scrollHeight + scrollTop;
+    } catch (error) {
+        console.error('Error al cargar más mensajes:', error);
+    } finally {
+        isLoadingMore = false;
+        if (loaderDiv) loaderDiv.style.display = 'none';
+    }
+}
+
+// Guardar la marca de lectura de un chat
+function markChatAsRead(chatId) {
+    try {
+        const times = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
+        times[chatId] = Date.now();
+        localStorage.setItem('chatReadTimes', JSON.stringify(times));
+        inMemoryReadTimes = times;
+    } catch (e) {
+        console.warn('LocalStorage unavailable, storing in memory', e);
+        inMemoryReadTimes[chatId] = Date.now();
+    }
+
+    const chatEl = document.querySelector(`[data-chat-id="${chatId}"]`);
+    if (chatEl) {
+        chatEl.classList.remove('unread');
+    }
+}
+
+function getChatReadTimes() {
+    try {
+        const stored = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
+        inMemoryReadTimes = stored;
+        return stored;
+    } catch (e) {
+        console.warn('LocalStorage unavailable, using in-memory times', e);
+        return inMemoryReadTimes;
+    }
+}
+
+// Funciones auxiliares para la interfaz
+async function setupGroupChatInterface(chatData) {
+    const participantsInfo = await Promise.all(
+        chatData.participants.map(async (userId) => {
+            const userDoc = await getDoc(doc(db, 'users', userId));
+            return userDoc.exists() ? userDoc.data() : { email: 'Usuario desconocido' };
+        })
+    );
+
+    const participantNames = participantsInfo.map(
+        user => user.username || user.email.split('@')[0]
+    );
+
+    const groupInfoElement = document.createElement('div');
+    groupInfoElement.className = 'group-info';
+    groupInfoElement.innerHTML = `
+        <div class="group-name">${chatData.name}</div>
+        <div class="group-participants">
+            ${participantNames.join(', ')}
+        </div>
+    `;
+
+    groupInfoElement.title = participantNames.join(', ');
+    groupInfoElement.onclick = () => alert(participantNames.join(', '));
+
+    if (currentChatInfo) {
+        currentChatInfo.innerHTML = '';
+        currentChatInfo.appendChild(groupInfoElement);
+    }
+
+}
+
+async function setupIndividualChatInterface(chatData, currentUser) {
+    const otherUserId = chatData.participants.find(id => id !== currentUser.uid);
+    if (!otherUserId) {
+        console.error('No se encontró el otro participante');
+        return;
+    }
+
+    const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+    if (!otherUserDoc.exists()) {
+        console.error('Usuario no encontrado:', otherUserId);
+        return;
+    }
+
+    const otherUserData = otherUserDoc.data();
+    if (currentChatInfo) {
+        currentChatInfo.textContent = otherUserData.username || otherUserData.email.split('@')[0];
+    }
+}
+
+// Función para mostrar mensajes del sistema
+function displaySystemMessage(messageData) {
+    if (!messagesList) return;
+
+    const messageElement = document.createElement('div');
+    messageElement.className = 'message system-message';
+    messageElement.innerHTML = `
+        <span class="message-text">${messageData.text}</span>
+        <span class="message-time">${
+            messageData.timestamp ? 
+            new Date(messageData.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
+            ''
+        }</span>
+    `;
+
+    messagesList.appendChild(messageElement);
+    messagesList.scrollTop = messagesList.scrollHeight;
+}
+
+// Función para enviar mensaje
+async function sendMessage(text) {
+    console.log('📤 Intentando enviar mensaje:', text);
+    if (!text.trim() || !currentChat) {
+        console.log('❌ No hay texto o chat activo');
+        return;
+    }
+
+    try {
+        const user = getCurrentUser();
+        if (!user) {
+            console.error('❌ No hay usuario autenticado');
+            return;
+        }
+
+        // Obtener el idioma actual del usuario desde la base de datos
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
+        
+        console.log('👤 Usuario actual:', user.email, 'Idioma:', currentLanguage);
+        
+        // Crear el mensaje con el idioma correcto
+        const messageData = {
+            text: text.trim(),
+            senderId: user.uid,
+            senderEmail: user.email,
+            timestamp: serverTimestamp(),
+            language: currentLanguage, // Asegurar que se guarda el idioma correcto
+            translations: {}
+        };
+
+        console.log('💾 Guardando mensaje en idioma original:', currentLanguage);
+        // Enviar el mensaje
+        const messagesRef = collection(db, 'chats', currentChat, 'messages');
+        const docRef = await addDoc(messagesRef, messageData);
+        console.log('✅ Mensaje enviado con ID:', docRef.id);
+        
+        // Actualizar último mensaje del chat
+        const chatRef = doc(db, 'chats', currentChat);
+        await updateDoc(chatRef, {
+            lastMessage: text.trim(),
+            lastMessageTime: serverTimestamp()
+        });
+        
+        // Limpiar el input
+        messageInput.value = '';
+        
+        // Obtener información del chat
+        const chatDoc = await getDoc(chatRef);
+        const chatData = chatDoc.data();
+        const isGroupChat = chatData.type === 'group';
+        
+        // Determinar los idiomas necesarios para traducción
+        let targetLanguages = new Set();
+        
+        if (isGroupChat) {
+            console.log('👥 Chat grupal detectado, obteniendo idiomas de participantes...');
+            // Para grupos, obtener los idiomas únicos de todos los participantes
+            const participantsData = await Promise.all(
+                chatData.participants.map(uid => getDoc(doc(db, 'users', uid)))
+            );
+            
+            participantsData.forEach(participantDoc => {
+                if (participantDoc.exists()) {
+                    const participantLang = participantDoc.data().language || 'en';
+                    if (participantLang !== currentLanguage) {
+                        targetLanguages.add(participantLang);
+                    }
+                }
+            });
+        } else {
+            console.log('👤 Chat individual detectado, obteniendo idioma del otro usuario...');
+            // Para chats individuales, solo traducir al idioma del otro usuario
+            const otherUserId = chatData.participants.find(uid => uid !== user.uid);
+            if (otherUserId) {
+                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
+                if (otherUserDoc.exists()) {
+                    const otherUserLang = otherUserDoc.data().language || 'en';
+                    if (otherUserLang !== currentLanguage) {
+                        targetLanguages.add(otherUserLang);
+                    }
+                }
+            }
+        }
+        
+        console.log('🎯 Idiomas objetivo para traducción:', Array.from(targetLanguages));
+        // Realizar las traducciones necesarias
+        for (const targetLang of targetLanguages) {
+            try {
+                console.log(`🔄 Traduciendo mensaje a ${targetLang}...`);
+                const translation = await translateText(text, targetLang, currentLanguage);
+                
+                if (translation === 'LIMIT_EXCEEDED') {
+                    console.warn('⚠️ Límite de traducción excedido');
+                    await updateDoc(doc(messagesRef, docRef.id), {
+                        [`translations.${targetLang}`]: text,
+                        translationStatus: 'limit_exceeded'
+                    });
+                    const limitMessage = getTranslation('translationLimitExceeded', currentLanguage);
+                    alert(limitMessage);
+                    break;
+                } else {
+                    console.log(`✅ Traducción a ${targetLang} completada:`, translation);
+                    await updateDoc(doc(messagesRef, docRef.id), {
+                        [`translations.${targetLang}`]: translation
+                    });
+                }
+            } catch (translationError) {
+                console.error(`❌ Error al traducir al ${targetLang}:`, translationError);
+                await updateDoc(doc(messagesRef, docRef.id), {
+                    [`translations.${targetLang}`]: text,
+                    translationError: true
+                });
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error al enviar mensaje:', error);
+        showError('errorGeneric');
+    }
+}
+
+let typingTimeout = null;
+let unsubscribeTypingStatus = null;
+
+async function setTypingStatus(isTyping) {
+    if (!currentChat || !currentUser) return;
+
+    console.log(`🔄 setTypingStatus llamado con: ${isTyping}`);
+
+    const chatRef = doc(db, 'chats', currentChat);
+
+    try {
+        const typingData = isTyping ? {
+            userId: currentUser.uid,
+            timestamp: serverTimestamp(),
+            username: currentUser.email.split('@')[0] // o el nombre de usuario si lo tienes
+        } : null;
+
+        await updateDoc(chatRef, {
+            typingStatus: typingData
+        });
+        console.log('✅ Estado de escritura actualizado:', typingData);
+    } catch (error) {
+        console.error('❌ Error actualizando estado de escritura:', error);
+    }
+}
+
+function handleTyping() {
+    setTypingStatus(true);
+
+    if (typingTimeout) clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+        setTypingStatus(false);
+    }, 3000); // 3 segundos sin escribir = no está escribiendo
+}
+
+const typingIndicator = document.getElementById('typingIndicator');
+
+function showTypingIndicator(text) {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.textContent = text;
+        typingIndicator.style.display = 'block';
+        console.log('✨ Mostrando indicador:', text);
+    }
+}
+
+function hideTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.style.display = 'none';
+        typingIndicator.textContent = '';
+        console.log('🚫 Ocultando indicador de escritura');
+    }
+}
+
+
 // Eventos para enviar mensajes
 sendMessageBtn.addEventListener('click', () => {
     console.log('Botón enviar clickeado');
@@ -1053,6 +2077,96 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Función para manejar la navegación entre vistas
+function toggleChatList(show) {
+    console.log('Alternando vista de chat, mostrar lista:', show);
+    
+    const sidebar = document.querySelector('.sidebar');
+    const chatContainer = document.querySelector('.chat-container');
+    const backButton = document.getElementById('backToChats');
+    const addBtn = document.getElementById('addMembersBtn');
+    
+    if (show) {
+        // Mostrar lista de chats
+        if (sidebar) {
+            sidebar.classList.remove('hidden');
+            sidebar.style.display = 'block';
+        }
+        if (chatContainer) {
+            chatContainer.classList.add('hidden');
+            chatContainer.style.display = 'none';
+        }
+        
+        // Cancelar suscripción a mensajes si existe
+        if (unsubscribeMessagesFn) {
+            unsubscribeMessagesFn();
+            unsubscribeMessagesFn = null;
+        }
+
+        if (currentChat) {
+            markChatAsRead(currentChat);
+        }
+
+        if (addBtn) {
+            addBtn.classList.add('hidden');
+        }
+
+        // Restablecer estado del chat actual
+        currentChat = null;
+        if (messagesList) {
+            messagesList.innerHTML = '';
+        }
+        if (currentChatInfo) {
+            currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+            currentChatInfo.onclick = null;
+            currentChatInfo.removeAttribute('title');
+        }
+
+        // Recargar la lista correspondiente
+        if (currentListType === 'group') {
+            if (groupsPage) groupsPage.classList.remove('hidden');
+            if (chatList) chatList.classList.add('hidden');
+            setupRealtimeChats(groupsListEl, 'group');
+        } else {
+            if (groupsPage) groupsPage.classList.add('hidden');
+            if (chatList) chatList.classList.remove('hidden');
+            setupRealtimeChats(chatList, 'individual');
+        }
+    } else {
+
+        // Mostrar chat
+        if (sidebar) {
+            sidebar.classList.add('hidden');
+            sidebar.style.display = 'none';
+        }
+        if (chatContainer) {
+            chatContainer.classList.remove('hidden');
+            chatContainer.style.display = 'block';
+        }
+    }
+
+    // Manejar visibilidad del botón de retorno
+    if (backButton) {
+        backButton.style.display = window.innerWidth <= 768 && !show ? 'block' : 'none';
+    }
+
+    if (addBtn && show) {
+        addBtn.classList.add('hidden');
+    }
+
+    adjustMobileLayout();
+}
+
+// Asegurarse de que el botón de retorno se muestre/oculte correctamente al cambiar el tamaño de la ventana
+window.addEventListener('resize', () => {
+    const backButton = document.getElementById('backToChats');
+    if (backButton) {
+        if (window.innerWidth <= 768 && document.querySelector('.chat-container')?.style.display !== 'none') {
+            backButton.style.display = 'block';
+        } else {
+            backButton.style.display = 'none';
+        }
+    }
+});
 
 // Función para actualizar la lista de usuarios seleccionados
 function updateSelectedUsersList(selectedUsersList, createGroupBtn, minUsers = 1) {
@@ -1704,6 +2818,96 @@ async function syncUserLanguage(user) {
                 console.log('📤 Guardando idioma actual en la base de datos:', currentLanguage);
                 await updateDoc(doc(db, 'users', user.uid), {
                     language: currentLanguage,
+                    lastUpdated: serverTimestamp()
+                });
+                // Actualizar el tema según el idioma actual
+                updateTheme(currentLanguage);
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error al sincronizar idioma:', error);
+    }
+}
+
+const togglePassword = document.getElementById("togglePassword");
+
+togglePassword.addEventListener("click", () => {
+    const isHidden = passwordInput.type === "password";
+    passwordInput.type = isHidden ? "text" : "password";
+    togglePassword.textContent = isHidden ? "🙈" : "👁️";
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+    const languageSelect = document.getElementById("languageSelect");
+    const themeSelect = document.getElementById("themeSelect");
+
+    function applyTheme() {
+        const lang = languageSelect.value;
+        const theme = themeSelect.value;
+
+        // 👉 Guardar en localStorage
+        localStorage.setItem("selectedLanguage", lang);
+        localStorage.setItem("selectedTheme", theme);
+
+        // 👉 Aplicar clases al <body>
+        document.body.className = `theme-set-${theme} theme-${lang}`;
+    }
+
+    languageSelect.addEventListener("change", applyTheme);
+    themeSelect.addEventListener("change", applyTheme);
+
+    // 👉 Restaurar valores si existen en localStorage
+    const savedLang = localStorage.getItem("selectedLanguage");
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedLang) languageSelect.value = savedLang;
+    if (savedTheme) themeSelect.value = savedTheme;
+
+    applyTheme();
+});
+
+
+// Funcionalidad del selector de tema
+const themeSelectMain = document.getElementById("themeSelectMain");
+
+if (themeSelectMain) {
+    // Restaurar tema guardado
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedTheme) {
+        themeSelectMain.value = savedTheme;
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith("theme-set-")) {
+                document.body.classList.remove(cls);
+            }
+        });
+        document.body.classList.add(`theme-set-${savedTheme}`);
+    }
+
+    themeSelectMain.addEventListener("change", () => {
+        const selectedTheme = themeSelectMain.value;
+        const lang = getUserLanguage();
+        updateThemeAndLanguage(selectedTheme, lang);
+    });
+}
+
+
+/*
+const themeSelectMain = document.getElementById("themeSelectMain");
+
+if (themeSelectMain) {
+    themeSelectMain.addEventListener("change", () => {
+        const selectedTheme = themeSelectMain.value; // banderas, elegante, elegante2, creativo
+        const currentLang = document.getElementById("languageSelectMain").value || "es";
+
+        // Quitar cualquier clase de tema anterior
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith("theme-set-")) {
+                document.body.classList.remove(cls);
+            }
+        });
+
+        // Aplicar nueva clase combinada
+        document.body.classList.add(`theme-set-${selectedTheme}`);
         document.body.classList.add(`theme-${currentLang}`);
     });
 }
@@ -1812,6 +3016,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showGroupCreationModal();
     });
 });
+
 
 
 
