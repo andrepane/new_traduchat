@@ -103,10 +103,19 @@ export function clearTranslationCache() {
 export function getCacheStats() {
     const entries = Object.keys(translationCache).length;
     const size = new Blob([JSON.stringify(translationCache)]).size;
+    let oldestEntry = null;
+    let newestEntry = null;
+
+    if (entries > 0) {
+        const timestamps = Object.values(translationCache).map(v => v.timestamp);
+        oldestEntry = Math.min(...timestamps);
+        newestEntry = Math.max(...timestamps);
+    }
+
     return {
         entries,
         sizeKB: (size / 1024).toFixed(2),
-        oldestEntry: Math.min(...Object.values(translationCache).map(v => v.timestamp)),
-        newestEntry: Math.max(...Object.values(translationCache).map(v => v.timestamp))
+        oldestEntry,
+        newestEntry
     };
-} 
+}
