@@ -98,28 +98,6 @@ const translations = {
         theme: 'Tema',
         about: 'Acerca de',
         developer: 'Desarrollado por Andrea Panepinto',
-        
-        // Validación de usuario
-        usernameValidationError: 'El nombre de usuario solo puede contener letras, números, guiones y guiones bajos, y debe tener entre 3 y 20 caracteres',
-        tooManyAttempts: 'Demasiados intentos. Intenta más tarde.',
-        
-        // Mensajes de sistema
-        translationError: '[Error de traducción]',
-        translationLimitExceeded: 'Se ha excedido el límite de traducciones',
-        
-        // Errores de reconocimiento de voz
-        errorVoiceRecognition: 'Error en el reconocimiento de voz',
-        errorNoChat: 'Debes seleccionar un chat primero',
-        
-        // Mensajes de Firebase
-        firebaseMessagingSuccess: 'Firebase Messaging inicializado correctamente',
-        firebaseMessagingNotSupported: 'Firebase Messaging no está soportado en este navegador',
-        serviceWorkerSuccess: 'Service Worker registrado con éxito',
-        serviceWorkerError: 'Error al registrar el Service Worker',
-        
-        // Contraseña
-        showPassword: 'Mostrar contraseña',
-        hidePassword: 'Ocultar contraseña'
     },
     en: {
         // Authentication
@@ -218,28 +196,6 @@ const translations = {
         theme: 'Theme',
         about: 'About',
         developer: 'Developed by Andrea Panepinto',
-        
-        // User validation
-        usernameValidationError: 'Username can only contain letters, numbers, hyphens and underscores, and must be between 3 and 20 characters',
-        tooManyAttempts: 'Too many attempts. Please try again later.',
-        
-        // System messages
-        translationError: '[Translation error]',
-        translationLimitExceeded: 'Translation limit has been exceeded',
-        
-        // Voice recognition errors
-        errorVoiceRecognition: 'Voice recognition error',
-        errorNoChat: 'You must select a chat first',
-        
-        // Firebase messages
-        firebaseMessagingSuccess: 'Firebase Messaging initialized successfully',
-        firebaseMessagingNotSupported: 'Firebase Messaging is not supported in this browser',
-        serviceWorkerSuccess: 'Service Worker registered successfully',
-        serviceWorkerError: 'Error registering Service Worker',
-        
-        // Password
-        showPassword: 'Show password',
-        hidePassword: 'Hide password'
     },
     it: {
         // Autenticazione
@@ -336,28 +292,6 @@ const translations = {
         theme: 'Tema',
         about: 'Informazioni',
         developer: 'Sviluppato da Andrea Panepinto',
-        
-        // Validazione utente
-        usernameValidationError: 'Il nome utente può contenere solo lettere, numeri, trattini e underscore, e deve essere compreso tra 3 e 20 caratteri',
-        tooManyAttempts: 'Troppi tentativi. Riprova più tardi.',
-        
-        // Messaggi di sistema
-        translationError: '[Errore di traduzione]',
-        translationLimitExceeded: 'È stato superato il limite di traduzioni',
-        
-        // Errori di riconoscimento vocale
-        errorVoiceRecognition: 'Errore nel riconoscimento vocale',
-        errorNoChat: 'Devi prima selezionare una chat',
-        
-        // Messaggi Firebase
-        firebaseMessagingSuccess: 'Firebase Messaging inizializzato correttamente',
-        firebaseMessagingNotSupported: 'Firebase Messaging non è supportato in questo browser',
-        serviceWorkerSuccess: 'Service Worker registrato con successo',
-        serviceWorkerError: 'Errore durante la registrazione del Service Worker',
-        
-        // Password
-        showPassword: 'Mostra password',
-        hidePassword: 'Nascondi password'
     }
 };
 
@@ -396,13 +330,14 @@ function translateInterface(language) {
                 element.placeholder = translation;
             }
         } else {
-            if (element.id === 'titulo-wave') {
-                element.textContent = translation;
-                animateTitleWave(); // Aplicar efecto tras traducción
-            } else {
-                element.textContent = translation;
-            }
-        }
+    if (element.id === 'titulo-wave') {
+        element.textContent = translation;
+        animateTitleWave(); // Aplicar efecto tras traducción
+    } else {
+        element.textContent = translation;
+    }
+}
+
     });
 
     // Traducir elementos OPTION
@@ -414,18 +349,6 @@ function translateInterface(language) {
         const translation = getTranslation(key, language);
         console.log(`📝 Traduciendo OPTION [${key}] de:`, option.textContent, 'a:', translation);
         option.textContent = translation;
-    });
-
-    // Traducir atributos
-    const elementsWithAttr = document.querySelectorAll('[data-translate-attr]');
-    console.log(`🔍 Encontrados ${elementsWithAttr.length} elementos con atributos para traducir`);
-    
-    elementsWithAttr.forEach(element => {
-        const attrSpec = element.getAttribute('data-translate-attr');
-        const [attr, key] = attrSpec.split(':');
-        const translation = getTranslation(key, language);
-        console.log(`📝 Traduciendo atributo ${attr} [${key}] a:`, translation);
-        element.setAttribute(attr, translation);
     });
 
     console.log('✅ Traducción de interfaz completada');
