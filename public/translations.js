@@ -89,7 +89,7 @@ const translations = {
         membersAdded: 'Miembros agregados exitosamente',
         errorAddMembers: 'Error al agregar miembros',
         addedMembers: 'ha agregado a los miembros',
-        groups: 'Groups',
+        groups: 'Grupos',
         
         // Ajustes
         settings: 'Ajustes',
