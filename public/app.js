@@ -2703,6 +2703,7 @@ if (themeSelectMain) {
 
 // Funcionalidad de la página de ajustes
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicialización de la aplicación
     const settingsPage = document.getElementById('settingsPage');
     const btnSettings = document.getElementById('btnSettings');
     const backFromSettings = document.getElementById('backFromSettings');
@@ -2710,6 +2711,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsLanguage = document.getElementById('settingsLanguage');
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+    
+    // Inicializar estado de navegación
+    document.getElementById('groupsPage').classList.add('hidden');
+    document.getElementById('btnChats').classList.add('active');
 
     // Mostrar página de ajustes
     btnSettings.addEventListener('click', function() {
@@ -2728,76 +2733,94 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Volver de ajustes
-    backFromSettings.addEventListener('click', function() {
-        settingsPage.classList.add('hidden');
-        chatList.classList.remove('hidden');
-    });
+    if (backFromSettings) {
+        backFromSettings.addEventListener('click', function() {
+            settingsPage.classList.add('hidden');
+            chatList.classList.remove('hidden');
+        });
+    }
 
     // Cambiar idioma desde ajustes
-    settingsLanguage.addEventListener('change', function() {
-        const newLanguage = this.value;
-        localStorage.setItem('language', newLanguage);
-        document.documentElement.setAttribute('lang', newLanguage);
-        document.body.className = `theme-${localStorage.getItem('theme-set')} theme-${newLanguage}`;
-        updateTranslations();
-    });
+    if (settingsLanguage) {
+        settingsLanguage.addEventListener('change', function() {
+            const newLanguage = this.value;
+            localStorage.setItem('language', newLanguage);
+            document.documentElement.setAttribute('lang', newLanguage);
+            document.body.className = `theme-${localStorage.getItem('theme-set')} theme-${newLanguage}`;
+            updateTranslations();
+        });
+    }
 
     // Cambiar tema desde ajustes
-    settingsTheme.addEventListener('change', function() {
-        const newTheme = this.value;
-        localStorage.setItem('theme-set', newTheme);
-        document.body.className = `theme-${newTheme} theme-${localStorage.getItem('language')}`;
-    });
+    if (settingsTheme) {
+        settingsTheme.addEventListener('change', function() {
+            const newTheme = this.value;
+            localStorage.setItem('theme-set', newTheme);
+            document.body.className = `theme-${newTheme} theme-${localStorage.getItem('language')}`;
+        });
+    }
 
     // Cerrar sesión desde ajustes
-    settingsLogoutBtn.addEventListener('click', handleLogout);
+    if (settingsLogoutBtn) {
+        settingsLogoutBtn.addEventListener('click', handleLogout);
+    }
+
+    // Botón de grupos
+    const btnGroups = document.getElementById('btnGroups');
+    if (btnGroups) {
+        btnGroups.addEventListener('click', showGroupsPage);
+    }
+    
+    // Botón de chats
+    const btnChats = document.getElementById('btnChats');
+    if (btnChats) {
+        btnChats.addEventListener('click', showChatsPage);
+    }
+    
+    // Botón de volver desde grupos
+    const backFromGroups = document.getElementById('backFromGroups');
+    if (backFromGroups) {
+        backFromGroups.addEventListener('click', showChatsPage);
+    }
 });
+
+// Eliminar la función initializeApp duplicada al final del archivo
 
 // Funciones para la navegación entre páginas
 function showChatsPage() {
-    document.getElementById('chatList').style.display = 'block';
-    document.getElementById('settingsPage').classList.add('hidden');
-    document.getElementById('groupsPage').classList.add('hidden');
+    const chatList = document.getElementById('chatList');
+    const settingsPage = document.getElementById('settingsPage');
+    const groupsPage = document.getElementById('groupsPage');
+    const btnChats = document.getElementById('btnChats');
+    const btnGroups = document.getElementById('btnGroups');
+    const btnSettings = document.getElementById('btnSettings');
+
+    if (chatList) chatList.style.display = 'block';
+    if (settingsPage) settingsPage.classList.add('hidden');
+    if (groupsPage) groupsPage.classList.add('hidden');
     
     // Actualizar estados de los botones
-    document.getElementById('btnChats').classList.add('active');
-    document.getElementById('btnGroups').classList.remove('active');
-    document.getElementById('btnSettings').classList.remove('active');
+    if (btnChats) btnChats.classList.add('active');
+    if (btnGroups) btnGroups.classList.remove('active');
+    if (btnSettings) btnSettings.classList.remove('active');
 }
 
 function showGroupsPage() {
-    document.getElementById('chatList').style.display = 'none';
-    document.getElementById('settingsPage').classList.add('hidden');
-    document.getElementById('groupsPage').classList.remove('hidden');
+    const chatList = document.getElementById('chatList');
+    const settingsPage = document.getElementById('settingsPage');
+    const groupsPage = document.getElementById('groupsPage');
+    const btnChats = document.getElementById('btnChats');
+    const btnGroups = document.getElementById('btnGroups');
+    const btnSettings = document.getElementById('btnSettings');
+
+    if (chatList) chatList.style.display = 'none';
+    if (settingsPage) settingsPage.classList.add('hidden');
+    if (groupsPage) groupsPage.classList.remove('hidden');
     
     // Actualizar estados de los botones
-    document.getElementById('btnChats').classList.remove('active');
-    document.getElementById('btnGroups').classList.add('active');
-    document.getElementById('btnSettings').classList.remove('active');
+    if (btnChats) btnChats.classList.remove('active');
+    if (btnGroups) btnGroups.classList.add('active');
+    if (btnSettings) btnSettings.classList.remove('active');
 }
 
-// Event listeners para la navegación
-document.addEventListener('DOMContentLoaded', function() {
-    // ... existing code ...
-
-    // Botón de grupos
-    document.getElementById('btnGroups').addEventListener('click', showGroupsPage);
-    
-    // Botón de chats (actualizar el existente si ya existe)
-    document.getElementById('btnChats').addEventListener('click', showChatsPage);
-    
-    // Botón de volver desde grupos
-    document.getElementById('backFromGroups').addEventListener('click', showChatsPage);
-});
-
-// Inicialización de la aplicación
-function initializeApp() {
-    // ... existing code ...
-    
-    // Inicializar estado de navegación
-    document.getElementById('groupsPage').classList.add('hidden');
-    document.getElementById('btnChats').classList.add('active');
-    
-    // ... rest of initialization code ...
-}
 
