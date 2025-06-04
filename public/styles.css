@@ -17,6 +17,7 @@
     --color-user-right: #fde1d9;
     --color-system: #8e8e8e;
     --color-system-bg: #faf2e3cc;
+    --color-unread: #fff6d1;
     --color-text: #4a3b00;
   }
   
@@ -31,6 +32,7 @@
     --color-user-right: #d4dfea;
     --color-system: #a3a9b1;
     --color-system-bg: #eef3facc;
+    --color-unread: #ffecec;
      --color-text: #1a2d48;
   }
   
@@ -45,6 +47,7 @@
     --color-user-right: #ffe9e9;
     --color-system: #9ea9a2;
     --color-system-bg: #f0f8f2cc;
+    --color-unread: #ffecec;
      --color-text: #1f4a33;
   }
   
@@ -63,7 +66,8 @@
     --color-user-right: #dfcef7;
     --color-system: #9c9cae;
     --color-system-bg: #f2eefacc;
-     --color-text: #443c5c; 
+    --color-unread: #ede5fa;
+     --color-text: #443c5c;
   }
   
   .theme-set-elegante.theme-en {
@@ -77,6 +81,7 @@
     --color-user-right: #d0e3f7;
     --color-system: #9aa7b5;
     --color-system-bg: #eef3facc;
+    --color-unread: #e6eef8;
      --color-text: #2c4564;
   }
   
@@ -91,6 +96,7 @@
     --color-user-right: #f5cfcf;
     --color-system: #a89e9e;
     --color-system-bg: #fff1f1cc;
+    --color-unread: #ffeaea;
      --color-text: #6c3f3f;
   }
   
@@ -109,6 +115,7 @@
     --color-user-right: #ffddb8;
     --color-system: #a08877;
     --color-system-bg: #fff1e7cc;
+    --color-unread: #fff0e0;
      --color-text: #5e3b19;
   }
   
@@ -123,7 +130,8 @@
     --color-user-right: #b2ebf2;
     --color-system: #779fa1;
     --color-system-bg: #e8f8facc;
-     --color-text: #02575e; 
+    --color-unread: #e0f7fa;
+     --color-text: #02575e;
   }
   
   .theme-set-creativo.theme-it {
@@ -137,7 +145,8 @@
     --color-user-right: #fdd5ed;
     --color-system: #a98ca2;
     --color-system-bg: #fff0f7cc;
-     --color-text: #6a3262; 
+    --color-unread: #ffe5f4;
+     --color-text: #6a3262;
   }
   
   /* =============================================================
@@ -156,7 +165,8 @@
     --color-user-right: #d0e8d0;
     --color-system: #8e9e8e;
     --color-system-bg: #f0f6f0cc;
-     --color-text: #3c553c; 
+    --color-unread: #eef6ee;
+     --color-text: #3c553c;
   }
   
   .theme-set-elegante2.theme-en {
@@ -170,7 +180,8 @@
     --color-user-right: #cdd9e4;
     --color-system: #8a9aa7;
     --color-system-bg: #eef3f7cc;
-     --color-text: #2e3f51; 
+    --color-unread: #e7edf3;
+     --color-text: #2e3f51;
   }
   
   .theme-set-elegante2.theme-it {
@@ -184,6 +195,7 @@
     --color-user-right: #f1e1ce;
     --color-system: #a89f96;
     --color-system-bg: #f7f1eacc;
+    --color-unread: #f9f4ed;
      --color-text: #5c4433;
   }
   
@@ -202,6 +214,7 @@
       --color-user-right: #b9f5d8;
       --color-system: #98a6a9;
       --color-system-bg: #f0f8f2cc;
+      --color-unread: #fff6d1;
       
       /* Colores de texto y estados */
       --color-text: #232f2b;
@@ -482,6 +495,31 @@
       flex: 1;
       min-width: 0;
   }
+
+  /* Información del chat grupal */
+  .group-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      cursor: pointer;
+  }
+
+  .group-name {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+
+  .group-participants {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #333;
+  }
   
   
   /* ==========================================================================
@@ -525,6 +563,12 @@
       background-color: var(--color-user-left);
       border-left: 3px solid var(--color-primary);
   }
+
+.chat-item.unread {
+    background-color: var(--color-unread);
+    border-left: 4px solid var(--color-primary-dark);
+    font-weight: bold;
+}
   
   .chat-info {
       flex: 1;
@@ -1242,10 +1286,11 @@
   #createGroup {
       background: #2e7d32;
   }
-  
+
   #createGroup:hover {
       background: #1b5e20;
   }
+
   
   #logoutBtn {
       background: var(--color-danger);
@@ -2098,9 +2143,9 @@
   }
 
 .chat-item.unread {
-  background-color: rgba(0, 200, 100, 0.08);
+  background-color: var(--color-unread);
   font-weight: bold;
-  border-left: 4px solid #00c864;
+  border-left: 4px solid var(--color-primary-dark);
 }
 
 /* ==========================================================================
