@@ -2789,38 +2789,57 @@ document.addEventListener('DOMContentLoaded', function() {
 // Funciones para la navegación entre páginas
 function showChatsPage() {
     const chatList = document.getElementById('chatList');
-    const settingsPage = document.getElementById('settingsPage');
     const groupsPage = document.getElementById('groupsPage');
     const btnChats = document.getElementById('btnChats');
     const btnGroups = document.getElementById('btnGroups');
-    const btnSettings = document.getElementById('btnSettings');
 
-    if (chatList) chatList.style.display = 'block';
-    if (settingsPage) settingsPage.classList.add('hidden');
-    if (groupsPage) groupsPage.classList.add('hidden');
+    if (chatList) {
+        chatList.style.display = 'block';
+        chatList.classList.remove('hidden');
+    }
+    if (groupsPage) {
+        groupsPage.classList.add('hidden');
+    }
     
     // Actualizar estados de los botones
     if (btnChats) btnChats.classList.add('active');
     if (btnGroups) btnGroups.classList.remove('active');
-    if (btnSettings) btnSettings.classList.remove('active');
+
+    // Recargar la lista de chats
+    setupRealtimeChats();
 }
 
 function showGroupsPage() {
     const chatList = document.getElementById('chatList');
-    const settingsPage = document.getElementById('settingsPage');
     const groupsPage = document.getElementById('groupsPage');
     const btnChats = document.getElementById('btnChats');
     const btnGroups = document.getElementById('btnGroups');
-    const btnSettings = document.getElementById('btnSettings');
 
-    if (chatList) chatList.style.display = 'none';
-    if (settingsPage) settingsPage.classList.add('hidden');
-    if (groupsPage) groupsPage.classList.remove('hidden');
+    if (chatList) {
+        chatList.style.display = 'none';
+        chatList.classList.add('hidden');
+    }
+    if (groupsPage) {
+        groupsPage.classList.remove('hidden');
+    }
     
     // Actualizar estados de los botones
     if (btnChats) btnChats.classList.remove('active');
     if (btnGroups) btnGroups.classList.add('active');
-    if (btnSettings) btnSettings.classList.remove('active');
 }
+
+// Event listeners para la navegación
+document.getElementById('btnGroups')?.addEventListener('click', showGroupsPage);
+document.getElementById('btnChats')?.addEventListener('click', showChatsPage);
+document.getElementById('backFromGroups')?.addEventListener('click', showChatsPage);
+
+// Asegurarse de que la página de grupos esté oculta inicialmente
+document.addEventListener('DOMContentLoaded', function() {
+    const groupsPage = document.getElementById('groupsPage');
+    if (groupsPage) {
+        groupsPage.classList.add('hidden');
+    }
+});
+
 
 
