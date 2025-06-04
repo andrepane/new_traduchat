@@ -56,7 +56,7 @@
             <input type="text" id="usernameInput" data-translate="username" placeholder="Nombre de usuario" />
 <div class="password-wrapper">
     <input type="password" id="passwordInput" data-translate="password" placeholder="Contraseña" />
-    <button type="button" id="togglePassword" aria-label="Mostrar contraseña" data-translate-attr="aria-label:showPassword">👁️</button>
+    <button type="button" id="togglePassword" aria-label="Mostrar contraseña">👁️</button>
 </div>
             <button id="loginBtn" data-translate="loginRegister">Registrar/Iniciar Sesión</button>
         </div>
@@ -67,30 +67,13 @@
         <!-- Sidebar con lista de chats -->
         <div class="sidebar">
             <div class="user-header">
-                <div class="user-info">
-                    <span id="userInfo">Cargando...</span>
-                    <select id="languageSelectMain" class="language-select-main">
-                        <option value="es" data-translate="languageEs">Español</option>
-                        <option value="en" data-translate="languageEn">Inglés</option>
-                        <option value="it" data-translate="languageIt">Italiano</option>
-                    </select>
-                        <!-- Selector de tema 
-                    <select id="themeSelectMain" class="theme-select-main">
-                        <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
-                        <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
-                        <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
-                        <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
-                    </select> -->
-                </div>
+                <h2 data-translate="chats">Chats</h2>
                 <div class="header-actions">
                     <button id="createGroup" class="icon-button" title="Crear grupo">
                         <i class="fas fa-users"></i>
                     </button>
                     <button id="newChat" class="icon-button" title="Nuevo chat" data-translate="newChat">
                         <i class="fa-solid fa-plus"></i> 
-                    </button>
-                    <button id="logoutBtn" class="icon-button" title="Cerrar sesión">
-                        <i class="fas fa-sign-out-alt"></i>
                     </button>
                 </div>
             </div>
@@ -100,6 +83,126 @@
             <div id="chatList" class="chat-list">
                 <!-- Los chats se cargarán aquí dinámicamente -->
             </div>
+
+            <!-- Página de Ajustes -->
+            <div id="settingsPage" class="settings-page hidden">
+                <div class="settings-header">
+                    <button class="back-button" id="backFromSettings">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <h2 data-translate="settings">Ajustes</h2>
+                </div>
+                
+                <div class="settings-content">
+                    <!-- Sección de Perfil -->
+                    <div class="settings-section">
+                        <h3 data-translate="profile">Perfil</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-user"></i>
+                            <div class="settings-item-content">
+                                <label data-translate="username">Nombre de usuario</label>
+                                <input type="text" id="settingsUsername" readonly class="readonly-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Idioma -->
+                    <div class="settings-section">
+                        <h3 data-translate="language">Idioma</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-language"></i>
+                            <div class="settings-item-content">
+                                <label data-translate="selectLanguage">Seleccionar idioma</label>
+                                <select id="languageSelectMain" class="settings-select">
+                                    <option value="es" data-translate="languageEs">Español</option>
+                                    <option value="en" data-translate="languageEn">Inglés</option>
+                                    <option value="it" data-translate="languageIt">Italiano</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Tema -->
+                    <div class="settings-section">
+                        <h3 data-translate="theme">Tema</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-palette"></i>
+                            <div class="settings-item-content">
+                                <label data-translate="selectTheme">Seleccionar tema</label>
+                                <select id="themeSelectMain" class="settings-select">
+                                    <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
+                                    <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
+                                    <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
+                                    <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección de Información -->
+                    <div class="settings-section">
+                        <h3 data-translate="about">Acerca de</h3>
+                        <div class="settings-item">
+                            <i class="fas fa-info-circle"></i>
+                            <div class="settings-item-content">
+                                <span class="app-version">TraduChat v1.0</span>
+                                <span class="app-developer" data-translate="developer">Desarrollado por Andrea Panepinto</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Botón de Cerrar Sesión -->
+                    <div class="settings-section">
+                        <button id="settingsLogoutBtn" class="settings-logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span data-translate="logout">Cerrar sesión</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Página de Grupos -->
+            <div id="groupsPage" class="groups-page hidden">
+                <div class="groups-header">
+                    <h2 data-translate="groups">Grupos</h2>
+                    <div class="header-actions">
+                        <button id="createGroupFromGroups" class="icon-button" title="Crear grupo">
+                            <i class="fas fa-users"></i>
+                        </button>
+                        <button id="newGroupChat" class="icon-button" title="Nuevo chat" data-translate="newChat">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="groupsList" class="chat-list">
+                    <!-- Los grupos se cargarán aquí dinámicamente -->
+                </div>
+                <!-- Barra de navegación para la página de grupos -->
+                <nav class="bottom-nav">
+                    <button class="nav-button" id="btnChats">
+                        <i class="fas fa-message"></i>
+                    </button>
+                    <button class="nav-button active" id="btnGroups">
+                        <i class="fas fa-users"></i>
+                    </button>
+                    <button class="nav-button" id="btnSettings">
+                        <i class="fas fa-gear"></i>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Nueva barra de navegación -->
+            <nav class="bottom-nav">
+                <button class="nav-button" id="btnChats">
+                    <i class="fas fa-message"></i>
+                </button>
+                <button class="nav-button" id="btnGroups">
+                    <i class="fas fa-users"></i>
+                </button>
+                <button class="nav-button" id="btnSettings">
+                    <i class="fas fa-gear"></i>
+                </button>
+            </nav>
         </div>
 
         <!-- Contenedor del chat -->
@@ -116,7 +219,7 @@
                 <!-- Los mensajes se cargarán aquí dinámicamente -->
             </div>
             <div class="message-input">
-                <button id="micButton" class="icon-button" title="Grabar audio" data-translate-attr="title:listening">
+                <button id="micButton" class="icon-button" title="Grabar audio">
                     <i class="fas fa-microphone"></i>
                 </button>
                 <input type="text" id="messageInput" data-translate="writeMessage" placeholder="Escribe un mensaje..." />
