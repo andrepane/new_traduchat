@@ -1,6 +1,6 @@
 # TraduChat-WA
 
-Una aplicación de chat similar a WhatsApp con traducción automática integrada. Los usuarios pueden comunicarse en diferentes idiomas, y los mensajes se traducen automáticamente al idioma preferido de cada usuario.
+Una aplicación de chat con traducción automática integrada. Los usuarios pueden comunicarse en diferentes idiomas, y los mensajes se traducen automáticamente al idioma preferido de cada usuario.
 
 ## Características
 
