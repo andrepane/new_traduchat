@@ -2791,9 +2791,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Manejador para el botón de crear grupo en la página de grupos
+    document.getElementById('createGroupFromGroups').addEventListener('click', () => {
+        showGroupCreationModal();
+    });
 });
-
-
-
-
-
