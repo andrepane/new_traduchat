@@ -1080,6 +1080,7 @@
   /* Indicador de Escritura */
   #typingIndicator {
       padding: 5px 10px;
+      margin: 5px;
       font-style: italic;
       color: var(--color-system);
       text-align: center;
