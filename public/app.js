@@ -107,6 +107,9 @@ const phoneInput = document.getElementById('phoneNumber');
 const countrySelect = document.getElementById('countryCode');
 const loginBtn = document.getElementById('loginBtn');
 const chatList = document.getElementById('chatList');
+const groupsListEl = document.getElementById('groupsList');
+const groupsPage = document.getElementById('groupsPage');
+const settingsPage = document.getElementById('settingsPage');
 const messageInput = document.getElementById('messageInput');
 const sendMessageBtn = document.getElementById('sendMessage');
 const messagesList = document.getElementById('messagesList');
@@ -131,11 +134,13 @@ let currentChatParticipants = [];
 let verificationCode = null;
 let timerInterval = null;
 const CODE_EXPIRY_TIME = 5 * 60; // 5 minutos en segundos
-let unsubscribeMessages = null; // Variable para almacenar la función de cancelación de suscripción
+let unsubscribeMessagesFn = null; // Variable para almacenar la función de cancelación de suscripción
 let typingTimeouts = {};
 let lastSender = null;
 let unsubscribeChats = null;
 let initialLoadComplete = false; // Variable para controlar la carga inicial de mensajes
+let currentListType = 'individual';
+let inMemoryReadTimes = {};
 
 // Variables para grupos
 let selectedUsers = new Set();
@@ -719,9 +724,9 @@ function resetChatState() {
     console.log('🔄 Reseteando estado del chat');
     
     // Cancelar todas las suscripciones
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
-        unsubscribeMessages = null;
+    if (unsubscribeMessagesFn) {
+        unsubscribeMessagesFn();
+        unsubscribeMessagesFn = null;
     }
     
     if (unsubscribeChats) {
@@ -887,11 +892,6 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
             constraints.push(where('type', '==', chatType));
         }
 
-
-        // Firestore requires a composite index for ordering with array-contains.
-        // To avoid index errors we sort the chats client-side instead.
-
-
         const q = query(collection(db, 'chats'), ...constraints);
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
@@ -1003,6 +1003,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         }
     }
 }
+
 
 
 // Función para notificar nuevo chat
@@ -1415,8 +1416,8 @@ async function openChat(chatId) {
     }
 
     // Cancelar la suscripción anterior si existe
-    if (unsubscribeMessages) {
-        unsubscribeMessages();
+    if (unsubscribeMessagesFn) {
+        unsubscribeMessagesFn();
     }
 
     // Resetear variables de paginación
@@ -1431,6 +1432,7 @@ async function openChat(chatId) {
         currentChatInfo.onclick = null;
         currentChatInfo.removeAttribute('title');
     }
+
     
     try {
         // Obtener información del chat
@@ -1450,6 +1452,8 @@ async function openChat(chatId) {
                 addMembersBtn.classList.add('hidden');
             }
         }
+
+
 
         // Limpiar mensajes anteriores
         if (messagesList) {
@@ -1513,6 +1517,8 @@ async function openChat(chatId) {
         await loadInitialMessages(chatId);
         markChatAsRead(chatId);
 
+
+
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
 const newMessagesQuery = query(
@@ -1521,7 +1527,7 @@ const newMessagesQuery = query(
     limit(1)
 );
 
-unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
+unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
     if (unsubscribeTypingStatus) {
         unsubscribeTypingStatus();
     }
@@ -1574,6 +1580,7 @@ unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
         }
     });
 });
+
 
     } catch (error) {
         console.error('Error al abrir chat:', error);
@@ -1705,8 +1712,10 @@ function markChatAsRead(chatId) {
         const times = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
         times[chatId] = Date.now();
         localStorage.setItem('chatReadTimes', JSON.stringify(times));
+        inMemoryReadTimes = times;
     } catch (e) {
-        console.warn('LocalStorage unavailable, unread state not persisted', e);
+        console.warn('LocalStorage unavailable, storing in memory', e);
+        inMemoryReadTimes[chatId] = Date.now();
     }
 
     const chatEl = document.querySelector(`[data-chat-id="${chatId}"]`);
@@ -1717,15 +1726,16 @@ function markChatAsRead(chatId) {
 
 function getChatReadTimes() {
     try {
-        return JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
+        const stored = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
+        inMemoryReadTimes = stored;
+        return stored;
     } catch (e) {
-        console.warn('LocalStorage unavailable, using empty read times', e);
-        return {};
+        console.warn('LocalStorage unavailable, using in-memory times', e);
+        return inMemoryReadTimes;
     }
 }
 
 // Funciones auxiliares para la interfaz
-
 async function setupGroupChatInterface(chatData) {
     const participantsInfo = await Promise.all(
         chatData.participants.map(async (userId) => {
@@ -1754,6 +1764,7 @@ async function setupGroupChatInterface(chatData) {
         currentChatInfo.innerHTML = '';
         currentChatInfo.appendChild(groupInfoElement);
     }
+
 }
 
 async function setupIndividualChatInterface(chatData, currentUser) {
@@ -2006,9 +2017,9 @@ async function handleLogout() {
             unsubscribeChats();
             unsubscribeChats = null;
         }
-        if (unsubscribeMessages) {
-            unsubscribeMessages();
-            unsubscribeMessages = null;
+        if (unsubscribeMessagesFn) {
+            unsubscribeMessagesFn();
+            unsubscribeMessagesFn = null;
         }
 
         // Limpiar el estado de la aplicación
@@ -2086,9 +2097,13 @@ function toggleChatList(show) {
         }
         
         // Cancelar suscripción a mensajes si existe
-        if (unsubscribeMessages) {
-            unsubscribeMessages();
-            unsubscribeMessages = null;
+        if (unsubscribeMessagesFn) {
+            unsubscribeMessagesFn();
+            unsubscribeMessagesFn = null;
+        }
+
+        if (currentChat) {
+            markChatAsRead(currentChat);
         }
 
         if (addBtn) {
@@ -2106,9 +2121,18 @@ function toggleChatList(show) {
             currentChatInfo.removeAttribute('title');
         }
 
-        // Recargar la lista de chats
-        setupRealtimeChats(chatList, 'individual');
+        // Recargar la lista correspondiente
+        if (currentListType === 'group') {
+            if (groupsPage) groupsPage.classList.remove('hidden');
+            if (chatList) chatList.classList.add('hidden');
+            setupRealtimeChats(groupsListEl, 'group');
+        } else {
+            if (groupsPage) groupsPage.classList.add('hidden');
+            if (chatList) chatList.classList.remove('hidden');
+            setupRealtimeChats(chatList, 'individual');
+        }
     } else {
+
         // Mostrar chat
         if (sidebar) {
             sidebar.classList.add('hidden');
@@ -2891,8 +2915,6 @@ if (themeSelectMain) {
 
 // Funcionalidad de la página de ajustes
 document.addEventListener('DOMContentLoaded', function() {
-    const settingsPage = document.getElementById('settingsPage');
-    const groupsPage = document.getElementById('groupsPage');
     const btnSettings = document.querySelectorAll('#btnSettings');
     const btnChats = document.querySelectorAll('#btnChats');
     const btnGroups = document.querySelectorAll('#btnGroups');
@@ -2902,8 +2924,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsLanguage = document.getElementById('settingsLanguage');
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
-    const chatList = document.getElementById('chatList');
-    const groupsList = document.getElementById('groupsList');
+
 
     // Función para actualizar los botones activos
     function updateActiveButtons(activeId) {
@@ -2923,6 +2944,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (settingsPage) settingsPage.classList.add('hidden');
                 if (groupsPage) groupsPage.classList.add('hidden');
                 updateActiveButtons('btnChats');
+                currentListType = 'individual';
                 setupRealtimeChats(chatList, 'individual');
             }
         });
@@ -2936,7 +2958,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 chatList.classList.add('hidden');
                 if (settingsPage) settingsPage.classList.add('hidden');
                 updateActiveButtons('btnGroups');
-                setupRealtimeChats(groupsList, 'group');
+                currentListType = 'group';
+                setupRealtimeChats(groupsListEl, 'group');
             }
         });
     });
@@ -2968,10 +2991,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 groupsPage.classList.add('hidden');
                 chatList.classList.remove('hidden');
                 updateActiveButtons('btnChats');
+                currentListType = 'individual';
                 setupRealtimeChats(chatList, 'individual');
             }
         });
     }
+
 
     // Volver desde ajustes
     if (backFromSettings) {
@@ -2980,6 +3005,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 settingsPage.classList.add('hidden');
                 chatList.classList.remove('hidden');
                 updateActiveButtons('btnChats');
+                currentListType = 'individual';
                 setupRealtimeChats(chatList, 'individual');
             }
         });

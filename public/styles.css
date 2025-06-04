@@ -50,6 +50,7 @@
     --color-unread: #ffecec;
      --color-text: #1f4a33;
   }
+
   
   /* =============================================================
      Tema visual: ELEGANTE (pastel moderno)
@@ -69,6 +70,7 @@
     --color-unread: #ede5fa;
      --color-text: #443c5c;
   }
+
   
   .theme-set-elegante.theme-en {
     --color-primary: #5c88c4;
@@ -84,6 +86,7 @@
     --color-unread: #e6eef8;
      --color-text: #2c4564;
   }
+
   
   .theme-set-elegante.theme-it {
     --color-primary: #d77c7c;
@@ -99,6 +102,7 @@
     --color-unread: #ffeaea;
      --color-text: #6c3f3f;
   }
+
   
   /* =============================================================
      Tema visual: CREATIVO (colorido y vibrante)
@@ -118,6 +122,7 @@
     --color-unread: #fff0e0;
      --color-text: #5e3b19;
   }
+
   
   .theme-set-creativo.theme-en {
     --color-primary: #00bcd4;
@@ -133,6 +138,7 @@
     --color-unread: #e0f7fa;
      --color-text: #02575e;
   }
+
   
   .theme-set-creativo.theme-it {
     --color-primary: #ce4b99;
@@ -148,6 +154,7 @@
     --color-unread: #ffe5f4;
      --color-text: #6a3262;
   }
+
   
   /* =============================================================
      Tema visual: ELEGANTE 2 (pastel moderno)
@@ -168,6 +175,7 @@
     --color-unread: #eef6ee;
      --color-text: #3c553c;
   }
+
   
   .theme-set-elegante2.theme-en {
     --color-primary: #5f758e;         /* azul grisáceo suave */
@@ -183,6 +191,7 @@
     --color-unread: #e7edf3;
      --color-text: #2e3f51;
   }
+
   
   .theme-set-elegante2.theme-it {
     --color-primary: #c5a27e;         /* beige tierra elegante */
@@ -198,6 +207,7 @@
     --color-unread: #f9f4ed;
      --color-text: #5c4433;
   }
+
   
   
   
@@ -215,7 +225,7 @@
       --color-system: #98a6a9;
       --color-system-bg: #f0f8f2cc;
       --color-unread: #fff6d1;
-      
+
       /* Colores de texto y estados */
       --color-text: #232f2b;
       --color-text-light: #fff;
@@ -565,10 +575,12 @@
       border-left: 3px solid var(--color-primary);
   }
 
-  .chat-item.unread {
-      background-color: var(--color-unread);
-      border-left: 3px solid var(--color-primary);
-  }
+.chat-item.unread {
+    background-color: var(--color-unread);
+    border-left: 4px solid var(--color-primary-dark);
+    font-weight: bold;
+}
+
   
   .chat-info {
       flex: 1;
@@ -1289,13 +1301,6 @@
 
   #createGroup:hover {
       background: #1b5e20;
-  }
-
-
-
-  /* Botón para añadir miembros */
-  #addMembersBtn {
-      font-size: 0.75rem;
   }
 
 
@@ -2153,8 +2158,9 @@
 .chat-item.unread {
   background-color: var(--color-unread);
   font-weight: bold;
-  border-left: 4px solid var(--color-primary);
+  border-left: 4px solid var(--color-primary-dark);
 }
+
 
 /* ==========================================================================
      Página de Grupos
