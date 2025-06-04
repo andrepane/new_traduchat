@@ -896,7 +896,8 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         if (chatType) {
             constraints.push(where('type', '==', chatType));
         }
-        constraints.push(orderBy('lastMessageTime', 'desc'));
+        // Firestore requires a composite index for ordering with array-contains.
+        // To avoid index errors we sort the chats client-side instead.
 
         const q = query(collection(db, 'chats'), ...constraints);
 
@@ -1452,6 +1453,12 @@ async function openChat(chatId) {
     lastVisibleMessage = null;
 
     currentChat = chatId;
+
+    // Limpia cualquier manejador previo en la cabecera del chat
+    if (currentChatInfo) {
+        currentChatInfo.onclick = null;
+        currentChatInfo.removeAttribute('title');
+    }
     
     try {
         // Obtener información del chat
@@ -1465,7 +1472,11 @@ async function openChat(chatId) {
         console.log('Datos del chat:', chatData);
         currentChatParticipants = chatData.participants || [];
         if (addMembersBtn) {
-            addMembersBtn.style.display = chatData.type === 'group' ? 'block' : 'none';
+            if (chatData.type === 'group') {
+                addMembersBtn.classList.remove('hidden');
+            } else {
+                addMembersBtn.classList.add('hidden');
+            }
         }
 
         // Limpiar mensajes anteriores
@@ -1723,14 +1734,21 @@ async function setupGroupChatInterface(chatData) {
         })
     );
 
+    const participantNames = participantsInfo.map(
+        user => user.username || user.email.split('@')[0]
+    );
+
     const groupInfoElement = document.createElement('div');
     groupInfoElement.className = 'group-info';
     groupInfoElement.innerHTML = `
         <div class="group-name">${chatData.name}</div>
         <div class="group-participants">
-            ${participantsInfo.map(user => user.username || user.email.split('@')[0]).join(', ')}
+            ${participantNames.join(', ')}
         </div>
     `;
+
+    groupInfoElement.title = participantNames.join(', ');
+    groupInfoElement.onclick = () => alert(participantNames.join(', '));
 
     if (currentChatInfo) {
         currentChatInfo.innerHTML = '';
@@ -2043,7 +2061,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAddMembersModal(currentChat, currentChatParticipants);
             }
         });
-        addBtn.style.display = 'none';
+        addBtn.classList.add('hidden');
     }
 });
 
@@ -2074,7 +2092,7 @@ function toggleChatList(show) {
         }
 
         if (addBtn) {
-            addBtn.style.display = 'none';
+            addBtn.classList.add('hidden');
         }
 
         // Restablecer estado del chat actual
@@ -2084,6 +2102,8 @@ function toggleChatList(show) {
         }
         if (currentChatInfo) {
             currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+            currentChatInfo.onclick = null;
+            currentChatInfo.removeAttribute('title');
         }
 
         // Recargar la lista de chats
@@ -2106,7 +2126,7 @@ function toggleChatList(show) {
     }
 
     if (addBtn && show) {
-        addBtn.style.display = 'none';
+        addBtn.classList.add('hidden');
     }
 
     adjustMobileLayout();
