@@ -890,15 +890,10 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         // Set para mantener un registro de los chats ya mostrados
         const displayedChats = new Set();
         
-        const constraints = [
+        const q = query(
+            collection(db, 'chats'),
             where('participants', 'array-contains', currentUser.uid)
-        ];
-        if (chatType) {
-            constraints.push(where('type', '==', chatType));
-        }
-        constraints.push(orderBy('lastMessageTime', 'desc'));
-
-        const q = query(collection(db, 'chats'), ...constraints);
+        );
 
         // Crear nueva suscripción
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
@@ -928,12 +923,15 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                     // Evitar duplicados usando el Set
                     if (!displayedChats.has(doc.id)) {
                         const chatData = doc.data();
-                        chats.push({
-                            id: doc.id,
-                            ...chatData,
-                            lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
-                        });
-                        displayedChats.add(doc.id);
+                        // Filtrar por tipo si es necesario
+                        if (!chatType || chatData.type === chatType) {
+                            chats.push({
+                                id: doc.id,
+                                ...chatData,
+                                lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
+                            });
+                            displayedChats.add(doc.id);
+                        }
                     }
                 });
 
