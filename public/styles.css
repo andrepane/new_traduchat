@@ -482,6 +482,31 @@
       flex: 1;
       min-width: 0;
   }
+
+  /* Información del chat grupal */
+  .group-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      cursor: pointer;
+  }
+
+  .group-name {
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+  }
+
+  .group-participants {
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #333;
+  }
   
   
   /* ==========================================================================
@@ -1247,10 +1272,12 @@
       background: #1b5e20;
   }
 
+
   /* Botón para añadir miembros */
   #addMembersBtn {
       font-size: 0.75rem;
   }
+
   
   #logoutBtn {
       background: var(--color-danger);

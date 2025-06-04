@@ -1453,6 +1453,12 @@ async function openChat(chatId) {
     lastVisibleMessage = null;
 
     currentChat = chatId;
+
+    // Limpia cualquier manejador previo en la cabecera del chat
+    if (currentChatInfo) {
+        currentChatInfo.onclick = null;
+        currentChatInfo.removeAttribute('title');
+    }
     
     try {
         // Obtener información del chat
@@ -1728,14 +1734,21 @@ async function setupGroupChatInterface(chatData) {
         })
     );
 
+    const participantNames = participantsInfo.map(
+        user => user.username || user.email.split('@')[0]
+    );
+
     const groupInfoElement = document.createElement('div');
     groupInfoElement.className = 'group-info';
     groupInfoElement.innerHTML = `
         <div class="group-name">${chatData.name}</div>
         <div class="group-participants">
-            ${participantsInfo.map(user => user.username || user.email.split('@')[0]).join(', ')}
+            ${participantNames.join(', ')}
         </div>
     `;
+
+    groupInfoElement.title = participantNames.join(', ');
+    groupInfoElement.onclick = () => alert(participantNames.join(', '));
 
     if (currentChatInfo) {
         currentChatInfo.innerHTML = '';
@@ -2089,6 +2102,8 @@ function toggleChatList(show) {
         }
         if (currentChatInfo) {
             currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+            currentChatInfo.onclick = null;
+            currentChatInfo.removeAttribute('title');
         }
 
         // Recargar la lista de chats
