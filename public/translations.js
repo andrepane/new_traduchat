@@ -85,7 +85,7 @@ const translations = {
         groupCreated: 'Grupo creado exitosamente',
         minUsersCount: '({0}/2 mínimo)',
         youMessage: 'Tú',
-        addMembers: '+',
+        addMembers: 'Agregar miembros',
         membersAdded: 'Miembros agregados exitosamente',
         errorAddMembers: 'Error al agregar miembros',
         addedMembers: 'ha agregado a los miembros',
