@@ -54,7 +54,12 @@ import {
 
 
 
-const userLanguage = getUserLanguage(); // ✅ ahora sí puedes usarla
+let userLanguage = getUserLanguage();
+
+// Mantener sincronizado el idioma con los cambios del usuario
+window.addEventListener('languageChanged', (e) => {
+    userLanguage = e.detail;
+});
 
 
 // Antes de llamar a startAuthListener
@@ -242,7 +247,7 @@ async function verifyCode(phoneNumber, code) {
 
 // Función para mostrar mensajes de error
 function showError(errorKey) {
-    alert(getTranslation(errorKey, userLanguage));
+    alert(getTranslation(errorKey, getUserLanguage()));
 }
 
 // Función para actualizar la información del usuario
@@ -471,6 +476,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar el tema según el idioma actual
     const currentLang = getUserLanguage();
     document.body.classList.add(`theme-${currentLang}`);
+    // Aplicar traducción inicial de la interfaz
+    translateInterface(currentLang);
 
     const handleLanguageChange = async (newLang) => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
@@ -2454,7 +2461,7 @@ async function createGroupChat(groupName, participants) {
 
         // Crear mensaje de sistema inicial
         await addDoc(collection(db, 'chats', groupChatRef.id, 'messages'), {
-            text: `Grupo "${groupName}" creado por ${currentUser.email}`,
+            text: getTranslation('systemGroupCreated', getUserLanguage(), groupName, currentUser.email),
             type: 'system',
             timestamp: serverTimestamp(),
             senderId: 'system'
