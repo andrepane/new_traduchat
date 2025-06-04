@@ -202,6 +202,7 @@
       --color-user-right: #b9f5d8;
       --color-system: #98a6a9;
       --color-system-bg: #f0f8f2cc;
+      --color-unread: #fff6d1;
       
       /* Colores de texto y estados */
       --color-text: #232f2b;
@@ -548,6 +549,11 @@
   
   .chat-item.active {
       background-color: var(--color-user-left);
+      border-left: 3px solid var(--color-primary);
+  }
+
+  .chat-item.unread {
+      background-color: var(--color-unread);
       border-left: 3px solid var(--color-primary);
   }
   
