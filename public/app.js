@@ -896,7 +896,8 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         if (chatType) {
             constraints.push(where('type', '==', chatType));
         }
-        constraints.push(orderBy('lastMessageTime', 'desc'));
+        // Firestore requires a composite index for ordering with array-contains.
+        // To avoid index errors we sort the chats client-side instead.
 
         const q = query(collection(db, 'chats'), ...constraints);
 
