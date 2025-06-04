@@ -858,22 +858,19 @@ function showDeleteConfirmDialog(chatId, chatElement) {
 // Función para cargar chats en tiempo real
 async function setupRealtimeChats(container = chatList, chatType = null) {
     console.log('🔄 Configurando escucha de chats en tiempo real');
-    
-    // Cancelar suscripción anterior si existe
+
     if (unsubscribeChats) {
-        console.log('📤 Cancelando suscripción anterior de chats');
         unsubscribeChats();
         unsubscribeChats = null;
     }
 
-    // Limpiar la lista de chats o grupos
     if (container) {
         container.innerHTML = '';
     }
 
     const currentUser = getCurrentUser();
-    const currentLang = document.getElementById('languageSelect')?.value || 
-                       document.getElementById('languageSelectMain')?.value || 
+    const currentLang = document.getElementById('languageSelect')?.value ||
+                       document.getElementById('languageSelectMain')?.value ||
                        getUserLanguage();
 
     if (!db || !currentUser) {
@@ -885,140 +882,111 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
     }
 
     try {
-        console.log('🔍 Configurando consulta de chats para usuario:', currentUser.uid);
-        
-        // Set para mantener un registro de los chats ya mostrados
-        const displayedChats = new Set();
-        
-        const constraints = [
-            where('participants', 'array-contains', currentUser.uid)
-        ];
+        const constraints = [where('participants', 'array-contains', currentUser.uid)];
         if (chatType) {
             constraints.push(where('type', '==', chatType));
         }
-        constraints.push(orderBy('lastMessageTime', 'desc'));
 
         const q = query(collection(db, 'chats'), ...constraints);
 
-        // Crear nueva suscripción
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
             try {
-                console.log('📥 Actualización de chats detectada');
-                
-                // Limpiar lista actual solo si no hay chats mostrados
-                if (container && displayedChats.size === 0) {
-                    container.innerHTML = '';
-                }
-                
+                if (container) container.innerHTML = '';
+
                 if (snapshot.empty) {
-                    if (container && displayedChats.size === 0) {
+                    if (container) {
                         const noChatsDiv = document.createElement('div');
                         noChatsDiv.className = 'chat-item';
                         noChatsDiv.setAttribute('data-translate', 'noChats');
                         noChatsDiv.textContent = getTranslation('noChats', currentLang);
-                        container.innerHTML = '';
                         container.appendChild(noChatsDiv);
                     }
                     return;
                 }
 
-                // Procesar chats
-                const chats = [];
-                snapshot.forEach(doc => {
-                    // Evitar duplicados usando el Set
-                    if (!displayedChats.has(doc.id)) {
-                        const chatData = doc.data();
-                        chats.push({
-                            id: doc.id,
-                            ...chatData,
-                            lastMessageTime: chatData.lastMessageTime ? chatData.lastMessageTime.toDate() : new Date(0)
-                        });
-                        displayedChats.add(doc.id);
-                    }
-                });
+                const readTimes = getChatReadTimes();
 
-                // Ordenar chats por tiempo del último mensaje
-                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
-
-                // Mostrar chats
-                for (const chat of chats) {
-                    try {
-                        // Verificar si el chat ya está mostrado
-                        if (container && container.querySelector(`[data-chat-id="${chat.id}"]`)) {
-                            continue;
-                        }
-
-                        const chatElement = document.createElement('div');
-                        chatElement.className = 'chat-item';
-                        chatElement.setAttribute('data-chat-id', chat.id);
-                        
-                        if (chat.type === 'group') {
-                            chatElement.classList.add('group-chat');
-                        }
-                        if (chat.id === currentChat) {
-                            chatElement.classList.add('active');
-                        }
-
-                        let chatName = '';
-                        if (chat.type === 'group') {
-                            chatName = chat.name;
-                        } else {
-                            const otherUserId = chat.participants.find(id => id !== currentUser.uid);
-                            if (otherUserId) {
-                                const otherUserDoc = await getDoc(doc(db, 'users', otherUserId));
-                                if (otherUserDoc.exists()) {
-                                    const otherUserData = otherUserDoc.data();
-                                    chatName = otherUserData.username || otherUserData.email.split('@')[0];
-                                }
+                const chats = await Promise.all(snapshot.docs.map(async docSnap => {
+                    const data = docSnap.data();
+                    let name = '';
+                    if (data.type === 'group') {
+                        name = data.name;
+                    } else {
+                        const otherId = data.participants.find(id => id !== currentUser.uid);
+                        if (otherId) {
+                            const otherDoc = await getDoc(doc(db, 'users', otherId));
+                            if (otherDoc.exists()) {
+                                const od = otherDoc.data();
+                                name = od.username || od.email.split('@')[0];
                             }
                         }
-
-                        const lastMessageTime = chat.lastMessageTime ? 
-                            chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-
-                        chatElement.innerHTML = `
-                            <div class="chat-info">
-                                <div class="chat-details">
-                                    <div class="chat-name">${chatName}</div>
-                                    <div class="last-message">${chat.lastMessage || ''}</div>
-                                </div>
-                                <div class="last-message-time">${lastMessageTime}</div>
-                            </div>
-                            <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        `;
-
-                        // Evento para borrar chat
-                        const deleteBtn = chatElement.querySelector('.delete-chat-btn');
-                        deleteBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            showDeleteConfirmDialog(chat.id, chatElement);
-                        });
-
-                        chatElement.addEventListener('click', () => {
-                            console.log('👆 Abriendo chat:', chat.id);
-                            document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
-                            chatElement.classList.add('active');
-                            openChat(chat.id);
-                        });
-
-                        if (container) {
-                            container.appendChild(chatElement);
-                        }
-                    } catch (error) {
-                        console.error('❌ Error al procesar chat individual:', error);
                     }
+
+                    const lastMsgTime = data.lastMessageTime ? data.lastMessageTime.toDate() : new Date(0);
+                    const unread = lastMsgTime.getTime() > (readTimes[docSnap.id] || 0);
+
+                    return {
+                        id: docSnap.id,
+                        name,
+                        isUnread: unread,
+                        lastMessageTime: lastMsgTime,
+                        lastMessage: data.lastMessage || '',
+                        type: data.type,
+                        participants: data.participants
+                    };
+                }));
+
+                chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+
+                for (const chat of chats) {
+                    const chatElement = document.createElement('div');
+                    chatElement.className = 'chat-item';
+                    chatElement.setAttribute('data-chat-id', chat.id);
+
+                    if (chat.type === 'group') chatElement.classList.add('group-chat');
+                    if (chat.id === currentChat) chatElement.classList.add('active');
+                    if (chat.isUnread) chatElement.classList.add('unread', 'chat-updated');
+
+                    const lastTime = chat.lastMessageTime ?
+                        chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+                    chatElement.innerHTML = `
+                        <div class="chat-info">
+                            <div class="chat-details">
+                                <div class="chat-name">${chat.name}</div>
+                                <div class="last-message">${chat.lastMessage}</div>
+                            </div>
+                            <div class="last-message-time">${lastTime}</div>
+                        </div>
+                        <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    `;
+
+                    const deleteBtn = chatElement.querySelector('.delete-chat-btn');
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showDeleteConfirmDialog(chat.id, chatElement);
+                    });
+
+                    chatElement.addEventListener('click', () => {
+                        document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+                        chatElement.classList.remove('unread', 'chat-updated');
+                        chatElement.classList.add('active');
+                        openChat(chat.id);
+                    });
+
+                    if (container) container.appendChild(chatElement);
                 }
             } catch (error) {
                 console.error('❌ Error al procesar actualización de chats:', error);
-                if (container && displayedChats.size === 0) {
+                if (container) {
                     container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
                 }
             }
         }, error => {
             console.error('❌ Error en la suscripción de chats:', error);
-            if (container && displayedChats.size === 0) {
+            if (container) {
                 container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
             }
         });
@@ -1452,6 +1420,12 @@ async function openChat(chatId) {
     lastVisibleMessage = null;
 
     currentChat = chatId;
+
+    // Limpia cualquier manejador previo en la cabecera del chat
+    if (currentChatInfo) {
+        currentChatInfo.onclick = null;
+        currentChatInfo.removeAttribute('title');
+    }
     
     try {
         // Obtener información del chat
@@ -1465,7 +1439,11 @@ async function openChat(chatId) {
         console.log('Datos del chat:', chatData);
         currentChatParticipants = chatData.participants || [];
         if (addMembersBtn) {
-            addMembersBtn.style.display = chatData.type === 'group' ? 'block' : 'none';
+            if (chatData.type === 'group') {
+                addMembersBtn.classList.remove('hidden');
+            } else {
+                addMembersBtn.classList.add('hidden');
+            }
         }
 
         // Limpiar mensajes anteriores
@@ -1528,6 +1506,7 @@ async function openChat(chatId) {
 
         // Cargar mensajes iniciales
         await loadInitialMessages(chatId);
+        markChatAsRead(chatId);
 
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
@@ -1586,6 +1565,7 @@ unsubscribeMessages = onSnapshot(newMessagesQuery, (snapshot) => {
             if (messagesList) {
                 messagesList.scrollTop = messagesList.scrollHeight;
             }
+            markChatAsRead(chatId);
         }
     });
 });
@@ -1714,6 +1694,31 @@ async function loadMoreMessages(chatId) {
     }
 }
 
+// Guardar la marca de lectura de un chat
+function markChatAsRead(chatId) {
+    try {
+        const times = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
+        times[chatId] = Date.now();
+        localStorage.setItem('chatReadTimes', JSON.stringify(times));
+    } catch (e) {
+        console.warn('LocalStorage unavailable, unread state not persisted', e);
+    }
+
+    const chatEl = document.querySelector(`[data-chat-id="${chatId}"]`);
+    if (chatEl) {
+        chatEl.classList.remove('unread');
+    }
+}
+
+function getChatReadTimes() {
+    try {
+        return JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
+    } catch (e) {
+        console.warn('LocalStorage unavailable, using empty read times', e);
+        return {};
+    }
+}
+
 // Funciones auxiliares para la interfaz
 async function setupGroupChatInterface(chatData) {
     const participantsInfo = await Promise.all(
@@ -1723,14 +1728,21 @@ async function setupGroupChatInterface(chatData) {
         })
     );
 
+    const participantNames = participantsInfo.map(
+        user => user.username || user.email.split('@')[0]
+    );
+
     const groupInfoElement = document.createElement('div');
     groupInfoElement.className = 'group-info';
     groupInfoElement.innerHTML = `
         <div class="group-name">${chatData.name}</div>
         <div class="group-participants">
-            ${participantsInfo.map(user => user.username || user.email.split('@')[0]).join(', ')}
+            ${participantNames.join(', ')}
         </div>
     `;
+
+    groupInfoElement.title = participantNames.join(', ');
+    groupInfoElement.onclick = () => alert(participantNames.join(', '));
 
     if (currentChatInfo) {
         currentChatInfo.innerHTML = '';
@@ -2043,7 +2055,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAddMembersModal(currentChat, currentChatParticipants);
             }
         });
-        addBtn.style.display = 'none';
+        addBtn.classList.add('hidden');
     }
 });
 
@@ -2074,7 +2086,7 @@ function toggleChatList(show) {
         }
 
         if (addBtn) {
-            addBtn.style.display = 'none';
+            addBtn.classList.add('hidden');
         }
 
         // Restablecer estado del chat actual
@@ -2084,6 +2096,8 @@ function toggleChatList(show) {
         }
         if (currentChatInfo) {
             currentChatInfo.textContent = getTranslation('selectChat', userLanguage);
+            currentChatInfo.onclick = null;
+            currentChatInfo.removeAttribute('title');
         }
 
         // Recargar la lista de chats
@@ -2106,7 +2120,7 @@ function toggleChatList(show) {
     }
 
     if (addBtn && show) {
-        addBtn.style.display = 'none';
+        addBtn.classList.add('hidden');
     }
 
     adjustMobileLayout();
