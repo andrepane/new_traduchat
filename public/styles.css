@@ -2148,5 +2148,14 @@
     }
 }
 
+/* Ocultar el botón de nuevo chat en la página de grupos */
+.groups-page #newGroupChat {
+    display: none;
+}
+
+/* Ocultar el botón de crear grupo en la página de chats individuales */
+#createGroup {
+    display: none;
+}
 
 
