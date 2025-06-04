@@ -70,7 +70,7 @@ startAuthListener(async (userData) => {
         hideLoadingScreen();
         showMainScreen();
         updateUserInfo(userData);
-        setupRealtimeChats();
+        setupRealtimeChats(chatList, 'individual');
         initializeNotifications(); // Aquí está bien colocada
     } else {
         console.log('No hay usuario autenticado');
@@ -428,14 +428,14 @@ async function updateUserData(user, username, isNewUser) {
         localStorage.setItem('userLanguage', userLanguage);
         showMainScreen();
         updateUserInfo({...user, username});
-        setupRealtimeChats();
+        setupRealtimeChats(chatList, 'individual');
     } catch (error) {
         console.error('Error al actualizar datos del usuario:', error);
         if (error.code === 'permission-denied') {
             // Si es un error de permisos pero el usuario está autenticado, continuar
             showMainScreen();
             updateUserInfo({...user, username});
-            setupRealtimeChats();
+            setupRealtimeChats(chatList, 'individual');
         } else {
             throw error;
         }
@@ -498,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Actualizar la lista de chats
         if (chatList) {
-            setupRealtimeChats();
+            setupRealtimeChats(chatList, 'individual');
         }
 
         // Actualizar mensajes si hay un chat activo
@@ -856,7 +856,7 @@ function showDeleteConfirmDialog(chatId, chatElement) {
 }
 
 // Función para cargar chats en tiempo real
-async function setupRealtimeChats() {
+async function setupRealtimeChats(container = chatList, chatType = null) {
     console.log('🔄 Configurando escucha de chats en tiempo real');
     
     // Cancelar suscripción anterior si existe
@@ -866,9 +866,9 @@ async function setupRealtimeChats() {
         unsubscribeChats = null;
     }
 
-    // Limpiar la lista de chats
-    if (chatList) {
-        chatList.innerHTML = '';
+    // Limpiar la lista de chats o grupos
+    if (container) {
+        container.innerHTML = '';
     }
 
     const currentUser = getCurrentUser();
@@ -878,8 +878,8 @@ async function setupRealtimeChats() {
 
     if (!db || !currentUser) {
         console.error('❌ Firestore o usuario no inicializados');
-        if (chatList) {
-            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', currentLang)}</div>`;
+        if (container) {
+            container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', currentLang)}</div>`;
         }
         return;
     }
@@ -890,11 +890,15 @@ async function setupRealtimeChats() {
         // Set para mantener un registro de los chats ya mostrados
         const displayedChats = new Set();
         
-        const q = query(
-            collection(db, 'chats'),
-            where('participants', 'array-contains', currentUser.uid),
-            orderBy('lastMessageTime', 'desc')
-        );
+        const constraints = [
+            where('participants', 'array-contains', currentUser.uid)
+        ];
+        if (chatType) {
+            constraints.push(where('type', '==', chatType));
+        }
+        constraints.push(orderBy('lastMessageTime', 'desc'));
+
+        const q = query(collection(db, 'chats'), ...constraints);
 
         // Crear nueva suscripción
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
@@ -902,18 +906,18 @@ async function setupRealtimeChats() {
                 console.log('📥 Actualización de chats detectada');
                 
                 // Limpiar lista actual solo si no hay chats mostrados
-                if (chatList && displayedChats.size === 0) {
-                    chatList.innerHTML = '';
+                if (container && displayedChats.size === 0) {
+                    container.innerHTML = '';
                 }
                 
                 if (snapshot.empty) {
-                    if (chatList && displayedChats.size === 0) {
+                    if (container && displayedChats.size === 0) {
                         const noChatsDiv = document.createElement('div');
                         noChatsDiv.className = 'chat-item';
                         noChatsDiv.setAttribute('data-translate', 'noChats');
                         noChatsDiv.textContent = getTranslation('noChats', currentLang);
-                        chatList.innerHTML = '';
-                        chatList.appendChild(noChatsDiv);
+                        container.innerHTML = '';
+                        container.appendChild(noChatsDiv);
                     }
                     return;
                 }
@@ -940,7 +944,7 @@ async function setupRealtimeChats() {
                 for (const chat of chats) {
                     try {
                         // Verificar si el chat ya está mostrado
-                        if (document.querySelector(`[data-chat-id="${chat.id}"]`)) {
+                        if (container && container.querySelector(`[data-chat-id="${chat.id}"]`)) {
                             continue;
                         }
 
@@ -999,8 +1003,8 @@ async function setupRealtimeChats() {
                             openChat(chat.id);
                         });
 
-                        if (chatList) {
-                            chatList.appendChild(chatElement);
+                        if (container) {
+                            container.appendChild(chatElement);
                         }
                     } catch (error) {
                         console.error('❌ Error al procesar chat individual:', error);
@@ -1008,21 +1012,21 @@ async function setupRealtimeChats() {
                 }
             } catch (error) {
                 console.error('❌ Error al procesar actualización de chats:', error);
-                if (chatList && displayedChats.size === 0) {
-                    chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+                if (container && displayedChats.size === 0) {
+                    container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
                 }
             }
         }, error => {
             console.error('❌ Error en la suscripción de chats:', error);
-            if (chatList && displayedChats.size === 0) {
-                chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+            if (container && displayedChats.size === 0) {
+                container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
             }
         });
 
     } catch (error) {
         console.error('❌ Error al configurar escucha de chats:', error);
-        if (chatList) {
-            chatList.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
+        if (container) {
+            container.innerHTML = `<div class="chat-item error">${getTranslation('errorLoadingChats', userLanguage)}</div>`;
         }
     }
 }
@@ -1055,7 +1059,7 @@ function notifyNewChat(userEmail) {
 // Función para buscar usuarios
 async function searchUsers(searchTerm) {
     if (!searchTerm) {
-        setupRealtimeChats();
+        setupRealtimeChats(chatList, 'individual');
         return;
     }
 
@@ -2083,7 +2087,7 @@ function toggleChatList(show) {
         }
 
         // Recargar la lista de chats
-        setupRealtimeChats();
+        setupRealtimeChats(chatList, 'individual');
     } else {
         // Mostrar chat
         if (sidebar) {
@@ -2879,6 +2883,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
     const chatList = document.getElementById('chatList');
+    const groupsList = document.getElementById('groupsList');
 
     // Función para actualizar los botones activos
     function updateActiveButtons(activeId) {
@@ -2898,6 +2903,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (settingsPage) settingsPage.classList.add('hidden');
                 if (groupsPage) groupsPage.classList.add('hidden');
                 updateActiveButtons('btnChats');
+                setupRealtimeChats(chatList, 'individual');
             }
         });
     });
@@ -2910,6 +2916,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 chatList.classList.add('hidden');
                 if (settingsPage) settingsPage.classList.add('hidden');
                 updateActiveButtons('btnGroups');
+                setupRealtimeChats(groupsList, 'group');
             }
         });
     });
@@ -2941,6 +2948,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 groupsPage.classList.add('hidden');
                 chatList.classList.remove('hidden');
                 updateActiveButtons('btnChats');
+                setupRealtimeChats(chatList, 'individual');
             }
         });
     }
@@ -2952,6 +2960,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 settingsPage.classList.add('hidden');
                 chatList.classList.remove('hidden');
                 updateActiveButtons('btnChats');
+                setupRealtimeChats(chatList, 'individual');
             }
         });
     }
