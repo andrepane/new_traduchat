@@ -2112,4 +2112,50 @@
   border-left: 4px solid #00c864;
 }
 
+/* ==========================================================================
+     Página de Grupos
+     ========================================================================== */
+.groups-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--color-bg);
+    z-index: 700;
+    display: flex;
+    flex-direction: column;
+}
+
+.groups-page.hidden {
+    display: none;
+}
+
+.groups-header {
+    height: var(--header-height);
+    padding: 12px 15px;
+    background: var(--color-bg-alt);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.groups-header h2 {
+    font-size: 1.2rem;
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+/* Ajustes iOS para la página de grupos */
+@supports (-webkit-touch-callout: none) {
+    .groups-header {
+        padding-top: calc(var(--safe-area-top) + 12px);
+        height: calc(var(--header-height) + var(--safe-area-top));
+    }
+}
+
+
 
