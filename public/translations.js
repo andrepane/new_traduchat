@@ -17,6 +17,8 @@ const translations = {
         noPhone: 'Sin teléfono',
         listening: 'Escuchando...',
         chats: 'Chats',
+        codeValidFor: 'Código válido por: {0}',
+        codeExpired: 'Código expirado',
         
         // Mensajes de error/éxito
         errorEmptyFields: 'Por favor, completa todos los campos',
@@ -26,6 +28,12 @@ const translations = {
         errorUsernameInUse: 'Este nombre de usuario ya está en uso',
         errorNetwork: 'Error de conexión. Verifica tu conexión a internet',
         errorGeneric: 'Ha ocurrido un error',
+        errorSendingCode: 'Error al enviar el código: {0}',
+        errorVerifyingCode: 'Error al verificar el código: {0}',
+        errorUsernameChars: 'El nombre de usuario solo puede contener letras, números, guiones y guiones bajos, y debe tener entre 3 y 20 caracteres',
+        errorTooManyAttempts: 'Demasiados intentos. Intenta más tarde.',
+        demoVerificationCode: 'Para fines de demostración, tu código es: {0}',
+        translationLimitExceeded: 'Límite de traducciones excedido',
         
         // Interfaz principal
         newChat: '+',
@@ -113,6 +121,8 @@ const translations = {
         logoutSuccess: 'You have successfully logged out',
         listening: 'Listening...',
         chats: 'Chats',
+        codeValidFor: 'Code valid for: {0}',
+        codeExpired: 'Code expired',
         
         // Error/success messages
         errorEmptyFields: 'Please fill in all fields',
@@ -122,6 +132,12 @@ const translations = {
         errorUsernameInUse: 'This username is already taken',
         errorNetwork: 'Connection error. Check your internet connection',
         errorGeneric: 'An error has occurred',
+        errorSendingCode: 'Error sending code: {0}',
+        errorVerifyingCode: 'Error verifying code: {0}',
+        errorUsernameChars: 'Username can only contain letters, numbers, hyphens and underscores, and must be between 3 and 20 characters',
+        errorTooManyAttempts: 'Too many attempts. Try again later.',
+        demoVerificationCode: 'For demonstration purposes, your code is: {0}',
+        translationLimitExceeded: 'Translation limit exceeded',
         
         // Main interface
         newChat: '+',
@@ -212,6 +228,8 @@ const translations = {
         logoutSuccess: 'Disconnessione effettuata con successo',
         listening: 'In ascolto...',
         chats: 'Chat',
+        codeValidFor: 'Codice valido per: {0}',
+        codeExpired: 'Codice scaduto',
         
         // Messaggi di errore/successo
         errorEmptyFields: 'Per favore, compila tutti i campi',
@@ -220,6 +238,12 @@ const translations = {
         errorEmailInUse: 'Questa email è già registrata',
         errorNetwork: 'Errore di connessione. Verifica la tua connessione internet',
         errorGeneric: 'Si è verificato un errore',
+        errorSendingCode: 'Errore nell\'invio del codice: {0}',
+        errorVerifyingCode: 'Errore nella verifica del codice: {0}',
+        errorUsernameChars: 'Il nome utente può contenere solo lettere, numeri, trattini e underscore e deve essere tra 3 e 20 caratteri',
+        errorTooManyAttempts: 'Troppi tentativi. Riprova più tardi.',
+        demoVerificationCode: 'Per scopi dimostrativi, il tuo codice è: {0}',
+        translationLimitExceeded: 'Limite di traduzione superato',
         
         // Interfaccia principale
         newChat: '+',
