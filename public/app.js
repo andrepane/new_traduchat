@@ -24,7 +24,8 @@ import {
     getFirestore,
     limit,
     startAfter,
-    writeBatch
+    writeBatch,
+    arrayUnion
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import {
@@ -118,6 +119,7 @@ const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
 
 // Referencias adicionales para móvil
 const backButton = document.getElementById('backToChats');
+const addMembersBtn = document.getElementById('addMembersBtn');
 const sidebar = document.querySelector('.sidebar');
 
 // Variables globales
@@ -125,6 +127,7 @@ let languageSelect;
 let languageSelectMain;
 let currentUser = null;
 let currentChat = null;
+let currentChatParticipants = [];
 let verificationCode = null;
 let timerInterval = null;
 const CODE_EXPIRY_TIME = 5 * 60; // 5 minutos en segundos
@@ -1456,6 +1459,10 @@ async function openChat(chatId) {
 
         const chatData = chatDoc.data();
         console.log('Datos del chat:', chatData);
+        currentChatParticipants = chatData.participants || [];
+        if (addMembersBtn) {
+            addMembersBtn.style.display = chatData.type === 'group' ? 'block' : 'none';
+        }
 
         // Limpiar mensajes anteriores
         if (messagesList) {
@@ -2011,18 +2018,28 @@ settingsLogoutBtn.addEventListener('click', handleLogout);
 // Evento para el botón de volver
 document.addEventListener('DOMContentLoaded', () => {
     const backButton = document.getElementById('backToChats');
+    const addBtn = document.getElementById('addMembersBtn');
     if (backButton) {
         backButton.addEventListener('click', () => {
             console.log('Botón volver clickeado');
             // Prevenir múltiples clics
             backButton.disabled = true;
             setTimeout(() => backButton.disabled = false, 500);
-            
+
             toggleChatList(true);
         });
-        
+
         // Inicialmente ocultar el botón
         backButton.style.display = 'none';
+    }
+
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            if (currentChat) {
+                showAddMembersModal(currentChat, currentChatParticipants);
+            }
+        });
+        addBtn.style.display = 'none';
     }
 });
 
@@ -2033,6 +2050,7 @@ function toggleChatList(show) {
     const sidebar = document.querySelector('.sidebar');
     const chatContainer = document.querySelector('.chat-container');
     const backButton = document.getElementById('backToChats');
+    const addBtn = document.getElementById('addMembersBtn');
     
     if (show) {
         // Mostrar lista de chats
@@ -2049,6 +2067,10 @@ function toggleChatList(show) {
         if (unsubscribeMessages) {
             unsubscribeMessages();
             unsubscribeMessages = null;
+        }
+
+        if (addBtn) {
+            addBtn.style.display = 'none';
         }
 
         // Restablecer estado del chat actual
@@ -2079,6 +2101,10 @@ function toggleChatList(show) {
         backButton.style.display = window.innerWidth <= 768 && !show ? 'block' : 'none';
     }
 
+    if (addBtn && show) {
+        addBtn.style.display = 'none';
+    }
+
     adjustMobileLayout();
 }
 
@@ -2095,7 +2121,7 @@ window.addEventListener('resize', () => {
 });
 
 // Función para actualizar la lista de usuarios seleccionados
-function updateSelectedUsersList(selectedUsersList, createGroupBtn) {
+function updateSelectedUsersList(selectedUsersList, createGroupBtn, minUsers = 1) {
     selectedUsersList.innerHTML = Array.from(selectedUsers).map(user => `
         <div class="selected-user-item">
             <span>${user.email}</span>
@@ -2108,14 +2134,18 @@ function updateSelectedUsersList(selectedUsersList, createGroupBtn) {
         btn.addEventListener('click', (e) => {
             const userId = e.target.dataset.userid;
             selectedUsers.delete(Array.from(selectedUsers).find(u => u.id === userId));
-            updateSelectedUsersList(selectedUsersList, createGroupBtn);
+            updateSelectedUsersList(selectedUsersList, createGroupBtn, minUsers);
         });
     });
 
     // Actualizar estado del botón
     if (createGroupBtn) {
         const groupNameInput = document.getElementById('groupName');
-        createGroupBtn.disabled = selectedUsers.size < 2 || !groupNameInput?.value.trim();
+        if (groupNameInput) {
+            createGroupBtn.disabled = selectedUsers.size < minUsers || !groupNameInput.value.trim();
+        } else {
+            createGroupBtn.disabled = selectedUsers.size < minUsers;
+        }
     }
 }
 
@@ -2186,7 +2216,7 @@ function showGroupCreationModal() {
 
         try {
             const users = await searchUsersForGroup(searchTerm);
-            displayUserSearchResults(users, userSearchResults, selectedUsersList, createGroupBtn);
+            displayUserSearchResults(users, userSearchResults, selectedUsersList, createGroupBtn, 2);
         } catch (error) {
             console.error('Error al buscar usuarios:', error);
             userSearchResults.innerHTML = `<div class="error-message" data-translate="errorSearch">${getTranslation('errorSearch', userLanguage)}</div>`;
@@ -2232,7 +2262,7 @@ function showGroupCreationModal() {
     });
 
     // Inicializar la lista de usuarios seleccionados
-    updateSelectedUsersList(selectedUsersList, createGroupBtn);
+    updateSelectedUsersList(selectedUsersList, createGroupBtn, 2);
     updateUsersCount();
 
     // Escuchar cambios de idioma
@@ -2244,7 +2274,7 @@ function showGroupCreationModal() {
 }
 
 // Función para buscar usuarios para el grupo
-async function searchUsersForGroup(searchTerm) {
+async function searchUsersForGroup(searchTerm, excludeIds = []) {
     const currentUser = getCurrentUser();
     
     try {
@@ -2258,6 +2288,7 @@ async function searchUsersForGroup(searchTerm) {
                 userData.uid &&
                 typeof userData.email === 'string' &&
                 userData.uid !== currentUser.uid &&
+                !excludeIds.includes(userData.uid) &&
                 (
                     userData.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                     (typeof userData.username === 'string' && userData.username.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -2280,7 +2311,7 @@ async function searchUsersForGroup(searchTerm) {
 }
 
 // Función para mostrar resultados de búsqueda de usuarios para el grupo
-function displayUserSearchResults(users, container, selectedUsersList, createGroupBtn) {
+function displayUserSearchResults(users, container, selectedUsersList, createGroupBtn, minUsers = 1) {
     if (users.length === 0) {
         container.innerHTML = `<div class="user-item no-results">${getTranslation('noUsersFound', userLanguage)}</div>`;
         return;
@@ -2310,18 +2341,23 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
                     email: userEmail
                 });
                 
-                updateSelectedUsersList(selectedUsersList, createGroupBtn);
+                updateSelectedUsersList(selectedUsersList, createGroupBtn, minUsers);
                 item.remove();
-                
+
                 // Actualizar estado del botón de crear
                 const groupNameInput = document.getElementById('groupName');
-                createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < 2;
-                
+                if (groupNameInput) {
+                    createGroupBtn.disabled = !groupNameInput.value.trim() || selectedUsers.size < minUsers;
+                } else {
+                    createGroupBtn.disabled = selectedUsers.size < minUsers;
+                }
+
                 // Actualizar contador
                 const usersCount = document.querySelector('.users-count');
                 if (usersCount) {
-                    usersCount.textContent = `(${selectedUsers.size}/2 mínimo)`;
-                    usersCount.style.color = selectedUsers.size >= 2 ? '#10b981' : '#ef4444';
+                    const minText = minUsers === 2 ? `${selectedUsers.size}/2 mínimo` : `(${selectedUsers.size})`;
+                    usersCount.textContent = minText;
+                    usersCount.style.color = selectedUsers.size >= minUsers ? '#10b981' : '#ef4444';
                 }
             }
         });
@@ -2382,7 +2418,135 @@ async function createGroupChat(groupName, participants) {
         console.error('Error al crear grupo:', error);
         showError('errorCreateGroup');
     }
-} 
+}
+
+// Función para mostrar modal para añadir miembros a un grupo existente
+function showAddMembersModal(chatId, existingParticipants = []) {
+    selectedUsers.clear();
+
+    const modalHtml = `
+        <div id="addMembersModal" class="modal">
+            <div class="modal-content">
+                <h2 data-translate="addMembers">${getTranslation('addMembers', userLanguage)}</h2>
+                <div class="group-form">
+                    <div class="selected-users">
+                        <h3>
+                            <span data-translate="selectedUsers">${getTranslation('selectedUsers', userLanguage)}</span>
+                            <span class="users-count">(0)</span>
+                        </h3>
+                        <div id="addSelectedUsers"></div>
+                    </div>
+                    <div class="user-search">
+                        <input type="text" id="addMemberSearch" data-translate="searchUsers" placeholder="${getTranslation('searchUsers', userLanguage)}" />
+                        <div id="addMemberResults"></div>
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="confirmAddMembers" disabled data-translate="addMembers">${getTranslation('addMembers', userLanguage)}</button>
+                        <button id="cancelAddMembers" data-translate="cancel">${getTranslation('cancel', userLanguage)}</button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = document.getElementById('addMembersModal');
+    const searchInput = document.getElementById('addMemberSearch');
+    const results = document.getElementById('addMemberResults');
+    const confirmBtn = document.getElementById('confirmAddMembers');
+    const cancelBtn = document.getElementById('cancelAddMembers');
+    const selectedList = document.getElementById('addSelectedUsers');
+    const usersCount = modal.querySelector('.users-count');
+
+    function updateUsersCount() {
+        usersCount.textContent = `(${selectedUsers.size})`;
+        usersCount.style.color = selectedUsers.size > 0 ? '#10b981' : '#ef4444';
+    }
+
+    translateInterface(getUserLanguage());
+
+    searchInput.addEventListener('input', debounce(async (e) => {
+        const term = e.target.value.trim();
+        if (term.length < 2) {
+            results.innerHTML = '';
+            return;
+        }
+        try {
+            const users = await searchUsersForGroup(term, existingParticipants);
+            displayUserSearchResults(users, results, selectedList, confirmBtn);
+            updateUsersCount();
+        } catch (err) {
+            console.error('Error al buscar usuarios:', err);
+            results.innerHTML = `<div class="error-message" data-translate="errorSearch">${getTranslation('errorSearch', userLanguage)}</div>`;
+        }
+    }, 300));
+
+    confirmBtn.addEventListener('click', async () => {
+        try {
+            await addMembersToGroup(chatId, Array.from(selectedUsers));
+            modal.remove();
+            alert(getTranslation('membersAdded', userLanguage));
+        } catch (err) {
+            console.error('Error al agregar miembros:', err);
+            showError('errorAddMembers');
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        selectedUsers.clear();
+        modal.remove();
+    });
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            selectedUsers.clear();
+            modal.remove();
+        }
+    });
+
+    updateSelectedUsersList(selectedList, confirmBtn, 1);
+    updateUsersCount();
+
+    window.addEventListener('languageChanged', (e) => {
+        const newLang = e.detail;
+        translateInterface(newLang);
+        updateUsersCount();
+    });
+}
+
+// Función para agregar miembros a un grupo existente
+async function addMembersToGroup(chatId, members) {
+    const currentUser = getCurrentUser();
+    if (!currentUser || members.length === 0) return;
+
+    const lang = getUserLanguage();
+
+    try {
+        const chatRef = doc(db, 'chats', chatId);
+        await updateDoc(chatRef, {
+            participants: arrayUnion(...members.map(m => m.id))
+        });
+
+        const memberNames = await Promise.all(members.map(async m => {
+            const docSnap = await getDoc(doc(db, 'users', m.id));
+            const data = docSnap.exists() ? docSnap.data() : null;
+            return data?.username || (data?.email || m.email).split('@')[0];
+        }));
+
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        const senderName = userDoc.exists() ? (userDoc.data().username || userDoc.data().email.split('@')[0]) : 'Usuario';
+
+        await addDoc(collection(db, 'chats', chatId, 'messages'), {
+            text: `${senderName} ${getTranslation('addedMembers', lang)} ${memberNames.join(', ')}`,
+            type: 'system',
+            timestamp: serverTimestamp(),
+            senderId: 'system'
+        });
+    } catch (error) {
+        console.error('Error al agregar miembros:', error);
+        throw error;
+    }
+}
 
 let recognition = null; // variable global para la instancia
 
