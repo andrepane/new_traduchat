@@ -1005,6 +1005,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
 }
 
 
+
 // Función para notificar nuevo chat
 function notifyNewChat(userEmail) {
     if (!("Notification" in window)) return;
@@ -1431,6 +1432,7 @@ async function openChat(chatId) {
         currentChatInfo.onclick = null;
         currentChatInfo.removeAttribute('title');
     }
+
     
     try {
         // Obtener información del chat
@@ -1450,6 +1452,8 @@ async function openChat(chatId) {
                 addMembersBtn.classList.add('hidden');
             }
         }
+
+
 
         // Limpiar mensajes anteriores
         if (messagesList) {
@@ -1513,6 +1517,8 @@ async function openChat(chatId) {
         await loadInitialMessages(chatId);
         markChatAsRead(chatId);
 
+
+
         // Suscribirse a nuevos mensajes
         const messagesRef = collection(db, 'chats', chatId, 'messages');
 const newMessagesQuery = query(
@@ -1574,6 +1580,7 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
         }
     });
 });
+
 
     } catch (error) {
         console.error('Error al abrir chat:', error);
@@ -1757,6 +1764,7 @@ async function setupGroupChatInterface(chatData) {
         currentChatInfo.innerHTML = '';
         currentChatInfo.appendChild(groupInfoElement);
     }
+
 }
 
 async function setupIndividualChatInterface(chatData, currentUser) {
@@ -2124,6 +2132,7 @@ function toggleChatList(show) {
             setupRealtimeChats(chatList, 'individual');
         }
     } else {
+
         // Mostrar chat
         if (sidebar) {
             sidebar.classList.add('hidden');
@@ -2916,6 +2925,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
 
+
     // Función para actualizar los botones activos
     function updateActiveButtons(activeId) {
         document.querySelectorAll('.nav-button').forEach(btn => {
@@ -2986,6 +2996,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
 
     // Volver desde ajustes
     if (backFromSettings) {
