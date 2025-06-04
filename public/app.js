@@ -2705,9 +2705,9 @@ if (themeSelectMain) {
 document.addEventListener('DOMContentLoaded', function() {
     const settingsPage = document.getElementById('settingsPage');
     const groupsPage = document.getElementById('groupsPage');
-    const btnSettings = document.getElementById('btnSettings');
-    const btnChats = document.getElementById('btnChats');
-    const btnGroups = document.getElementById('btnGroups');
+    const btnSettings = document.querySelectorAll('#btnSettings');
+    const btnChats = document.querySelectorAll('#btnChats');
+    const btnGroups = document.querySelectorAll('#btnGroups');
     const backFromSettings = document.getElementById('backFromSettings');
     const backFromGroups = document.getElementById('backFromGroups');
     const settingsUsername = document.getElementById('settingsUsername');
@@ -2716,28 +2716,58 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
     const chatList = document.getElementById('chatList');
 
+    // Función para actualizar los botones activos
+    function updateActiveButtons(activeId) {
+        document.querySelectorAll('.nav-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll(`#${activeId}`).forEach(btn => {
+            btn.classList.add('active');
+        });
+    }
+
     // Mostrar página de chats
-    btnChats.addEventListener('click', function() {
-        if (chatList) {
-            chatList.classList.remove('hidden');
-            if (settingsPage) settingsPage.classList.add('hidden');
-            if (groupsPage) groupsPage.classList.add('hidden');
-            btnChats.classList.add('active');
-            btnGroups.classList.remove('active');
-            btnSettings.classList.remove('active');
-        }
+    btnChats.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (chatList) {
+                chatList.classList.remove('hidden');
+                if (settingsPage) settingsPage.classList.add('hidden');
+                if (groupsPage) groupsPage.classList.add('hidden');
+                updateActiveButtons('btnChats');
+            }
+        });
     });
 
     // Mostrar página de grupos
-    btnGroups.addEventListener('click', function() {
-        if (groupsPage && chatList) {
-            groupsPage.classList.remove('hidden');
-            chatList.classList.add('hidden');
-            if (settingsPage) settingsPage.classList.add('hidden');
-            btnGroups.classList.add('active');
-            btnChats.classList.remove('active');
-            btnSettings.classList.remove('active');
-        }
+    btnGroups.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (groupsPage && chatList) {
+                groupsPage.classList.remove('hidden');
+                chatList.classList.add('hidden');
+                if (settingsPage) settingsPage.classList.add('hidden');
+                updateActiveButtons('btnGroups');
+            }
+        });
+    });
+
+    // Mostrar página de ajustes
+    btnSettings.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const currentUser = getCurrentUser();
+            if (settingsPage && chatList) {
+                settingsPage.classList.remove('hidden');
+                chatList.classList.add('hidden');
+                if (groupsPage) groupsPage.classList.add('hidden');
+                updateActiveButtons('btnSettings');
+                
+                // Actualizar el nombre de usuario en ajustes
+                if (settingsUsername && currentUser) {
+                    const name = currentUser.username || currentUser.email?.split('@')[0] || 'Usuario';
+                    settingsUsername.value = name;
+                    settingsUsername.setAttribute('readonly', true);
+                }
+            }
+        });
     });
 
     // Volver desde grupos
@@ -2746,61 +2776,23 @@ document.addEventListener('DOMContentLoaded', function() {
             if (groupsPage && chatList) {
                 groupsPage.classList.add('hidden');
                 chatList.classList.remove('hidden');
-                btnChats.classList.add('active');
-                btnGroups.classList.remove('active');
+                updateActiveButtons('btnChats');
             }
         });
     }
 
-    // Mostrar página de ajustes
-    btnSettings.addEventListener('click', function() {
-        const currentUser = getCurrentUser();
-        if (settingsPage && chatList) {
-            settingsPage.classList.remove('hidden');
-            chatList.classList.add('hidden');
-            if (groupsPage) groupsPage.classList.add('hidden');
-            btnSettings.classList.add('active');
-            btnChats.classList.remove('active');
-            btnGroups.classList.remove('active');
-            
-            // Actualizar el nombre de usuario en ajustes
-            if (settingsUsername && currentUser) {
-                const name = currentUser.username || currentUser.email?.split('@')[0] || 'Usuario';
-                settingsUsername.value = name;
-                settingsUsername.setAttribute('readonly', true);
+    // Volver desde ajustes
+    if (backFromSettings) {
+        backFromSettings.addEventListener('click', function() {
+            if (settingsPage && chatList) {
+                settingsPage.classList.add('hidden');
+                chatList.classList.remove('hidden');
+                updateActiveButtons('btnChats');
             }
-        }
-    });
-
-    // Volver de ajustes
-    backFromSettings.addEventListener('click', function() {
-        if (settingsPage && chatList) {
-            settingsPage.classList.add('hidden');
-            chatList.classList.remove('hidden');
-            btnChats.classList.add('active');
-            btnSettings.classList.remove('active');
-        }
-    });
-
-    // Cambiar idioma desde ajustes
-    settingsLanguage.addEventListener('change', function() {
-        const newLanguage = this.value;
-        localStorage.setItem('language', newLanguage);
-        document.documentElement.setAttribute('lang', newLanguage);
-        document.body.className = `theme-${localStorage.getItem('theme-set')} theme-${newLanguage}`;
-        updateTranslations();
-    });
-
-    // Cambiar tema desde ajustes
-    settingsTheme.addEventListener('change', function() {
-        const newTheme = this.value;
-        localStorage.setItem('theme-set', newTheme);
-        document.body.className = `theme-${newTheme} theme-${localStorage.getItem('language')}`;
-    });
-
-    // Cerrar sesión desde ajustes
-    settingsLogoutBtn.addEventListener('click', handleLogout);
+        });
+    }
 });
+
 
 
 
