@@ -896,7 +896,8 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         if (chatType) {
             constraints.push(where('type', '==', chatType));
         }
-        constraints.push(orderBy('lastMessageTime', 'desc'));
+        // Firestore requires a composite index for ordering with array-contains.
+        // To avoid index errors we sort the chats client-side instead.
 
         const q = query(collection(db, 'chats'), ...constraints);
 
@@ -1465,7 +1466,11 @@ async function openChat(chatId) {
         console.log('Datos del chat:', chatData);
         currentChatParticipants = chatData.participants || [];
         if (addMembersBtn) {
-            addMembersBtn.style.display = chatData.type === 'group' ? 'block' : 'none';
+            if (chatData.type === 'group') {
+                addMembersBtn.classList.remove('hidden');
+            } else {
+                addMembersBtn.classList.add('hidden');
+            }
         }
 
         // Limpiar mensajes anteriores
@@ -2043,7 +2048,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showAddMembersModal(currentChat, currentChatParticipants);
             }
         });
-        addBtn.style.display = 'none';
+        addBtn.classList.add('hidden');
     }
 });
 
@@ -2074,7 +2079,7 @@ function toggleChatList(show) {
         }
 
         if (addBtn) {
-            addBtn.style.display = 'none';
+            addBtn.classList.add('hidden');
         }
 
         // Restablecer estado del chat actual
@@ -2106,7 +2111,7 @@ function toggleChatList(show) {
     }
 
     if (addBtn && show) {
-        addBtn.style.display = 'none';
+        addBtn.classList.add('hidden');
     }
 
     adjustMobileLayout();

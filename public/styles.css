@@ -1242,9 +1242,14 @@
   #createGroup {
       background: #2e7d32;
   }
-  
+
   #createGroup:hover {
       background: #1b5e20;
+  }
+
+  /* Botón para añadir miembros */
+  #addMembersBtn {
+      font-size: 0.85rem;
   }
   
   #logoutBtn {
