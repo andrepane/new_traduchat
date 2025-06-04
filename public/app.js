@@ -114,8 +114,7 @@ const newChatBtn = document.getElementById('newChat');
 const userInfo = document.getElementById('userInfo');
 const currentChatInfo = document.getElementById('currentChatInfo');
 
-const logoutBtn = document.getElementById('logoutBtn');
-
+const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
 
 // Referencias adicionales para móvil
 const backButton = document.getElementById('backToChats');
@@ -246,7 +245,11 @@ function updateUserInfo(user) {
     }
 
     const name = user.username || user.email?.split('@')[0] || 'Usuario';
-    userInfo.textContent = name;
+    const settingsUsername = document.getElementById('settingsUsername');
+    if (settingsUsername) {
+        settingsUsername.value = name;
+        settingsUsername.setAttribute('readonly', true);
+    }
 }
 
 
@@ -297,7 +300,7 @@ loginBtn.addEventListener('click', async () => {
 
     const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
     if (!usernameRegex.test(username)) {
-        showError('usernameValidationError');
+        alert('El nombre de usuario solo puede contener letras, números, guiones y guiones bajos, y debe tener entre 3 y 20 caracteres');
         return;
     }
 
@@ -326,9 +329,6 @@ loginBtn.addEventListener('click', async () => {
                 return;
             } else if (loginError.code === 'auth/wrong-password') {
                 showError('errorPassword');
-            } else if (loginError.code === 'auth/too-many-requests') {
-                showError('tooManyAttempts');
-                return;
             } else {
                 throw loginError;
             }
@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Inicializar el tema según el idioma actual
     const currentLang = getUserLanguage();
-    updateTheme(currentLang);
+    document.body.classList.add(`theme-${currentLang}`);
 
     const handleLanguageChange = async (newLang) => {
         console.log('🔄 handleLanguageChange llamado con:', newLang);
@@ -472,8 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
             stopRecording();
         }
 
-        // Actualizar el tema según el nuevo idioma
-        updateTheme(newLang);
+        // Actualizar el tema con el nuevo idioma
+        const currentTheme = localStorage.getItem("selectedTheme") || "banderas";
+        updateThemeAndLanguage(currentTheme, newLang);
 
         await setUserLanguage(newLang);
         translateInterface(newLang);
@@ -574,6 +575,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
         hideLoadingScreen();
     });
+
+    // Inicializar selectores de tema
+    const themeSelect = document.getElementById("themeSelect");
+    const themeSelectMain = document.getElementById("themeSelectMain");
+
+    // Restaurar tema guardado
+    const savedTheme = localStorage.getItem("selectedTheme") || "banderas";
+    const initialLang = getUserLanguage();
+
+    // Aplicar tema inicial
+    updateThemeAndLanguage(savedTheme, initialLang);
+
+    // Event listener para el selector de tema en la pantalla de inicio
+    if (themeSelect) {
+        themeSelect.addEventListener("change", () => {
+            const selectedTheme = themeSelect.value;
+            const lang = getUserLanguage();
+            updateThemeAndLanguage(selectedTheme, lang);
+        });
+    }
+
+    // Event listener para el selector de tema en ajustes
+    if (themeSelectMain) {
+        themeSelectMain.addEventListener("change", () => {
+            const selectedTheme = themeSelectMain.value;
+            const lang = getUserLanguage();
+            updateThemeAndLanguage(selectedTheme, lang);
+        });
+    }
 });
 
 
@@ -625,15 +655,60 @@ document.addEventListener('gesturestart', function(e) {
     e.preventDefault();
 });
 
+// Función para actualizar el tema y el idioma
+function updateThemeAndLanguage(theme, lang) {
+    // Limpiar todas las clases de tema e idioma
+    document.body.classList.forEach(cls => {
+        if (cls.startsWith('theme-set-') || cls.startsWith('theme-')) {
+            document.body.classList.remove(cls);
+        }
+    });
+
+    // Aplicar el nuevo tema y el idioma
+    document.body.classList.add(`theme-set-${theme}`);
+    document.body.classList.add(`theme-${lang}`);
+
+    // Guardar tema en localStorage
+    localStorage.setItem("selectedTheme", theme);
+
+    // Actualizar TODOS los selectores de tema si existen
+    const themeSelect = document.getElementById("themeSelect");
+    const themeSelectMain = document.getElementById("themeSelectMain");
+    if (themeSelect) themeSelect.value = theme;
+    if (themeSelectMain) themeSelectMain.value = theme;
+
+    // Actualizar TODOS los selectores de idioma si existen
+    const languageSelect = document.getElementById("languageSelect");
+    const languageSelectMain = document.getElementById("languageSelectMain");
+    if (languageSelect) languageSelect.value = lang;
+    if (languageSelectMain) languageSelectMain.value = lang;
+}
+
 // Función para mostrar la pantalla principal
 function showMainScreen() {
     document.getElementById('authScreen').classList.remove('active');
     document.getElementById('mainScreen').classList.add('active');
-    toggleChatList(true); // Mostrar la lista de chats por defecto
+    toggleChatList(true);
     
-    // Asegurarnos de que el tema esté actualizado
-    const currentLang = getUserLanguage();
-    updateTheme(currentLang);
+    // Inicializar el selector de tema
+    const themeSelectMain = document.getElementById("themeSelectMain");
+    if (themeSelectMain) {
+        // Restaurar tema guardado
+        const savedTheme = localStorage.getItem("selectedTheme") || "banderas";
+        const currentLang = getUserLanguage();
+        updateThemeAndLanguage(savedTheme, currentLang);
+
+        themeSelectMain.addEventListener("change", () => {
+            const selectedTheme = themeSelectMain.value;
+            const currentLang = document.getElementById("languageSelectMain").value || "es";
+            
+            // Guardar en localStorage
+            localStorage.setItem("selectedTheme", selectedTheme);
+            
+            // Actualizar tema e idioma
+            updateThemeAndLanguage(selectedTheme, currentLang);
+        });
+    }
 }
 
 // Función para limpiar el estado del chat
@@ -1234,7 +1309,7 @@ async function displayMessage(messageData) {
                 }
             } catch (error) {
                 console.error('❌ Error al traducir mensaje:', error);
-                messageText = messageData.text + ' ' + getTranslation('translationError', currentLanguage);
+                messageText = messageData.text + ' [Error de traducción]';
             }
         }
     } else {
@@ -1931,7 +2006,7 @@ async function handleLogout() {
 }
 
 // Evento para el botón de cerrar sesión
-logoutBtn.addEventListener('click', handleLogout);
+settingsLogoutBtn.addEventListener('click', handleLogout);
 
 // Evento para el botón de volver
 document.addEventListener('DOMContentLoaded', () => {
@@ -2548,7 +2623,6 @@ togglePassword.addEventListener("click", () => {
     const isHidden = passwordInput.type === "password";
     passwordInput.type = isHidden ? "text" : "password";
     togglePassword.textContent = isHidden ? "🙈" : "👁️";
-    togglePassword.setAttribute('aria-label', isHidden ? getTranslation('hidePassword', userLanguage) : getTranslation('showPassword', userLanguage));
 });
 
 
@@ -2581,6 +2655,30 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+// Funcionalidad del selector de tema
+const themeSelectMain = document.getElementById("themeSelectMain");
+
+if (themeSelectMain) {
+    // Restaurar tema guardado
+    const savedTheme = localStorage.getItem("selectedTheme");
+    if (savedTheme) {
+        themeSelectMain.value = savedTheme;
+        document.body.classList.forEach(cls => {
+            if (cls.startsWith("theme-set-")) {
+                document.body.classList.remove(cls);
+            }
+        });
+        document.body.classList.add(`theme-set-${savedTheme}`);
+    }
+
+    themeSelectMain.addEventListener("change", () => {
+        const selectedTheme = themeSelectMain.value;
+        const lang = getUserLanguage();
+        updateThemeAndLanguage(selectedTheme, lang);
+    });
+}
+
+
 /*
 const themeSelectMain = document.getElementById("themeSelectMain");
 
@@ -2602,6 +2700,103 @@ if (themeSelectMain) {
     });
 }
 */
+
+// Funcionalidad de la página de ajustes
+document.addEventListener('DOMContentLoaded', function() {
+    const settingsPage = document.getElementById('settingsPage');
+    const groupsPage = document.getElementById('groupsPage');
+    const btnSettings = document.querySelectorAll('#btnSettings');
+    const btnChats = document.querySelectorAll('#btnChats');
+    const btnGroups = document.querySelectorAll('#btnGroups');
+    const backFromSettings = document.getElementById('backFromSettings');
+    const backFromGroups = document.getElementById('backFromGroups');
+    const settingsUsername = document.getElementById('settingsUsername');
+    const settingsLanguage = document.getElementById('settingsLanguage');
+    const settingsTheme = document.getElementById('settingsTheme');
+    const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+    const chatList = document.getElementById('chatList');
+
+    // Función para actualizar los botones activos
+    function updateActiveButtons(activeId) {
+        document.querySelectorAll('.nav-button').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelectorAll(`#${activeId}`).forEach(btn => {
+            btn.classList.add('active');
+        });
+    }
+
+    // Mostrar página de chats
+    btnChats.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (chatList) {
+                chatList.classList.remove('hidden');
+                if (settingsPage) settingsPage.classList.add('hidden');
+                if (groupsPage) groupsPage.classList.add('hidden');
+                updateActiveButtons('btnChats');
+            }
+        });
+    });
+
+    // Mostrar página de grupos
+    btnGroups.forEach(btn => {
+        btn.addEventListener('click', function() {
+            if (groupsPage && chatList) {
+                groupsPage.classList.remove('hidden');
+                chatList.classList.add('hidden');
+                if (settingsPage) settingsPage.classList.add('hidden');
+                updateActiveButtons('btnGroups');
+            }
+        });
+    });
+
+    // Mostrar página de ajustes
+    btnSettings.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const currentUser = getCurrentUser();
+            if (settingsPage && chatList) {
+                settingsPage.classList.remove('hidden');
+                chatList.classList.add('hidden');
+                if (groupsPage) groupsPage.classList.add('hidden');
+                updateActiveButtons('btnSettings');
+                
+                // Actualizar el nombre de usuario en ajustes
+                if (settingsUsername && currentUser) {
+                    const name = currentUser.username || currentUser.email?.split('@')[0] || 'Usuario';
+                    settingsUsername.value = name;
+                    settingsUsername.setAttribute('readonly', true);
+                }
+            }
+        });
+    });
+
+    // Volver desde grupos
+    if (backFromGroups) {
+        backFromGroups.addEventListener('click', function() {
+            if (groupsPage && chatList) {
+                groupsPage.classList.add('hidden');
+                chatList.classList.remove('hidden');
+                updateActiveButtons('btnChats');
+            }
+        });
+    }
+
+    // Volver desde ajustes
+    if (backFromSettings) {
+        backFromSettings.addEventListener('click', function() {
+            if (settingsPage && chatList) {
+                settingsPage.classList.add('hidden');
+                chatList.classList.remove('hidden');
+                updateActiveButtons('btnChats');
+            }
+        });
+    }
+
+    // Manejador para el botón de crear grupo en la página de grupos
+    document.getElementById('createGroupFromGroups').addEventListener('click', () => {
+        showGroupCreationModal();
+    });
+});
 
 
 
