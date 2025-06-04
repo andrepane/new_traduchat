@@ -2704,12 +2704,53 @@ if (themeSelectMain) {
 // Funcionalidad de la página de ajustes
 document.addEventListener('DOMContentLoaded', function() {
     const settingsPage = document.getElementById('settingsPage');
+    const groupsPage = document.getElementById('groupsPage');
     const btnSettings = document.getElementById('btnSettings');
+    const btnChats = document.getElementById('btnChats');
+    const btnGroups = document.getElementById('btnGroups');
     const backFromSettings = document.getElementById('backFromSettings');
+    const backFromGroups = document.getElementById('backFromGroups');
     const settingsUsername = document.getElementById('settingsUsername');
     const settingsLanguage = document.getElementById('settingsLanguage');
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+    const chatList = document.getElementById('chatList');
+
+    // Mostrar página de chats
+    btnChats.addEventListener('click', function() {
+        if (chatList) {
+            chatList.classList.remove('hidden');
+            if (settingsPage) settingsPage.classList.add('hidden');
+            if (groupsPage) groupsPage.classList.add('hidden');
+            btnChats.classList.add('active');
+            btnGroups.classList.remove('active');
+            btnSettings.classList.remove('active');
+        }
+    });
+
+    // Mostrar página de grupos
+    btnGroups.addEventListener('click', function() {
+        if (groupsPage && chatList) {
+            groupsPage.classList.remove('hidden');
+            chatList.classList.add('hidden');
+            if (settingsPage) settingsPage.classList.add('hidden');
+            btnGroups.classList.add('active');
+            btnChats.classList.remove('active');
+            btnSettings.classList.remove('active');
+        }
+    });
+
+    // Volver desde grupos
+    if (backFromGroups) {
+        backFromGroups.addEventListener('click', function() {
+            if (groupsPage && chatList) {
+                groupsPage.classList.add('hidden');
+                chatList.classList.remove('hidden');
+                btnChats.classList.add('active');
+                btnGroups.classList.remove('active');
+            }
+        });
+    }
 
     // Mostrar página de ajustes
     btnSettings.addEventListener('click', function() {
@@ -2717,6 +2758,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (settingsPage && chatList) {
             settingsPage.classList.remove('hidden');
             chatList.classList.add('hidden');
+            if (groupsPage) groupsPage.classList.add('hidden');
+            btnSettings.classList.add('active');
+            btnChats.classList.remove('active');
+            btnGroups.classList.remove('active');
             
             // Actualizar el nombre de usuario en ajustes
             if (settingsUsername && currentUser) {
@@ -2729,8 +2774,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Volver de ajustes
     backFromSettings.addEventListener('click', function() {
-        settingsPage.classList.add('hidden');
-        chatList.classList.remove('hidden');
+        if (settingsPage && chatList) {
+            settingsPage.classList.add('hidden');
+            chatList.classList.remove('hidden');
+            btnChats.classList.add('active');
+            btnSettings.classList.remove('active');
+        }
     });
 
     // Cambiar idioma desde ajustes
@@ -2752,6 +2801,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Cerrar sesión desde ajustes
     settingsLogoutBtn.addEventListener('click', handleLogout);
 });
+
 
 
 
