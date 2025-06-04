@@ -7,8 +7,15 @@ Una aplicación de chat con traducción automática integrada. Los usuarios pued
 - Autenticación de usuarios mediante email y teléfono
 - Chat en tiempo real
 - Traducción automática de mensajes
+- Sistema de caché para reutilizar traducciones y reducir llamadas a la API
 - Interfaz multilingüe (Español, Inglés, Italiano)
 - Diseño responsive inspirado en WhatsApp
+
+### Sistema de caché
+
+Las traducciones exitosas se almacenan en `localStorage` por 30 días. Antes de
+realizar una petición de traducción se consulta esta caché para evitar llamadas
+innecesarias a la API y así ahorrar tiempo y créditos.
 
 ## Tecnologías utilizadas
 
