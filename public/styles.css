@@ -496,6 +496,13 @@ body {
   min-width: 0;
 }
 
+/* Contenedor de información del chat actual */
+#currentChatInfo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
 /* Información del chat grupal */
 .group-info {
   display: flex;
@@ -744,6 +751,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   cursor: pointer;
   transition: var(--transition);
 }

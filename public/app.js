@@ -205,6 +205,7 @@ function refreshSpeakButtons() {
 
 window.addEventListener('languageChanged', refreshSpeakButtons);
 
+
 // Variables para paginación
 const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
 let isLoadingMore = false;
