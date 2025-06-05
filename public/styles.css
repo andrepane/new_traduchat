@@ -1588,7 +1588,8 @@ select:focus-visible {
 
 .speech-bubble-button {
   position: absolute;
-  top: -10px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -1602,13 +1603,13 @@ select:focus-visible {
 }
 
 .message.sent .speech-bubble-button {
-  right: -10px;
+  left: -10px;
   background: var(--color-user-right);
   color: var(--color-primary-dark);
 }
 
 .message.received .speech-bubble-button {
-  left: -10px;
+  right: -10px;
   background: var(--color-user-left);
   color: var(--color-text);
 }
