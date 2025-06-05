@@ -251,7 +251,7 @@ function startTimer(duration) {
 function simulateSendSMS(phoneNumber, code) {
     console.log(`Código enviado a ${phoneNumber}: ${code}`);
     // En una implementación real, aquí se llamaría a un servicio de SMS
-    alert(getTranslation('demoVerificationCode', getUserLanguage(), code));
+    showToast(getTranslation('demoVerificationCode', getUserLanguage(), code));
 }
 
 // Función para enviar el código vía API
@@ -273,7 +273,7 @@ async function sendVerificationCode(phoneNumber) {
         return true;
     } catch (error) {
         console.error('Error al enviar código:', error);
-        alert(getTranslation('errorSendingCode', getUserLanguage(), error.message));
+        showToast(getTranslation('errorSendingCode', getUserLanguage(), error.message));
         return false;
     }
 }
@@ -293,14 +293,34 @@ async function verifyCode(phoneNumber, code) {
         return data.success;
     } catch (error) {
         console.error('Error al verificar código:', error);
-        alert(getTranslation('errorVerifyingCode', getUserLanguage(), error.message));
+        showToast(getTranslation('errorVerifyingCode', getUserLanguage(), error.message));
         return false;
     }
 }
 
 // Función para mostrar mensajes de error
+function showToast(message) {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        toast.remove();
+    }, 4000);
+}
+window.showToast = showToast;
+
 function showError(errorKey) {
-    alert(getTranslation(errorKey, getUserLanguage()));
+    showToast(getTranslation(errorKey, getUserLanguage()));
 }
 
 // Función para actualizar la información del usuario
@@ -366,7 +386,7 @@ loginBtn.addEventListener('click', async () => {
 
     const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
     if (!usernameRegex.test(username)) {
-        alert(getTranslation('errorUsernameChars', getUserLanguage()));
+        showToast(getTranslation('errorUsernameChars', getUserLanguage()));
         return;
     }
 
@@ -412,7 +432,7 @@ loginBtn.addEventListener('click', async () => {
                 showError('errorNetwork');
                 break;
             case 'auth/too-many-requests':
-                alert(getTranslation('errorTooManyAttempts', getUserLanguage()));
+                showToast(getTranslation('errorTooManyAttempts', getUserLanguage()));
                 break;
             default:
                 showError('errorGeneric');
@@ -863,7 +883,7 @@ async function deleteChat(chatId) {
         await batch.commit();
 
         // Mostrar mensaje de éxito
-        alert(getTranslation('chatDeleted', getUserLanguage()));
+        showToast(getTranslation('chatDeleted', getUserLanguage()));
 
     } catch (error) {
         console.error('Error al borrar chat:', error);
@@ -1831,7 +1851,7 @@ async function setupGroupChatInterface(chatData) {
     `;
 
     groupInfoElement.title = participantNames.join(', ');
-    groupInfoElement.onclick = () => alert(participantNames.join(', '));
+    groupInfoElement.onclick = () => showToast(participantNames.join(', '));
 
     if (currentChatInfo) {
         currentChatInfo.innerHTML = '';
@@ -1977,7 +1997,7 @@ async function sendMessage(text) {
                         translationStatus: 'limit_exceeded'
                     });
                     const limitMessage = getTranslation('translationLimitExceeded', currentLanguage);
-                    alert(limitMessage);
+                    showToast(limitMessage);
                     break;
                 } else {
                     console.log(`✅ Traducción a ${targetLang} completada:`, translation);
@@ -2112,10 +2132,10 @@ async function handleLogout() {
         showAuthScreen();
         
         // Mostrar mensaje de éxito
-        alert(getTranslation('logoutSuccess', getUserLanguage()));
+        showToast(getTranslation('logoutSuccess', getUserLanguage()));
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
-        alert(getTranslation('errorGeneric', getUserLanguage()));
+        showToast(getTranslation('errorGeneric', getUserLanguage()));
     }
 }
 
@@ -2324,11 +2344,11 @@ function showMessageOptions(messageEl) {
         <button class="delete-btn" aria-label="Borrar">🗑</button>
     `;
     container.querySelector('.reply-btn').addEventListener('click', () => {
-        alert('Responder');
+        showToast('Responder');
         container.remove();
     });
     container.querySelector('.delete-btn').addEventListener('click', () => {
-        alert('Borrar');
+        showToast('Borrar');
         container.remove();
     });
     messageEl.appendChild(container);
@@ -2454,7 +2474,7 @@ function showGroupCreationModal() {
             await createGroupChat(groupName, Array.from(selectedUsers));
             modal.remove();
             // Mostrar mensaje de éxito
-            alert(getTranslation('groupCreated', getUserLanguage()));
+            showToast(getTranslation('groupCreated', getUserLanguage()));
         } catch (error) {
             console.error('Error al crear grupo:', error);
             showError('errorCreateGroup');
@@ -2700,7 +2720,7 @@ function showAddMembersModal(chatId, existingParticipants = []) {
         try {
             await addMembersToGroup(chatId, Array.from(selectedUsers));
             modal.remove();
-            alert(getTranslation('membersAdded', getUserLanguage()));
+            showToast(getTranslation('membersAdded', getUserLanguage()));
         } catch (err) {
             console.error('Error al agregar miembros:', err);
             showError('errorAddMembers');
