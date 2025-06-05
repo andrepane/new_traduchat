@@ -68,6 +68,7 @@ startAuthListener(async (userData) => {
     if (userData) {
         console.log('Usuario autenticado:', userData.email);
         console.log('User ID:', userData.uid);
+        currentUser = userData;
 
         resetChatState();
         hideLoadingScreen();
@@ -2053,6 +2054,7 @@ let typingTimeout = null;
 let unsubscribeTypingStatus = null;
 
 async function setTypingStatus(isTyping) {
+    const currentUser = getCurrentUser();
     if (!currentChat || !currentUser) return;
 
     console.log(`🔄 setTypingStatus llamado con: ${isTyping}`);
