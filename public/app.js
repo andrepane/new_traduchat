@@ -886,8 +886,8 @@ function showDeleteConfirmDialog(chatId, chatElement) {
         <div class="dialog-content">
             <p>${getTranslation('deleteChatConfirm', currentLang)}</p>
             <div class="dialog-buttons">
-                <button class="cancel-delete">${getTranslation('cancel', currentLang)}</button>
-                <button class="confirm-delete">${getTranslation('deleteChat', currentLang)}</button>
+                <button class="cancel-delete" aria-label="${getTranslation('cancel', currentLang)}">${getTranslation('cancel', currentLang)}</button>
+                <button class="confirm-delete" aria-label="${getTranslation('deleteChat', currentLang)}">${getTranslation('deleteChat', currentLang)}</button>
             </div>
         </div>
     `;
@@ -1021,7 +1021,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                             </div>
                             <div class="last-message-time">${lastTime}</div>
                         </div>
-                        <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}">
+                        <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}" aria-label="${getTranslation('deleteChat', userLanguage)}">
                             <i class="fas fa-trash"></i>
                         </button>
                     `;
@@ -1180,7 +1180,7 @@ function displaySearchResults(users, showGroupButton = false) {
                 <div class="user-name">${user.username}</div>
                 <div class="user-email">${user.email}</div>
             </div>
-            <button class="start-chat-btn" data-userid="${user.id}" data-translate="startChat">
+            <button class="start-chat-btn" data-userid="${user.id}" data-translate="startChat" aria-label="${getTranslation('startChat', currentLang)}">
                 <i class="fas fa-comment"></i>
                 <span>${getTranslation('startChat', currentLang)}</span>
             </button>
@@ -1405,7 +1405,7 @@ async function displayMessage(messageData) {
         messageElement.innerHTML = `
             ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="audio-message">
-                <button class="play-button">
+                <button class="play-button" aria-label="Reproducir audio">
                     <span class="material-icons">play_arrow</span>
                 </button>
                 <div class="waveform"></div>
@@ -1464,6 +1464,7 @@ async function displayMessage(messageData) {
         messageElement.setAttribute('data-sender-id', messageData.senderId);
 
         messagesList.appendChild(messageElement);
+        addSwipeActions(messageElement);
         messagesList.scrollTop = messagesList.scrollHeight;
     } else {
         console.error('❌ Lista de mensajes no encontrada');
@@ -2055,7 +2056,8 @@ function hideTypingIndicator() {
 
 
 // Eventos para enviar mensajes
-sendMessageBtn.addEventListener('click', () => {
+sendMessageBtn.addEventListener('click', (e) => {
+    createRipple(e);
     console.log('Botón enviar clickeado');
     sendMessage(messageInput.value);
 });
@@ -2124,6 +2126,7 @@ settingsLogoutBtn.addEventListener('click', handleLogout);
 document.addEventListener('DOMContentLoaded', () => {
     const backButton = document.getElementById('backToChats');
     const addBtn = document.getElementById('addMembersBtn');
+    const chatContainer = document.querySelector('.chat-container');
     if (backButton) {
         backButton.addEventListener('click', () => {
             console.log('Botón volver clickeado');
@@ -2145,6 +2148,22 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         addBtn.classList.add('hidden');
+    }
+
+    if (chatContainer) {
+        let startX = 0;
+        let startY = 0;
+        chatContainer.addEventListener('touchstart', (e) => {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+        });
+        chatContainer.addEventListener('touchend', (e) => {
+            const diffX = e.changedTouches[0].clientX - startX;
+            const diffY = e.changedTouches[0].clientY - startY;
+            if (diffX > 50 && Math.abs(diffY) < 30) {
+                toggleChatList(true);
+            }
+        });
     }
 });
 
@@ -2263,6 +2282,58 @@ window.addEventListener('resize', () => {
     }
 });
 
+function createRipple(e) {
+    const button = e.currentTarget;
+    const circle = document.createElement('span');
+    const diameter = Math.max(button.clientWidth, button.clientHeight);
+    const radius = diameter / 2;
+
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${e.clientX - button.getBoundingClientRect().left - radius}px`;
+    circle.style.top = `${e.clientY - button.getBoundingClientRect().top - radius}px`;
+    circle.classList.add('ripple-effect');
+
+    button.appendChild(circle);
+    setTimeout(() => circle.remove(), 600);
+}
+
+function addSwipeActions(messageEl) {
+    let startX = 0;
+    let startY = 0;
+    messageEl.addEventListener('touchstart', (ev) => {
+        const t = ev.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+    });
+    messageEl.addEventListener('touchend', (ev) => {
+        const t = ev.changedTouches[0];
+        const diffX = t.clientX - startX;
+        const diffY = t.clientY - startY;
+        if (diffX < -50 && Math.abs(diffY) < 30) {
+            showMessageOptions(messageEl);
+        }
+    });
+}
+
+function showMessageOptions(messageEl) {
+    document.querySelectorAll('.quick-options').forEach(el => el.remove());
+    const container = document.createElement('div');
+    container.className = 'quick-options';
+    container.innerHTML = `
+        <button class="reply-btn" aria-label="Responder">↩</button>
+        <button class="delete-btn" aria-label="Borrar">🗑</button>
+    `;
+    container.querySelector('.reply-btn').addEventListener('click', () => {
+        alert('Responder');
+        container.remove();
+    });
+    container.querySelector('.delete-btn').addEventListener('click', () => {
+        alert('Borrar');
+        container.remove();
+    });
+    messageEl.appendChild(container);
+}
+
 // Función para actualizar la lista de usuarios seleccionados
 function updateSelectedUsersList(selectedUsersList, createGroupBtn, minUsers = 1) {
     selectedUsersList.innerHTML = Array.from(selectedUsers).map(user => `
@@ -2315,10 +2386,10 @@ function showGroupCreationModal() {
                         <div id="userSearchResults"></div>
                     </div>
                     <div class="modal-buttons">
-                        <button id="createGroupBtn" disabled data-translate="createGroup">
+                        <button id="createGroupBtn" disabled data-translate="createGroup" aria-label="${getTranslation('createGroup', userLanguage)}">
                             ${getTranslation('createGroup', userLanguage)}
                         </button>
-                        <button id="cancelGroupBtn" data-translate="cancel">
+                        <button id="cancelGroupBtn" data-translate="cancel" aria-label="${getTranslation('cancel', userLanguage)}">
                             ${getTranslation('cancel', userLanguage)}
                         </button>
                     </div>
@@ -2585,8 +2656,8 @@ function showAddMembersModal(chatId, existingParticipants = []) {
                         <div id="addMemberResults"></div>
                     </div>
                     <div class="modal-buttons">
-                        <button id="confirmAddMembers" disabled data-translate="addMembers">${getTranslation('addMembers', userLanguage)}</button>
-                        <button id="cancelAddMembers" data-translate="cancel">${getTranslation('cancel', userLanguage)}</button>
+                        <button id="confirmAddMembers" disabled data-translate="addMembers" aria-label="${getTranslation('addMembers', userLanguage)}">${getTranslation('addMembers', userLanguage)}</button>
+                        <button id="cancelAddMembers" data-translate="cancel" aria-label="${getTranslation('cancel', userLanguage)}">${getTranslation('cancel', userLanguage)}</button>
                     </div>
                 </div>
             </div>

@@ -109,7 +109,7 @@
             👁️
           </button>
         </div>
-        <button id="loginBtn" data-translate="loginRegister">
+        <button id="loginBtn" data-translate="loginRegister" aria-label="Registrar o iniciar sesión">
           Registrar/Iniciar Sesión
         </button>
       </div>
@@ -122,13 +122,14 @@
         <div class="user-header">
           <h2 data-translate="chats">Chats</h2>
           <div class="header-actions">
-            <button id="createGroup" class="icon-button" title="Crear grupo">
+            <button id="createGroup" class="icon-button" title="Crear grupo" aria-label="Crear grupo">
               <i class="fas fa-users"></i>
             </button>
             <button
               id="newChat"
               class="icon-button"
               title="Nuevo chat"
+              aria-label="Nuevo chat"
               data-translate="newChat"
             >
               <i class="fa-solid fa-plus"></i>
@@ -150,7 +151,7 @@
         <!-- Página de Ajustes -->
         <div id="settingsPage" class="settings-page hidden">
           <div class="settings-header">
-            <button class="back-button" id="backFromSettings">
+            <button class="back-button" id="backFromSettings" aria-label="Volver">
               <i class="fas fa-arrow-left"></i>
             </button>
             <h2 data-translate="settings">Ajustes</h2>
@@ -239,7 +240,7 @@
 
             <!-- Botón de Cerrar Sesión -->
             <div class="settings-section">
-              <button id="settingsLogoutBtn" class="settings-logout-btn">
+              <button id="settingsLogoutBtn" class="settings-logout-btn" aria-label="Cerrar sesión">
                 <i class="fas fa-sign-out-alt"></i>
                 <span data-translate="logout">Cerrar sesión</span>
               </button>
@@ -256,6 +257,7 @@
                 id="createGroupFromGroups"
                 class="icon-button"
                 title="Crear grupo"
+                aria-label="Crear grupo"
               >
                 <i class="fas fa-users"></i>
               </button>
@@ -263,6 +265,7 @@
                 id="newGroupChat"
                 class="icon-button"
                 title="Nuevo chat"
+                aria-label="Nuevo chat"
                 data-translate="newChat"
               >
                 <i class="fa-solid fa-plus"></i>
@@ -274,13 +277,13 @@
           </div>
           <!-- Barra de navegación para la página de grupos -->
           <nav class="bottom-nav">
-            <button class="nav-button" id="btnChats">
+            <button class="nav-button" id="btnChats" aria-label="Chats">
               <i class="fas fa-message"></i>
             </button>
-            <button class="nav-button active" id="btnGroups">
+            <button class="nav-button active" id="btnGroups" aria-label="Grupos">
               <i class="fas fa-users"></i>
             </button>
-            <button class="nav-button" id="btnSettings">
+            <button class="nav-button" id="btnSettings" aria-label="Ajustes">
               <i class="fas fa-gear"></i>
             </button>
           </nav>
@@ -288,13 +291,13 @@
 
         <!-- Nueva barra de navegación -->
         <nav class="bottom-nav">
-          <button class="nav-button" id="btnChats">
+          <button class="nav-button" id="btnChats" aria-label="Chats">
             <i class="fas fa-message"></i>
           </button>
-          <button class="nav-button" id="btnGroups">
+          <button class="nav-button" id="btnGroups" aria-label="Grupos">
             <i class="fas fa-users"></i>
           </button>
-          <button class="nav-button" id="btnSettings">
+          <button class="nav-button" id="btnSettings" aria-label="Ajustes">
             <i class="fas fa-gear"></i>
           </button>
         </nav>
@@ -303,7 +306,7 @@
       <!-- Contenedor del chat -->
       <div class="chat-container">
         <div class="chat-header">
-          <button class="back-button" id="backToChats">
+          <button class="back-button" id="backToChats" aria-label="Volver a los chats">
             <span class="material-icons">arrow_back</span>
           </button>
           <div id="currentChatInfo" data-translate="selectChat">
@@ -313,6 +316,7 @@
             id="addMembersBtn"
             class="icon-button hidden"
             title="Agregar miembros"
+            aria-label="Agregar miembros"
           >
             <i class="fas fa-user-plus"></i>
           </button>
@@ -330,7 +334,7 @@
           "
         ></div>
         <div class="message-input">
-          <button id="micButton" class="icon-button" title="Grabar audio">
+          <button id="micButton" class="icon-button" title="Grabar audio" aria-label="Grabar audio">
             <i class="fas fa-microphone"></i>
           </button>
           <input
@@ -339,7 +343,7 @@
             data-translate="writeMessage"
             placeholder="Escribe un mensaje..."
           />
-          <button id="sendMessage" class="icon-button">
+          <button id="sendMessage" class="icon-button" aria-label="Enviar mensaje">
             <i class="fas fa-paper-plane"></i>
           </button>
         </div>
