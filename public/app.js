@@ -62,18 +62,36 @@ const userLanguage = getUserLanguage(); // ✅ ahora sí puedes usarla
 setUserLanguage(userLanguage);
 
 startAuthListener(async (userData) => {
+    const languageSelect = document.getElementById('languageSelect');
+    const languageSelectMain = document.getElementById('languageSelectMain');
+
     if (userData) {
         console.log('Usuario autenticado:', userData.email);
         console.log('User ID:', userData.uid);
+
+        const lang = userData.language || getUserLanguage();
+        setUserLanguage(lang);
+        translateInterface(lang);
+        updateTheme(lang);
+        if (languageSelect) languageSelect.value = lang;
+        if (languageSelectMain) languageSelectMain.value = lang;
 
         resetChatState();
         hideLoadingScreen();
         showMainScreen();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
-        initializeNotifications(); // Aquí está bien colocada
+        initializeNotifications();
     } else {
         console.log('No hay usuario autenticado');
+
+        const lang = getUserLanguage();
+        setUserLanguage(lang);
+        translateInterface(lang);
+        updateTheme(lang);
+        if (languageSelect) languageSelect.value = lang;
+        if (languageSelectMain) languageSelectMain.value = lang;
+
         currentUser = null;
         resetChatState();
         hideLoadingScreen();
@@ -593,53 +611,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (languageSelect) languageSelect.addEventListener('change', (e) => handleLanguageChange(e.target.value));
     if (languageSelectMain) languageSelectMain.addEventListener('change', (e) => handleLanguageChange(e.target.value));
 
-    // 🔐 Autenticación y gestión de idioma
-    onAuthStateChanged(auth, async (user) => {
-        if (user) {
-            console.log('👤 Usuario autenticado:', user.uid);
-
-            try {
-                const userRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userRef);
-
-                let lang = 'es';
-                if (userDoc.exists()) {
-                    lang = userDoc.data().language || 'es';
-                    console.log('🌐 Idioma cargado desde Firestore:', lang);
-                } else {
-                    console.warn('⚠️ Usuario sin idioma en Firestore. Usando idioma local');
-                    lang = getUserLanguage();
-                }
-
-                setUserLanguage(lang);
-                translateInterface(lang);
-                // Asegurarnos de que el tema se actualice con el idioma correcto
-                updateTheme(lang);
-                if (languageSelect) languageSelect.value = lang;
-                if (languageSelectMain) languageSelectMain.value = lang;
-
-                showMainScreen();
-            } catch (error) {
-                console.error('❌ Error cargando idioma:', error);
-                showError('errorGeneric');
-            }
-
-        } else {
-            console.log('🚪 Usuario no autenticado');
-            const lang = getUserLanguage();
-            setUserLanguage(lang);
-            translateInterface(lang);
-            // Actualizar el tema incluso cuando no hay usuario autenticado
-            updateTheme(lang);
-
-            if (languageSelect) languageSelect.value = lang;
-            if (languageSelectMain) languageSelectMain.value = lang;
-
-            showAuthScreen();
-        }
-
-        hideLoadingScreen();
-    });
 
     // Inicializar selectores de tema
     const themeSelect = document.getElementById("themeSelect");
