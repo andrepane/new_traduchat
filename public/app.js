@@ -145,6 +145,8 @@ let unsubscribeChats = null;
 let initialLoadComplete = false; // Variable para controlar la carga inicial de mensajes
 let currentListType = 'individual';
 let inMemoryReadTimes = {};
+let lastChatsKey = '';
+const TYPING_EXPIRE_MS = 5000;
 
 // Variables para grupos
 let selectedUsers = new Set();
@@ -957,6 +959,9 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         unsubscribeChats = null;
     }
 
+    // Reset key to ensure list updates on each subscription
+    lastChatsKey = '';
+
     if (container) {
         container.innerHTML = '';
     }
@@ -983,6 +988,18 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         const q = query(collection(db, 'chats'), ...constraints);
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
+            const newKey = snapshot.docs.map(docSnap => {
+                const d = docSnap.data();
+                const t = d.lastMessageTime ? d.lastMessageTime.toMillis() : 0;
+                const m = d.lastMessage || '';
+                return `${docSnap.id}|${m}|${t}`;
+            }).sort().join(';');
+
+            if (newKey === lastChatsKey) {
+                return;
+            }
+            lastChatsKey = newKey;
+
             try {
                 if (container) container.innerHTML = '';
 
@@ -1665,10 +1682,16 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
         console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
 
         if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
-            const username = typingStatus.username || typingStatus.userId;
-            const typingMessage = getTypingMessage(username, currentLang);
-            console.log('💬 Usuario escribiendo:', username);
-            showTypingIndicator(typingMessage);
+            const ts = typingStatus.timestamp ? typingStatus.timestamp.toMillis() : 0;
+            if (ts && Date.now() - ts < TYPING_EXPIRE_MS) {
+                const username = typingStatus.username || typingStatus.userId;
+                const typingMessage = getTypingMessage(username, currentLang);
+                console.log('💬 Usuario escribiendo:', username);
+                showTypingIndicator(typingMessage);
+            } else {
+                console.log('⌛ Indicador de escritura expirado');
+                hideTypingIndicator();
+            }
         } else {
             console.log('💬 Nadie está escribiendo');
             hideTypingIndicator();
@@ -2065,7 +2088,7 @@ async function setTypingStatus(isTyping) {
         const typingData = isTyping ? {
             userId: currentUser.uid,
             timestamp: serverTimestamp(),
-            username: currentUser.email.split('@')[0] // o el nombre de usuario si lo tienes
+            username: currentUser.username || currentUser.email.split('@')[0]
         } : null;
 
         await updateDoc(chatRef, {
