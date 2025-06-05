@@ -4,17 +4,10 @@ import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs
 import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
 function showForegroundToast(title, body) {
-    const toast = document.getElementById('inAppToast');
-    if (!toast) return;
-
-    toast.textContent = `${title}: ${body}`;
-    toast.classList.remove('hidden');
-    toast.classList.add('show');
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.classList.add('hidden');
-    }, 4000);
+    if (typeof window.showToast === 'function') {
+        window.showToast(`${title}: ${body}`);
+        return;
+    }
 }
 
 export async function initializeNotifications() {
