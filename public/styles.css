@@ -576,6 +576,21 @@ body {
   font-weight: bold;
 }
 
+.unread-badge {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  min-width: 18px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  line-height: 1;
+  border-radius: 12px;
+  text-align: center;
+  pointer-events: none;
+}
+
 .chat-info {
   flex: 1;
   min-width: 0;
@@ -2303,6 +2318,21 @@ select:focus-visible {
   background-color: var(--color-unread);
   font-weight: bold;
   border-left: 4px solid var(--color-primary-dark);
+}
+
+.unread-badge {
+  position: absolute;
+  right: 12px;
+  bottom: 8px;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  min-width: 18px;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  line-height: 1;
+  border-radius: 12px;
+  text-align: center;
+  pointer-events: none;
 }
 
 /* ==========================================================================

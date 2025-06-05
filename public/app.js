@@ -25,7 +25,9 @@ import {
     limit,
     startAfter,
     writeBatch,
-    arrayUnion
+    arrayUnion,
+    Timestamp,
+    getCountFromServer
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import {
@@ -1008,10 +1010,26 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                     const lastMsgTime = data.lastMessageTime ? data.lastMessageTime.toDate() : new Date(0);
                     const unread = lastMsgTime.getTime() > (readTimes[docSnap.id] || 0);
 
+                    let unreadCount = 0;
+                    if (unread) {
+                        try {
+                            const countQuery = query(
+                                collection(db, 'chats', docSnap.id, 'messages'),
+                                where('timestamp', '>', Timestamp.fromMillis(readTimes[docSnap.id] || 0)),
+                                where('senderId', '!=', currentUser.uid)
+                            );
+                            const countSnap = await getCountFromServer(countQuery);
+                            unreadCount = countSnap.data().count || 0;
+                        } catch (err) {
+                            console.error('Error counting unread messages:', err);
+                        }
+                    }
+
                     return {
                         id: docSnap.id,
                         name,
                         isUnread: unread,
+                        unreadCount,
                         lastMessageTime: lastMsgTime,
                         lastMessage: data.lastMessage || '',
                         type: data.type,
@@ -1033,6 +1051,8 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                     const lastTime = chat.lastMessageTime ?
                         chat.lastMessageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
+                    const unreadBadge = chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : '';
+
                     chatElement.innerHTML = `
                         <div class="chat-info">
                             <div class="chat-details">
@@ -1041,6 +1061,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                             </div>
                             <div class="last-message-time">${lastTime}</div>
                         </div>
+                        ${unreadBadge}
                         <button class="delete-chat-btn" title="${getTranslation('deleteChat', userLanguage)}" aria-label="${getTranslation('deleteChat', userLanguage)}">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -1814,6 +1835,8 @@ function markChatAsRead(chatId) {
     const chatEl = document.querySelector(`[data-chat-id="${chatId}"]`);
     if (chatEl) {
         chatEl.classList.remove('unread');
+        const badge = chatEl.querySelector('.unread-badge');
+        if (badge) badge.remove();
     }
 }
 
