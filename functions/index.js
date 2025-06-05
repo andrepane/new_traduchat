@@ -101,7 +101,7 @@ exports.sendMessageNotification = functions.firestore
                             },
                             notification: {
                                 icon: '/images/icon-192.png',
-                                badge: '/images/icon-72.png',
+                                badge: '/images/icon-72x72.png',
                                 vibrate: [200, 100, 200],
                                 requireInteraction: true
                             },
