@@ -1,309 +1,434 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#00b451">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="description" content="Chat multilingüe con traducción automática">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#00b451" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta
+      name="description"
+      content="Chat multilingüe con traducción automática"
+    />
     <title>TraduChat</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/png" sizes="192x192" href="images/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="images/icon-512.png">
-    <link rel="apple-touch-icon" href="images/icon-192.png">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-      <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
-</head>
-<body>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="manifest" href="manifest.json" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="192x192"
+      href="images/icon-192.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="512x512"
+      href="images/icon-512.png"
+    />
+    <link rel="apple-touch-icon" href="images/icon-192.png" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <!-- Pantalla de carga -->
     <div class="loading-screen">
-          <div class="spinner"></div>
+      <div class="spinner"></div>
     </div>
-
 
     <!-- Pantalla de autenticación -->
     <div id="authScreen" class="screen active">
-        <div class="auth-container">
-            <h1 id="titulo-wave" data-translate="appTitle">TraduChat</h1>
-            
-            <!-- Selector de idioma -->
-            <div class="language-selector">
-                <label data-translate="selectLanguage">Seleccionar idioma</label>
-                <select id="languageSelect" class="language-select">
-                    <option value="es" data-translate="languageEs">Español</option>
-                    <option value="en" data-translate="languageEn">Inglés</option>
-                    <option value="it" data-translate="languageIt">Italiano</option>
-                </select>
-            </div>
+      <div class="auth-container">
+        <h1 id="titulo-wave" data-translate="appTitle">TraduChat</h1>
 
-            <!-- Selector de tema -->
-          <div class="theme-selector">
-          <label data-translate="selectTheme">Seleccionar tema</label>
-          <select id="themeSelect" class="theme-select">
-            <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
-            <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
-            <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
-            <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
+        <!-- Selector de idioma -->
+        <div class="language-selector">
+          <label data-translate="selectLanguage">Seleccionar idioma</label>
+          <select id="languageSelect" class="language-select">
+            <option value="es" data-translate="languageEs">Español</option>
+            <option value="en" data-translate="languageEn">Inglés</option>
+            <option value="it" data-translate="languageIt">Italiano</option>
           </select>
         </div>
 
-
-
-            <input type="email" id="emailInput" data-translate="email" placeholder="Correo electrónico" />
-            <input type="text" id="usernameInput" data-translate="username" placeholder="Nombre de usuario" />
-<div class="password-wrapper">
-    <input type="password" id="passwordInput" data-translate="password" placeholder="Contraseña" />
-    <button type="button" id="togglePassword" aria-label="Mostrar contraseña">👁️</button>
-</div>
-            <button id="loginBtn" data-translate="loginRegister">Registrar/Iniciar Sesión</button>
+        <!-- Selector de tema -->
+        <div class="theme-selector">
+          <label data-translate="selectTheme">Seleccionar tema</label>
+          <select id="themeSelect" class="theme-select">
+            <option value="banderas" data-translate="themeBanderas">
+              Colores de bandera
+            </option>
+            <option value="elegante" data-translate="themeElegante">
+              Pastel elegante
+            </option>
+            <option value="creativo" data-translate="themeCreativo">
+              Creativo vibrante
+            </option>
+            <option value="elegante2" data-translate="themeElegante2">
+              Brisa de té
+            </option>
+          </select>
         </div>
+
+        <input
+          type="email"
+          id="emailInput"
+          data-translate="email"
+          placeholder="Correo electrónico"
+        />
+        <input
+          type="text"
+          id="usernameInput"
+          data-translate="username"
+          placeholder="Nombre de usuario"
+        />
+        <div class="password-wrapper">
+          <input
+            type="password"
+            id="passwordInput"
+            data-translate="password"
+            placeholder="Contraseña"
+          />
+          <button
+            type="button"
+            id="togglePassword"
+            aria-label="Mostrar contraseña"
+          >
+            👁️
+          </button>
+        </div>
+        <button id="loginBtn" data-translate="loginRegister">
+          Registrar/Iniciar Sesión
+        </button>
+      </div>
     </div>
 
     <!-- Pantalla principal -->
     <div id="mainScreen" class="screen">
-        <!-- Sidebar con lista de chats -->
-        <div class="sidebar">
-            <div class="user-header">
-                <h2 data-translate="chats">Chats</h2>
-                <div class="header-actions">
-                    <button id="createGroup" class="icon-button" title="Crear grupo">
-                        <i class="fas fa-users"></i>
-                    </button>
-                    <button id="newChat" class="icon-button" title="Nuevo chat" data-translate="newChat">
-                        <i class="fa-solid fa-plus"></i> 
-                    </button>
-                </div>
-            </div>
-            <div class="search-container">
-                <input type="text" id="searchContacts" data-translate="search" placeholder="Buscar o iniciar nuevo chat" />
-            </div>
-            <div id="chatList" class="chat-list">
-                <!-- Los chats se cargarán aquí dinámicamente -->
-            </div>
-
-            <!-- Página de Ajustes -->
-            <div id="settingsPage" class="settings-page hidden">
-                <div class="settings-header">
-                    <button class="back-button" id="backFromSettings">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <h2 data-translate="settings">Ajustes</h2>
-                </div>
-                
-                <div class="settings-content">
-                    <!-- Sección de Perfil -->
-                    <div class="settings-section">
-                        <h3 data-translate="profile">Perfil</h3>
-                        <div class="settings-item">
-                            <i class="fas fa-user"></i>
-                            <div class="settings-item-content">
-                                <label data-translate="username">Nombre de usuario</label>
-                                <input type="text" id="settingsUsername" readonly class="readonly-input">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección de Idioma -->
-                    <div class="settings-section">
-                        <h3 data-translate="language">Idioma</h3>
-                        <div class="settings-item">
-                            <i class="fas fa-language"></i>
-                            <div class="settings-item-content">
-                                <label data-translate="selectLanguage">Seleccionar idioma</label>
-                                <select id="languageSelectMain" class="settings-select">
-                                    <option value="es" data-translate="languageEs">Español</option>
-                                    <option value="en" data-translate="languageEn">Inglés</option>
-                                    <option value="it" data-translate="languageIt">Italiano</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección de Tema -->
-                    <div class="settings-section">
-                        <h3 data-translate="theme">Tema</h3>
-                        <div class="settings-item">
-                            <i class="fas fa-palette"></i>
-                            <div class="settings-item-content">
-                                <label data-translate="selectTheme">Seleccionar tema</label>
-                                <select id="themeSelectMain" class="settings-select">
-                                    <option value="banderas" data-translate="themeBanderas">Colores de bandera</option>
-                                    <option value="elegante" data-translate="themeElegante">Pastel elegante</option>
-                                    <option value="creativo" data-translate="themeCreativo">Creativo vibrante</option>
-                                    <option value="elegante2" data-translate="themeElegante2">Brisa de té</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección de Información -->
-                    <div class="settings-section">
-                        <h3 data-translate="about">Acerca de</h3>
-                        <div class="settings-item">
-                            <i class="fas fa-info-circle"></i>
-                            <div class="settings-item-content">
-                                <span class="app-version">TraduChat v1.0</span>
-                                <span class="app-developer" data-translate="developer">Desarrollado por Andrea Panepinto</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Botón de Cerrar Sesión -->
-                    <div class="settings-section">
-                        <button id="settingsLogoutBtn" class="settings-logout-btn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span data-translate="logout">Cerrar sesión</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Página de Grupos -->
-            <div id="groupsPage" class="groups-page hidden">
-                <div class="groups-header">
-                    <h2 data-translate="groups">Grupos</h2>
-                    <div class="header-actions">
-                        <button id="createGroupFromGroups" class="icon-button" title="Crear grupo">
-                            <i class="fas fa-users"></i>
-                        </button>
-                        <button id="newGroupChat" class="icon-button" title="Nuevo chat" data-translate="newChat">
-                            <i class="fa-solid fa-plus"></i>
-                        </button>
-                    </div>
-                </div>
-                <div id="groupsList" class="chat-list">
-                    <!-- Los grupos se cargarán aquí dinámicamente -->
-                </div>
-                <!-- Barra de navegación para la página de grupos -->
-                <nav class="bottom-nav">
-                    <button class="nav-button" id="btnChats">
-                        <i class="fas fa-message"></i>
-                    </button>
-                    <button class="nav-button active" id="btnGroups">
-                        <i class="fas fa-users"></i>
-                    </button>
-                    <button class="nav-button" id="btnSettings">
-                        <i class="fas fa-gear"></i>
-                    </button>
-                </nav>
-            </div>
-
-            <!-- Nueva barra de navegación -->
-            <nav class="bottom-nav">
-                <button class="nav-button" id="btnChats">
-                    <i class="fas fa-message"></i>
-                </button>
-                <button class="nav-button" id="btnGroups">
-                    <i class="fas fa-users"></i>
-                </button>
-                <button class="nav-button" id="btnSettings">
-                    <i class="fas fa-gear"></i>
-                </button>
-            </nav>
+      <!-- Sidebar con lista de chats -->
+      <div class="sidebar">
+        <div class="user-header">
+          <h2 data-translate="chats">Chats</h2>
+          <div class="header-actions">
+            <button id="createGroup" class="icon-button" title="Crear grupo">
+              <i class="fas fa-users"></i>
+            </button>
+            <button
+              id="newChat"
+              class="icon-button"
+              title="Nuevo chat"
+              data-translate="newChat"
+            >
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+        </div>
+        <div class="search-container">
+          <input
+            type="text"
+            id="searchContacts"
+            data-translate="search"
+            placeholder="Buscar o iniciar nuevo chat"
+          />
+        </div>
+        <div id="chatList" class="chat-list">
+          <!-- Los chats se cargarán aquí dinámicamente -->
         </div>
 
-        <!-- Contenedor del chat -->
-        <div class="chat-container">
-            <div class="chat-header">
-                <button class="back-button" id="backToChats">
-                    <span class="material-icons">arrow_back</span>
-                </button>
-                <div id="currentChatInfo" data-translate="selectChat">Selecciona un chat para comenzar</div>
-                <button id="addMembersBtn" class="icon-button hidden" title="Agregar miembros">
-                    <i class="fas fa-user-plus"></i>
-                </button>
+        <!-- Página de Ajustes -->
+        <div id="settingsPage" class="settings-page hidden">
+          <div class="settings-header">
+            <button class="back-button" id="backFromSettings">
+              <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 data-translate="settings">Ajustes</h2>
+          </div>
+
+          <div class="settings-content">
+            <!-- Sección de Perfil -->
+            <div class="settings-section">
+              <h3 data-translate="profile">Perfil</h3>
+              <div class="settings-item">
+                <i class="fas fa-user"></i>
+                <div class="settings-item-content">
+                  <label data-translate="username">Nombre de usuario</label>
+                  <input
+                    type="text"
+                    id="settingsUsername"
+                    readonly
+                    class="readonly-input"
+                  />
+                </div>
+              </div>
             </div>
-            <div id="messagesList" class="messages-list">
-                <!-- Los mensajes se cargarán aquí dinámicamente -->
+
+            <!-- Sección de Idioma -->
+            <div class="settings-section">
+              <h3 data-translate="language">Idioma</h3>
+              <div class="settings-item">
+                <i class="fas fa-language"></i>
+                <div class="settings-item-content">
+                  <label data-translate="selectLanguage"
+                    >Seleccionar idioma</label
+                  >
+                  <select id="languageSelectMain" class="settings-select">
+                    <option value="es" data-translate="languageEs">
+                      Español
+                    </option>
+                    <option value="en" data-translate="languageEn">
+                      Inglés
+                    </option>
+                    <option value="it" data-translate="languageIt">
+                      Italiano
+                    </option>
+                  </select>
+                </div>
+              </div>
             </div>
-            <div id="typingIndicator" style="display:none; font-style: italic; padding: 5px 10px; color: #555;"></div>
-            <div class="message-input">
-                <button id="micButton" class="icon-button" title="Grabar audio">
-                    <i class="fas fa-microphone"></i>
-                </button>
-                <input type="text" id="messageInput" data-translate="writeMessage" placeholder="Escribe un mensaje..." />
-                <button id="sendMessage" class="icon-button">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+
+            <!-- Sección de Tema -->
+            <div class="settings-section">
+              <h3 data-translate="theme">Tema</h3>
+              <div class="settings-item">
+                <i class="fas fa-palette"></i>
+                <div class="settings-item-content">
+                  <label data-translate="selectTheme">Seleccionar tema</label>
+                  <select id="themeSelectMain" class="settings-select">
+                    <option value="banderas" data-translate="themeBanderas">
+                      Colores de bandera
+                    </option>
+                    <option value="elegante" data-translate="themeElegante">
+                      Pastel elegante
+                    </option>
+                    <option value="creativo" data-translate="themeCreativo">
+                      Creativo vibrante
+                    </option>
+                    <option value="elegante2" data-translate="themeElegante2">
+                      Brisa de té
+                    </option>
+                  </select>
+                </div>
+              </div>
             </div>
+
+            <!-- Sección de Información -->
+            <div class="settings-section">
+              <h3 data-translate="about">Acerca de</h3>
+              <div class="settings-item">
+                <i class="fas fa-info-circle"></i>
+                <div class="settings-item-content">
+                  <span class="app-version">TraduChat v1.0</span>
+                  <span class="app-developer" data-translate="developer"
+                    >Desarrollado por Andrea Panepinto</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Botón de Cerrar Sesión -->
+            <div class="settings-section">
+              <button id="settingsLogoutBtn" class="settings-logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span data-translate="logout">Cerrar sesión</span>
+              </button>
+            </div>
+          </div>
         </div>
+
+        <!-- Página de Grupos -->
+        <div id="groupsPage" class="groups-page hidden">
+          <div class="groups-header">
+            <h2 data-translate="groups">Grupos</h2>
+            <div class="header-actions">
+              <button
+                id="createGroupFromGroups"
+                class="icon-button"
+                title="Crear grupo"
+              >
+                <i class="fas fa-users"></i>
+              </button>
+              <button
+                id="newGroupChat"
+                class="icon-button"
+                title="Nuevo chat"
+                data-translate="newChat"
+              >
+                <i class="fa-solid fa-plus"></i>
+              </button>
+            </div>
+          </div>
+          <div id="groupsList" class="chat-list">
+            <!-- Los grupos se cargarán aquí dinámicamente -->
+          </div>
+          <!-- Barra de navegación para la página de grupos -->
+          <nav class="bottom-nav">
+            <button class="nav-button" id="btnChats">
+              <i class="fas fa-message"></i>
+            </button>
+            <button class="nav-button active" id="btnGroups">
+              <i class="fas fa-users"></i>
+            </button>
+            <button class="nav-button" id="btnSettings">
+              <i class="fas fa-gear"></i>
+            </button>
+          </nav>
+        </div>
+
+        <!-- Nueva barra de navegación -->
+        <nav class="bottom-nav">
+          <button class="nav-button" id="btnChats">
+            <i class="fas fa-message"></i>
+          </button>
+          <button class="nav-button" id="btnGroups">
+            <i class="fas fa-users"></i>
+          </button>
+          <button class="nav-button" id="btnSettings">
+            <i class="fas fa-gear"></i>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Contenedor del chat -->
+      <div class="chat-container">
+        <div class="chat-header">
+          <button class="back-button" id="backToChats">
+            <span class="material-icons">arrow_back</span>
+          </button>
+          <div id="currentChatInfo" data-translate="selectChat">
+            Selecciona un chat para comenzar
+          </div>
+          <button
+            id="addMembersBtn"
+            class="icon-button hidden"
+            title="Agregar miembros"
+          >
+            <i class="fas fa-user-plus"></i>
+          </button>
+        </div>
+        <div id="messagesList" class="messages-list">
+          <!-- Los mensajes se cargarán aquí dinámicamente -->
+        </div>
+        <div
+          id="typingIndicator"
+          style="
+            display: none;
+            font-style: italic;
+            padding: 5px 10px;
+            color: #555;
+          "
+        ></div>
+        <div class="message-input">
+          <button id="micButton" class="icon-button" title="Grabar audio">
+            <i class="fas fa-microphone"></i>
+          </button>
+          <input
+            type="text"
+            id="messageInput"
+            data-translate="writeMessage"
+            placeholder="Escribe un mensaje..."
+          />
+          <button id="sendMessage" class="icon-button">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Material Icons -->
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+
     <!-- Firebase -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { 
-            getAuth, 
-            browserLocalPersistence, 
-            setPersistence,
-            initializeAuth,
-            indexedDBLocalPersistence,
-            onAuthStateChanged
-        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-        import { getFirestore, initializeFirestore, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-        import { getMessaging } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+      import {
+        getAuth,
+        browserLocalPersistence,
+        setPersistence,
+        initializeAuth,
+        indexedDBLocalPersistence,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+      import {
+        getFirestore,
+        initializeFirestore,
+        enableIndexedDbPersistence,
+      } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+      import { getMessaging } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
-            authDomain: "traduchat-2.firebaseapp.com",
-            projectId: "traduchat-2",
-            storageBucket: "traduchat-2.appspot.com",
-            messagingSenderId: "304746474467",
-            appId: "1:304746474467:web:a0496a8d1d891cec170ed6"
-        };
+      const firebaseConfig = {
+        apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
+        authDomain: "traduchat-2.firebaseapp.com",
+        projectId: "traduchat-2",
+        storageBucket: "traduchat-2.appspot.com",
+        messagingSenderId: "304746474467",
+        appId: "1:304746474467:web:a0496a8d1d891cec170ed6",
+      };
 
+      try {
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+
+        // Inicializar Auth con persistencia local
+        const auth = initializeAuth(app, {
+          persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+        });
+        window.auth = auth;
+
+        // Configurar Firestore
+        const db = initializeFirestore(app, {
+          experimentalForceLongPolling: true,
+          useFetchStreams: false,
+        });
+        window.db = db;
+
+        // Habilitar persistencia offline de Firestore
+        enableIndexedDbPersistence(db).catch((err) => {
+          if (err.code == "failed-precondition") {
+            console.warn(
+              "La persistencia offline falló, múltiples pestañas abiertas"
+            );
+          } else if (err.code == "unimplemented") {
+            console.warn("El navegador no soporta persistencia offline");
+          }
+        });
+
+        // Inicializar Messaging
         try {
-            // Inicializar Firebase
-            const app = initializeApp(firebaseConfig);
-            
-            // Inicializar Auth con persistencia local
-            const auth = initializeAuth(app, {
-                persistence: [indexedDBLocalPersistence, browserLocalPersistence]
-            });
-            window.auth = auth;
-
-            // Configurar Firestore
-            const db = initializeFirestore(app, {
-                experimentalForceLongPolling: true,
-                useFetchStreams: false
-            });
-            window.db = db;
-
-            // Habilitar persistencia offline de Firestore
-            enableIndexedDbPersistence(db).catch((err) => {
-                if (err.code == 'failed-precondition') {
-                    console.warn('La persistencia offline falló, múltiples pestañas abiertas');
-                } else if (err.code == 'unimplemented') {
-                    console.warn('El navegador no soporta persistencia offline');
-                }
-            });
-
-            // Inicializar Messaging
-            try {
-                const messaging = getMessaging(app);
-                if (messaging) {
-                    window.messaging = messaging;
-                    console.log('✅ Firebase Messaging inicializado y asignado a window.messaging');
-                } else {
-                    console.warn('⚠️ No se pudo obtener la instancia de Firebase Messaging');
-                }
-            } catch (error) {
-                console.error('❌ Error al inicializar Firebase Messaging:', error);
-            }
-
+          const messaging = getMessaging(app);
+          if (messaging) {
+            window.messaging = messaging;
+            console.log(
+              "✅ Firebase Messaging inicializado y asignado a window.messaging"
+            );
+          } else {
+            console.warn(
+              "⚠️ No se pudo obtener la instancia de Firebase Messaging"
+            );
+          }
         } catch (error) {
-            console.error('Error al inicializar Firebase:', error);
+          console.error("❌ Error al inicializar Firebase Messaging:", error);
         }
+      } catch (error) {
+        console.error("Error al inicializar Firebase:", error);
+      }
     </script>
-    <div id="inAppToast" class="in-app-toast hidden"></div>
     <script type="module" src="translations.js"></script>
     <script type="module" src="app.js"></script>
-    
-</body>
+  </body>
 </html>
+
