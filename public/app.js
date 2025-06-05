@@ -145,6 +145,7 @@ let unsubscribeChats = null;
 let initialLoadComplete = false; // Variable para controlar la carga inicial de mensajes
 let currentListType = 'individual';
 let inMemoryReadTimes = {};
+let lastChatsKey = '';
 
 // Variables para grupos
 let selectedUsers = new Set();
@@ -983,6 +984,18 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         const q = query(collection(db, 'chats'), ...constraints);
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
+            const newKey = snapshot.docs.map(docSnap => {
+                const d = docSnap.data();
+                const t = d.lastMessageTime ? d.lastMessageTime.toMillis() : 0;
+                const m = d.lastMessage || '';
+                return `${docSnap.id}|${m}|${t}`;
+            }).sort().join(';');
+
+            if (newKey === lastChatsKey) {
+                return;
+            }
+            lastChatsKey = newKey;
+
             try {
                 if (container) container.innerHTML = '';
 
