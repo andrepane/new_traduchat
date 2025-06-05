@@ -51,7 +51,8 @@ import { initializeNotifications } from './modules/notificaciones.js';
 
 import {
     getUserLanguage,
-    getCurrentUser
+    getCurrentUser,
+    setCurrentUser
 } from './modules/state.js';
 
 
@@ -338,6 +339,8 @@ function updateUserInfo(user) {
     if (settingsUsername) {
         settingsUsername.value = name;
         settingsUsername.setAttribute('readonly', true);
+        settingsUsername.classList.add('readonly-input');
+        settingsUsername.classList.remove('editing');
     }
 }
 
@@ -1848,6 +1851,35 @@ function markChatAsRead(chatId) {
     }
 }
 
+// Cambiar nombre de usuario del usuario actual
+async function changeUsername(newUsername) {
+    const user = getCurrentUser();
+    if (!user) {
+        throw new Error('auth');
+    }
+
+    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+    if (!usernameRegex.test(newUsername)) {
+        throw new Error('errorUsernameChars');
+    }
+
+    if (user.username !== newUsername) {
+        const usernameQuery = query(collection(db, 'users'), where('username', '==', newUsername));
+        const usernameSnapshot = await getDocs(usernameQuery);
+        if (!usernameSnapshot.empty) {
+            throw new Error('errorUsernameInUse');
+        }
+    }
+
+    const userRef = doc(db, 'users', user.uid);
+    await updateDoc(userRef, { username: newUsername, lastUpdated: serverTimestamp() });
+
+    const updatedUser = { ...user, username: newUsername };
+    setCurrentUser(updatedUser);
+    currentUser = updatedUser;
+    updateUserInfo(updatedUser);
+}
+
 function getChatReadTimes() {
     try {
         const stored = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
@@ -3143,6 +3175,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsLanguage = document.getElementById('settingsLanguage');
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+    const editUsernameBtn = document.getElementById('editUsernameBtn');
+    const saveUsernameBtn = document.getElementById('saveUsernameBtn');
 
 
     // Función para actualizar los botones activos
@@ -3152,6 +3186,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         document.querySelectorAll(`#${activeId}`).forEach(btn => {
             btn.classList.add('active');
+        });
+    }
+
+    if (editUsernameBtn && saveUsernameBtn && settingsUsername) {
+        editUsernameBtn.addEventListener('click', () => {
+            settingsUsername.removeAttribute('readonly');
+            settingsUsername.classList.remove('readonly-input');
+            settingsUsername.classList.add('editing');
+            saveUsernameBtn.classList.remove('hidden');
+            editUsernameBtn.classList.add('hidden');
+            settingsUsername.focus();
+        });
+
+        saveUsernameBtn.addEventListener('click', async () => {
+            const newUsername = settingsUsername.value.trim();
+            try {
+                await changeUsername(newUsername);
+                showToast(getTranslation('usernameUpdated', getUserLanguage()));
+                settingsUsername.setAttribute('readonly', true);
+                settingsUsername.classList.add('readonly-input');
+                settingsUsername.classList.remove('editing');
+                saveUsernameBtn.classList.add('hidden');
+                editUsernameBtn.classList.remove('hidden');
+            } catch (err) {
+                const key = err.message === 'errorUsernameChars' ? 'errorUsernameChars' :
+                             err.message === 'errorUsernameInUse' ? 'errorUsernameInUse' : 'errorGeneric';
+                showToast(getTranslation(key, getUserLanguage()));
+            }
         });
     }
 
@@ -3198,6 +3260,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const name = currentUser.username || currentUser.email?.split('@')[0] || 'Usuario';
                     settingsUsername.value = name;
                     settingsUsername.setAttribute('readonly', true);
+                    settingsUsername.classList.add('readonly-input');
+                    settingsUsername.classList.remove('editing');
+                    if (saveUsernameBtn && editUsernameBtn) {
+                        saveUsernameBtn.classList.add('hidden');
+                        editUsernameBtn.classList.remove('hidden');
+                    }
                 }
             }
         });

@@ -109,6 +109,9 @@ const translations = {
         theme: 'Tema',
         about: 'Acerca de',
         developer: 'Desarrollado por Andrea Panepinto',
+        editUsername: 'Editar',
+        save: 'Guardar',
+        usernameUpdated: 'Nombre de usuario actualizado',
     },
     en: {
         // Authentication
@@ -218,6 +221,9 @@ const translations = {
         theme: 'Theme',
         about: 'About',
         developer: 'Developed by Andrea Panepinto',
+        editUsername: 'Edit',
+        save: 'Save',
+        usernameUpdated: 'Username updated',
     },
     it: {
         // Autenticazione
@@ -325,6 +331,9 @@ const translations = {
         theme: 'Tema',
         about: 'Informazioni',
         developer: 'Sviluppato da Andrea Panepinto',
+        editUsername: 'Modifica',
+        save: 'Salva',
+        usernameUpdated: 'Nome utente aggiornato',
     }
 };
 
