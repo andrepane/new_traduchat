@@ -304,17 +304,5 @@
     <script type="module" src="translations.js"></script>
     <script type="module" src="app.js"></script>
     
-    <!-- Registro del Service Worker -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/firebase-messaging-sw.js')
-                .then(function(registration) {
-                    console.log('Service Worker registrado con éxito:', registration.scope);
-                })
-                .catch(function(error) {
-                    console.log('Error al registrar el Service Worker:', error);
-                });
-        }
-    </script>
 </body>
 </html>

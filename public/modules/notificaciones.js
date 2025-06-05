@@ -12,10 +12,11 @@ export async function initializeNotifications() {
     }
 
     try {
+        let registration;
         // Registrar el Service Worker primero
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+                registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
                     scope: '/'
                 });
                 console.log('✅ Service Worker registrado:', registration);
@@ -40,7 +41,8 @@ export async function initializeNotifications() {
 
         console.log('🔑 Obteniendo token FCM...');
         const token = await getToken(messaging, {
-            vapidKey: 'BHOz-BX2_ZDpjjQEvZ03bfRVTWyMgBd6CcZ5HgpLAJnKre2UbZYd4vMmCTVVF1MY17nJJTEb7nPiAJ9M5xIXTeY'
+            vapidKey: 'BHOz-BX2_ZDpjjQEvZ03bfRVTWyMgBd6CcZ5HgpLAJnKre2UbZYd4vMmCTVVF1MY17nJJTEb7nPiAJ9M5xIXTeY',
+            serviceWorkerRegistration: registration
         });
 
         if (!token) {
@@ -61,6 +63,28 @@ export async function initializeNotifications() {
                     notificationsEnabled: true
                 }, { merge: true });
                 console.log('✅ Token guardado en Firestore');
+
+                // Escuchar cambios de token para actualizarlo en Firestore
+                if (messaging.onTokenRefresh) {
+                    messaging.onTokenRefresh(async () => {
+                        try {
+                            const newToken = await getToken(messaging, {
+                                vapidKey: 'BHOz-BX2_ZDpjjQEvZ03bfRVTWyMgBd6CcZ5HgpLAJnKre2UbZYd4vMmCTVVF1MY17nJJTEb7nPiAJ9M5xIXTeY',
+                                serviceWorkerRegistration: registration
+                            });
+                            if (newToken) {
+                                await setDoc(userRef, {
+                                    fcmToken: newToken,
+                                    lastTokenUpdate: serverTimestamp(),
+                                    notificationsEnabled: true
+                                }, { merge: true });
+                                console.log('🔄 Token FCM actualizado en Firestore');
+                            }
+                        } catch (refreshError) {
+                            console.error('❌ Error al refrescar token:', refreshError);
+                        }
+                    });
+                }
 
                 // Configurar listener para mensajes en primer plano
                 onMessage(messaging, (payload) => {

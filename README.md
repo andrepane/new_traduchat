@@ -42,6 +42,12 @@ innecesarias a la API y así ahorrar tiempo y créditos.
    todas las claves de Firebase y **FCM_SERVER_KEY** para poder enviar notificaciones
    push mediante FCM.
 
+## Compatibilidad
+
+Las notificaciones push basadas en FCM no funcionan en Safari para iOS debido a la
+falta de soporte para Service Workers. Si necesitas notificar a los usuarios de iOS,
+considera alternativas como correos electrónicos o mensajes SMS.
+
 ## Contribuir
 
 Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer. 
