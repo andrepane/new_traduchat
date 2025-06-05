@@ -2348,10 +2348,16 @@ select:focus-visible {
   z-index: 700;
   display: flex;
   flex-direction: column;
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-.groups-page.hidden {
-  display: none;
+.groups-page.active {
+  transform: translateX(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .groups-header {
