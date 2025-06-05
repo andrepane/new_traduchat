@@ -54,12 +54,13 @@ import {
 
 
 
-const userLanguage = getUserLanguage(); // ✅ ahora sí puedes usarla
-
-
-// Antes de llamar a startAuthListener
+let userLanguage = getUserLanguage();
 
 setUserLanguage(userLanguage);
+
+window.addEventListener('languageChanged', (e) => {
+    userLanguage = e.detail;
+});
 
 startAuthListener(async (userData) => {
     if (userData) {
@@ -299,7 +300,7 @@ async function verifyCode(phoneNumber, code) {
 
 // Función para mostrar mensajes de error
 function showError(errorKey) {
-    alert(getTranslation(errorKey, userLanguage));
+    alert(getTranslation(errorKey, getUserLanguage()));
 }
 
 // Función para actualizar la información del usuario
@@ -2109,10 +2110,10 @@ async function handleLogout() {
         showAuthScreen();
         
         // Mostrar mensaje de éxito
-        alert(getTranslation('logoutSuccess', userLanguage));
+        alert(getTranslation('logoutSuccess', getUserLanguage()));
     } catch (error) {
         console.error('Error al cerrar sesión:', error);
-        alert(getTranslation('errorGeneric', userLanguage));
+        alert(getTranslation('errorGeneric', getUserLanguage()));
     }
 }
 
@@ -2382,7 +2383,7 @@ function showGroupCreationModal() {
             await createGroupChat(groupName, Array.from(selectedUsers));
             modal.remove();
             // Mostrar mensaje de éxito
-            alert(getTranslation('groupCreated', userLanguage));
+            alert(getTranslation('groupCreated', getUserLanguage()));
         } catch (error) {
             console.error('Error al crear grupo:', error);
             showError('errorCreateGroup');
@@ -2628,7 +2629,7 @@ function showAddMembersModal(chatId, existingParticipants = []) {
         try {
             await addMembersToGroup(chatId, Array.from(selectedUsers));
             modal.remove();
-            alert(getTranslation('membersAdded', userLanguage));
+            alert(getTranslation('membersAdded', getUserLanguage()));
         } catch (err) {
             console.error('Error al agregar miembros:', err);
             showError('errorAddMembers');
