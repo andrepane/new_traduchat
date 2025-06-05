@@ -1586,6 +1586,16 @@ select:focus-visible {
   margin: 0 3px;
 }
 
+.speak-button {
+  background: none;
+  border: none;
+  padding: 0 2px;
+  cursor: pointer;
+  color: inherit;
+  display: flex;
+  align-items: center;
+}
+
 .message-time {
   font-size: 0.65em;
   color: rgba(134, 150, 160, 0.9);
