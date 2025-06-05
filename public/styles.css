@@ -1535,6 +1535,31 @@ select:focus-visible {
   border: 1px solid #e5e7eb;
 }
 
+#confirmAddMembers,
+#cancelAddMembers {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+#confirmAddMembers {
+  background: var(--color-primary);
+  color: white;
+}
+
+#confirmAddMembers:disabled {
+  background: #c7d2fe;
+  cursor: not-allowed;
+}
+
+#cancelAddMembers {
+  background: #f3f4f6;
+  color: #4b5563;
+  border: 1px solid #e5e7eb;
+}
+
 /* ==========================================================================
      Mensajes y Estados de Chat
      ========================================================================== */
