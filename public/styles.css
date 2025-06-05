@@ -753,7 +753,9 @@ body {
   justify-content: center;
   flex-shrink: 0;
   cursor: pointer;
-  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .icon-button:hover {
@@ -765,6 +767,28 @@ body {
      Animaciones
      ========================================================================== */
 @keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes modalAppear {
   from {
     opacity: 0;
     transform: translateY(10px);
@@ -821,6 +845,9 @@ body {
     color: var(--color-primary);
     cursor: pointer;
     margin-right: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.2s ease, transform 0.2s ease;
   }
 
   .chat-header {
@@ -1139,6 +1166,7 @@ body {
   align-items: center;
   z-index: 1000;
   backdrop-filter: blur(4px);
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
@@ -1150,6 +1178,7 @@ body {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: var(--shadow);
+  animation: modalAppear 0.3s ease;
 }
 
 .selected-users {
@@ -1229,6 +1258,9 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+    transition: background-color 0.2s ease, transform 0.2s ease;
   }
 
   .modal-content {
@@ -2046,10 +2078,12 @@ select:focus-visible {
   color: var(--color-primary);
   padding: 10px;
   cursor: pointer;
-  transition: var(--transition);
+  transition: background-color 0.2s ease, transform 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .nav-button i {
@@ -2224,7 +2258,9 @@ select:focus-visible {
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .settings-logout-btn:hover {
@@ -2331,6 +2367,43 @@ select:focus-visible {
   border-top-color: #555;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+/* Ripple effect */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+  transform: scale(0);
+  animation: ripple 0.6s linear;
+  pointer-events: none;
+}
+
+/* Quick options for messages */
+.quick-options {
+  position: absolute;
+  top: 50%;
+  right: -80px;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.quick-options button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.quick-options button:hover {
+  background: var(--color-primary-dark);
 }
 
 @keyframes spin {
