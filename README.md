@@ -21,8 +21,8 @@ Una aplicación de chat con traducción automática integrada. Los usuarios pued
 
 1. Clona este repositorio
 2. Instala las dependencias con `npm install`
-3. Configura las variables de entorno necesarias (incluye `FCM_SERVER_KEY` para
-   las notificaciones FCM)
+3. Copia el archivo `.env.example` a `.env` y completa todas las variables
+   necesarias (incluye `FCM_SERVER_KEY` para las notificaciones FCM)
 4. Ejecuta el servidor con `npm start`. Asegúrate de que las variables de
    entorno estén cargadas previamente.
 
