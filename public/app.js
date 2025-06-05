@@ -2547,8 +2547,9 @@ async function createGroupChat(groupName, participants) {
         console.log('Grupo creado exitosamente:', groupChatRef.id);
 
         // Crear mensaje de sistema inicial
+        const lang = getUserLanguage();
         await addDoc(collection(db, 'chats', groupChatRef.id, 'messages'), {
-            text: `Grupo "${groupName}" creado por ${currentUser.email}`,
+            text: getTranslation('groupCreatedBy', lang, groupName, currentUser.email),
             type: 'system',
             timestamp: serverTimestamp(),
             senderId: 'system'

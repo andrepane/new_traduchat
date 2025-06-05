@@ -34,6 +34,9 @@ const translations = {
         errorTooManyAttempts: 'Demasiados intentos. Intenta más tarde.',
         demoVerificationCode: 'Para fines de demostración, tu código es: {0}',
         translationLimitExceeded: 'Límite de traducciones excedido',
+        errorVoiceRecognition: 'Error en el reconocimiento de voz',
+        errorNoChat: 'Selecciona un chat antes de grabar',
+        groupCreatedBy: 'Grupo "{0}" creado por {1}',
         
         // Interfaz principal
         newChat: '+',
@@ -138,6 +141,9 @@ const translations = {
         errorTooManyAttempts: 'Too many attempts. Try again later.',
         demoVerificationCode: 'For demonstration purposes, your code is: {0}',
         translationLimitExceeded: 'Translation limit exceeded',
+        errorVoiceRecognition: 'Voice recognition error',
+        errorNoChat: 'Please select a chat first',
+        groupCreatedBy: 'Group "{0}" created by {1}',
         
         // Main interface
         newChat: '+',
@@ -244,6 +250,9 @@ const translations = {
         errorTooManyAttempts: 'Troppi tentativi. Riprova più tardi.',
         demoVerificationCode: 'Per scopi dimostrativi, il tuo codice è: {0}',
         translationLimitExceeded: 'Limite di traduzione superato',
+        errorVoiceRecognition: 'Errore nel riconoscimento vocale',
+        errorNoChat: 'Seleziona una chat prima di registrare',
+        groupCreatedBy: 'Gruppo "{0}" creato da {1}',
         
         // Interfaccia principale
         newChat: '+',
