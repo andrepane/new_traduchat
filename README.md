@@ -28,15 +28,19 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 
 1. Clona este repositorio
 2. Instala las dependencias con `npm install`
-3. Configura las variables de entorno necesarias
-4. Ejecuta el servidor con `npm start`
+3. Configura las variables de entorno necesarias (incluye `FCM_SERVER_KEY` para
+   las notificaciones FCM)
+4. Ejecuta el servidor con `npm start`. Asegúrate de que las variables de
+   entorno estén cargadas previamente.
 
 ## Configuración
 
 1. Crea un proyecto en Firebase
 2. Configura las credenciales en `firebase-config.js`
 3. Habilita la autenticación por email en Firebase
-4. Configura las variables de entorno necesarias
+4. Configura las variables de entorno necesarias. En el archivo `.env` deberás incluir
+   todas las claves de Firebase y **FCM_SERVER_KEY** para poder enviar notificaciones
+   push mediante FCM.
 
 ## Contribuir
 
