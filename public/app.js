@@ -149,6 +149,62 @@ let isGroupCreationMode = false;
 // Variables para grabación de audio
 let isRecording = false;
 
+// Texto a voz
+let currentUtterance = null;
+let availableVoices = [];
+if ('speechSynthesis' in window) {
+    availableVoices = window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+        availableVoices = window.speechSynthesis.getVoices();
+    };
+}
+
+function speakText(text, lang) {
+    if (!('speechSynthesis' in window)) return;
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    const voice = availableVoices.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+    if (voice) utterance.voice = voice;
+    currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
+}
+
+function createSpeakButton(text, lang) {
+    const btn = document.createElement('button');
+    btn.className = 'speech-bubble-button';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Escuchar');
+    btn.tabIndex = 0;
+    btn.innerHTML = `
+        <svg class="icon-volume" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 9v6h4l5 5V4l-5 5H3z"></path>
+            <path d="M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-1.01 7-4.63 7-8.77s-2.99-7.76-7-8.77z"></path>
+        </svg>`;
+    btn.addEventListener('click', () => speakText(text, lang));
+    return btn;
+}
+
+function refreshSpeakButtons() {
+    const lang = document.getElementById('languageSelect')?.value ||
+                 document.getElementById('languageSelectMain')?.value ||
+                 getUserLanguage();
+    document.querySelectorAll('.message:not(.system-message)').forEach(el => {
+        const textSpan = el.querySelector('.message-text');
+        const timeSpan = el.querySelector('.message-time');
+        const content = el.querySelector('.message-content');
+        if (!textSpan || !timeSpan || !content) return;
+        const existing = el.querySelector('.speech-bubble-button');
+        if (existing) existing.remove();
+        const btn = createSpeakButton(textSpan.textContent, lang);
+        content.insertBefore(btn, timeSpan);
+    });
+}
+
+window.addEventListener('languageChanged', refreshSpeakButtons);
+
 // Variables para paginación
 const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
 let isLoadingMore = false;
@@ -1378,10 +1434,17 @@ async function displayMessage(messageData) {
             ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="message-content">
                 <span class="message-flag">${flag}</span>
-                <span class="message-text">${messageText}</span>
+                <span class="message-text"></span>
                 <span class="message-time">${timeString}</span>
             </div>
         `;
+
+        const textSpan = messageElement.querySelector('.message-text');
+        textSpan.textContent = messageText;
+
+        const speakBtn = createSpeakButton(messageText, currentLanguage);
+        const contentDiv = messageElement.querySelector('.message-content');
+        contentDiv.insertBefore(speakBtn, contentDiv.querySelector('.message-time'));
     }
 
     if (messagesList) {
@@ -1403,6 +1466,8 @@ async function displayMessage(messageData) {
     } else {
         console.error('❌ Lista de mensajes no encontrada');
     }
+
+    return { text: messageText, lang: currentLanguage };
 }
 
 // Función para abrir un chat
@@ -1571,7 +1636,10 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
             } else {
-                await displayMessage(messageData);
+                const result = await displayMessage(messageData);
+                if (initialLoadComplete && messageData.senderId !== currentUser.uid) {
+                    speakText(result.text, result.lang);
+                }
             }
             if (messagesList) {
                 messagesList.scrollTop = messagesList.scrollHeight;
