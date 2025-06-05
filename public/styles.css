@@ -1594,14 +1594,38 @@ select:focus-visible {
   margin: 0 3px;
 }
 
-.speak-button {
-  background: none;
+.speech-bubble-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   border: none;
-  padding: 0 2px;
-  cursor: pointer;
-  color: inherit;
   display: flex;
   align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+}
+
+.message.sent .speech-bubble-button {
+  left: -10px;
+  background: var(--color-user-right);
+  color: var(--color-primary-dark);
+}
+
+.message.received .speech-bubble-button {
+  right: -10px;
+  background: var(--color-user-left);
+  color: var(--color-text);
+}
+
+.speech-bubble-button .icon-volume {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
 }
 
 .message-time {
