@@ -149,6 +149,29 @@ let isGroupCreationMode = false;
 // Variables para grabación de audio
 let isRecording = false;
 
+// Texto a voz
+let currentUtterance = null;
+let availableVoices = [];
+if ('speechSynthesis' in window) {
+    availableVoices = window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => {
+        availableVoices = window.speechSynthesis.getVoices();
+    };
+}
+
+function speakText(text, lang) {
+    if (!('speechSynthesis' in window)) return;
+    if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;
+    const voice = availableVoices.find(v => v.lang.toLowerCase().startsWith(lang.toLowerCase()));
+    if (voice) utterance.voice = voice;
+    currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
+}
+
 // Variables para paginación
 const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
 let isLoadingMore = false;
@@ -1379,9 +1402,15 @@ async function displayMessage(messageData) {
             <div class="message-content">
                 <span class="message-flag">${flag}</span>
                 <span class="message-text">${messageText}</span>
+                <button class="speak-button" aria-label="Escuchar">
+                    <span class="material-icons">volume_up</span>
+                </button>
                 <span class="message-time">${timeString}</span>
             </div>
         `;
+
+        const speakBtn = messageElement.querySelector('.speak-button');
+        speakBtn.addEventListener('click', () => speakText(messageText, currentLanguage));
     }
 
     if (messagesList) {
@@ -1403,6 +1432,8 @@ async function displayMessage(messageData) {
     } else {
         console.error('❌ Lista de mensajes no encontrada');
     }
+
+    return { text: messageText, lang: currentLanguage };
 }
 
 // Función para abrir un chat
@@ -1571,7 +1602,10 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
             } else {
-                await displayMessage(messageData);
+                const result = await displayMessage(messageData);
+                if (initialLoadComplete && messageData.senderId !== currentUser.uid) {
+                    speakText(result.text, result.lang);
+                }
             }
             if (messagesList) {
                 messagesList.scrollTop = messagesList.scrollHeight;
