@@ -2065,7 +2065,7 @@ async function setTypingStatus(isTyping) {
         const typingData = isTyping ? {
             userId: currentUser.uid,
             timestamp: serverTimestamp(),
-            username: currentUser.email.split('@')[0] // o el nombre de usuario si lo tienes
+            username: currentUser.username || currentUser.email.split('@')[0]
         } : null;
 
         await updateDoc(chatRef, {
