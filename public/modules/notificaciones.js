@@ -3,6 +3,20 @@ import { getCurrentUser } from './state.js';
 import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
+function showForegroundToast(title, body) {
+    const toast = document.getElementById('inAppToast');
+    if (!toast) return;
+
+    toast.textContent = `${title}: ${body}`;
+    toast.classList.remove('hidden');
+    toast.classList.add('show');
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.classList.add('hidden');
+    }, 4000);
+}
+
 export async function initializeNotifications() {
     console.log('🔄 Iniciando configuración de notificaciones...');
 
@@ -96,7 +110,7 @@ export async function initializeNotifications() {
                             const notificationOptions = {
                                 body: payload.notification.body,
                                 icon: '/images/icon-192.png',
-                                badge: '/images/icon-72.png',
+                                badge: '/images/icon-72x72.png',
                                 vibrate: [200, 100, 200],
                                 tag: 'new-message',
                                 data: payload.data,
@@ -104,6 +118,7 @@ export async function initializeNotifications() {
                             };
 
                             registration.showNotification(notificationTitle, notificationOptions);
+                            showForegroundToast(notificationTitle, payload.notification.body);
                         });
                     }
                 });
