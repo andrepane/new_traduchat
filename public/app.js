@@ -2278,11 +2278,11 @@ function toggleChatList(show) {
 
         // Recargar la lista correspondiente
         if (currentListType === 'group') {
-            if (groupsPage) groupsPage.classList.remove('hidden');
+            if (groupsPage) groupsPage.classList.add('active');
             if (chatList) chatList.classList.add('hidden');
             setupRealtimeChats(groupsListEl, 'group');
         } else {
-            if (groupsPage) groupsPage.classList.add('hidden');
+            if (groupsPage) groupsPage.classList.remove('active');
             if (chatList) chatList.classList.remove('hidden');
             setupRealtimeChats(chatList, 'individual');
         }
@@ -3159,7 +3159,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (chatList) {
                 chatList.classList.remove('hidden');
                 if (settingsPage) settingsPage.classList.add('hidden');
-                if (groupsPage) groupsPage.classList.add('hidden');
+                if (groupsPage) groupsPage.classList.remove('active');
                 updateActiveButtons('btnChats');
                 currentListType = 'individual';
                 setupRealtimeChats(chatList, 'individual');
@@ -3171,7 +3171,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btnGroups.forEach(btn => {
         btn.addEventListener('click', function() {
             if (groupsPage && chatList) {
-                groupsPage.classList.remove('hidden');
+                groupsPage.classList.add('active');
                 chatList.classList.add('hidden');
                 if (settingsPage) settingsPage.classList.add('hidden');
                 updateActiveButtons('btnGroups');
@@ -3188,7 +3188,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (settingsPage && chatList) {
                 settingsPage.classList.remove('hidden');
                 chatList.classList.add('hidden');
-                if (groupsPage) groupsPage.classList.add('hidden');
+                if (groupsPage) groupsPage.classList.remove('active');
                 updateActiveButtons('btnSettings');
                 
                 // Actualizar el nombre de usuario en ajustes
@@ -3205,7 +3205,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (backFromGroups) {
         backFromGroups.addEventListener('click', function() {
             if (groupsPage && chatList) {
-                groupsPage.classList.add('hidden');
+                groupsPage.classList.remove('active');
                 chatList.classList.remove('hidden');
                 updateActiveButtons('btnChats');
                 currentListType = 'individual';
@@ -3221,6 +3221,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (settingsPage && chatList) {
                 settingsPage.classList.add('hidden');
                 chatList.classList.remove('hidden');
+                if (groupsPage) groupsPage.classList.remove('active');
                 updateActiveButtons('btnChats');
                 currentListType = 'individual';
                 setupRealtimeChats(chatList, 'individual');
