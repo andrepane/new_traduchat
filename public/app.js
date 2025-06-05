@@ -1576,8 +1576,10 @@ async function openChat(chatId) {
             await setupIndividualChatInterface(chatData, currentUser);
         }
 
-        // Cambiar a la vista del chat
-        toggleChatList(false);
+        // Cambiar a la vista del chat solo en móviles
+        if (window.innerWidth <= 768) {
+            toggleChatList(false);
+        }
 
         // Cargar mensajes iniciales
         await loadInitialMessages(chatId);
@@ -2148,13 +2150,27 @@ document.addEventListener('DOMContentLoaded', () => {
 // Función para manejar la navegación entre vistas
 function toggleChatList(show) {
     console.log('Alternando vista de chat, mostrar lista:', show);
-    
+
     const sidebar = document.querySelector('.sidebar');
     const chatContainer = document.querySelector('.chat-container');
     const backButton = document.getElementById('backToChats');
     const addBtn = document.getElementById('addMembersBtn');
-    
-    if (show) {
+
+    const isMobile = window.innerWidth <= 768;
+
+    if (!isMobile) {
+        // En pantallas grandes siempre mostramos ambas secciones
+        if (sidebar) {
+            sidebar.classList.remove('hidden');
+            sidebar.style.display = 'block';
+        }
+        if (chatContainer) {
+            chatContainer.classList.remove('hidden');
+            chatContainer.style.display = 'block';
+        }
+    }
+
+    if (isMobile && show) {
         // Mostrar lista de chats
         if (sidebar) {
             sidebar.classList.remove('hidden');
@@ -2200,7 +2216,7 @@ function toggleChatList(show) {
             if (chatList) chatList.classList.remove('hidden');
             setupRealtimeChats(chatList, 'individual');
         }
-    } else {
+    } else if (isMobile && !show) {
 
         // Mostrar chat
         if (sidebar) {
@@ -2215,7 +2231,7 @@ function toggleChatList(show) {
 
     // Manejar visibilidad del botón de retorno
     if (backButton) {
-        backButton.style.display = window.innerWidth <= 768 && !show ? 'block' : 'none';
+        backButton.style.display = isMobile && !show ? 'block' : 'none';
     }
 
     if (addBtn && show) {
@@ -2228,12 +2244,21 @@ function toggleChatList(show) {
 // Asegurarse de que el botón de retorno se muestre/oculte correctamente al cambiar el tamaño de la ventana
 window.addEventListener('resize', () => {
     const backButton = document.getElementById('backToChats');
-    if (backButton) {
-        if (window.innerWidth <= 768 && document.querySelector('.chat-container')?.style.display !== 'none') {
-            backButton.style.display = 'block';
-        } else {
-            backButton.style.display = 'none';
+    const sidebar = document.querySelector('.sidebar');
+    const chatContainer = document.querySelector('.chat-container');
+
+    if (window.innerWidth > 768) {
+        if (sidebar) {
+            sidebar.classList.remove('hidden');
+            sidebar.style.display = 'block';
         }
+        if (chatContainer) {
+            chatContainer.classList.remove('hidden');
+            chatContainer.style.display = 'block';
+        }
+        if (backButton) backButton.style.display = 'none';
+    } else if (backButton) {
+        backButton.style.display = chatContainer?.style.display !== 'none' ? 'block' : 'none';
     }
 });
 
