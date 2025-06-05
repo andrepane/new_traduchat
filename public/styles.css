@@ -1594,6 +1594,13 @@ select:focus-visible {
   color: inherit;
   display: flex;
   align-items: center;
+  margin-left: 2px;
+}
+
+.speak-button .icon-volume {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 
 .message-time {

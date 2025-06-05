@@ -172,6 +172,38 @@ function speakText(text, lang) {
     window.speechSynthesis.speak(utterance);
 }
 
+function createSpeakButton(text, lang) {
+    const btn = document.createElement('button');
+    btn.className = 'speak-button';
+    btn.setAttribute('aria-label', 'Escuchar');
+    btn.innerHTML = `
+        <svg class="icon-volume" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 9v6h4l5 5V4l-5 5H3z"></path>
+            <path d="M14 12c0-1.77-.73-3.29-1.86-4.3l1.42-1.42C15.08 7.78 16 9.79 16 12s-.92 4.22-2.44 5.72l-1.42-1.42C13.27 15.29 14 13.77 14 12z"></path>
+            <path d="M16.5 3.5l-1.42 1.42C17.63 6.47 19 9.11 19 12s-1.37 5.53-3.92 7.08l1.42 1.42C19.7 18.57 21 15.42 21 12s-1.3-6.57-4.5-8.5z"></path>
+        </svg>`;
+    btn.addEventListener('click', () => speakText(text, lang));
+    return btn;
+}
+
+function refreshSpeakButtons() {
+    const lang = document.getElementById('languageSelect')?.value ||
+                 document.getElementById('languageSelectMain')?.value ||
+                 getUserLanguage();
+    document.querySelectorAll('.message:not(.system-message)').forEach(el => {
+        const textSpan = el.querySelector('.message-text');
+        const timeSpan = el.querySelector('.message-time');
+        const content = el.querySelector('.message-content');
+        if (!textSpan || !timeSpan || !content) return;
+        const existing = el.querySelector('.speak-button');
+        if (existing) existing.remove();
+        const btn = createSpeakButton(textSpan.textContent, lang);
+        content.insertBefore(btn, timeSpan);
+    });
+}
+
+window.addEventListener('languageChanged', refreshSpeakButtons);
+
 // Variables para paginación
 const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
 let isLoadingMore = false;
@@ -1401,16 +1433,17 @@ async function displayMessage(messageData) {
             ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="message-content">
                 <span class="message-flag">${flag}</span>
-                <span class="message-text">${messageText}</span>
-                <button class="speak-button" aria-label="Escuchar">
-                    <span class="material-icons">volume_up</span>
-                </button>
+                <span class="message-text"></span>
                 <span class="message-time">${timeString}</span>
             </div>
         `;
 
-        const speakBtn = messageElement.querySelector('.speak-button');
-        speakBtn.addEventListener('click', () => speakText(messageText, currentLanguage));
+        const textSpan = messageElement.querySelector('.message-text');
+        textSpan.textContent = messageText;
+
+        const speakBtn = createSpeakButton(messageText, currentLanguage);
+        const contentDiv = messageElement.querySelector('.message-content');
+        contentDiv.insertBefore(speakBtn, contentDiv.querySelector('.message-time'));
     }
 
     if (messagesList) {
