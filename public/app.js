@@ -343,9 +343,13 @@ function updateUserInfo(user) {
 
 // Función para actualizar el tema según el idioma
 function updateTheme(lang) {
-    // Remover clases de tema anteriores
-    document.body.classList.remove('theme-es', 'theme-en', 'theme-it');
-    // Agregar la nueva clase de tema
+    // Remover cualquier clase de idioma existente
+    document.body.classList.forEach(cls => {
+        if (cls.startsWith('theme-')) {
+            document.body.classList.remove(cls);
+        }
+    });
+    // Agregar la nueva clase de idioma
     document.body.classList.add(`theme-${lang}`);
 }
 
@@ -608,6 +612,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError('errorGeneric');
             }
         }
+
+        // Asegurar que el tema final coincida con el idioma seleccionado
+        updateThemeAndLanguage(currentTheme, newLang);
 
         // Disparar evento personalizado de cambio de idioma
         window.dispatchEvent(new CustomEvent('languageChanged', { detail: newLang }));
