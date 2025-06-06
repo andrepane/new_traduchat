@@ -15,7 +15,8 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Endpoint para enviar notificación push FCM
-app.post('/send-notification', async (req, res) => {
+// Esta ruta se expone como /api/send-notification en Vercel
+app.post('/api/send-notification', async (req, res) => {
     const { token, title, body } = req.body;
 
     const response = await fetch('https://fcm.googleapis.com/fcm/send', {
@@ -29,7 +30,7 @@ app.post('/send-notification', async (req, res) => {
             notification: {
                 title,
                 body,
-                icon: '/images/icon-192x192.png'
+                icon: '/images/icon-192.png'
             }
         })
     });
