@@ -1,12 +1,65 @@
 import { messaging, db } from './firebase.js';
 import { getCurrentUser } from './state.js';
-import { doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import {
+    doc,
+    setDoc,
+    serverTimestamp,
+    getDoc,
+    getDocs,
+    query,
+    where,
+    collection,
+    limit
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
 function showForegroundToast(title, body) {
     if (typeof window.showToast === 'function') {
         window.showToast(`${title}: ${body}`);
         return;
+    }
+}
+
+export async function guardarTokenUnico(userId, token) {
+    try {
+        if (!userId || !token) return;
+
+        // Verificar si el token ya existe en otra cuenta
+        const dupQuery = query(
+            collection(db, 'users'),
+            where('fcmToken', '==', token),
+            limit(1)
+        );
+
+        const dupSnap = await getDocs(dupQuery);
+        if (!dupSnap.empty && dupSnap.docs[0].id !== userId) {
+            console.log('⛔ Token ya registrado en otra cuenta. No se guarda.');
+            return;
+        }
+
+        const userRef = doc(db, 'users', userId);
+        const userSnap = await getDoc(userRef);
+        const currentToken = userSnap.exists() ? userSnap.data().fcmToken : null;
+
+        if (currentToken === token) {
+            console.log('🔁 El usuario ya tiene este token registrado.');
+            return;
+        }
+
+        await setDoc(
+            userRef,
+            {
+                fcmToken: token,
+                lastTokenUpdate: serverTimestamp(),
+                notificationsEnabled: true
+            },
+            { merge: true }
+        );
+
+        console.log(currentToken ? '🔄 Token FCM actualizado' : '✅ Token FCM guardado');
+    } catch (err) {
+        console.error('❌ Error al guardar token único:', err);
+        throw err;
     }
 }
 
@@ -63,13 +116,8 @@ export async function initializeNotifications() {
         if (user && token) {
             try {
                 console.log('💾 Guardando token en Firestore para usuario:', user.uid);
-                const userRef = doc(db, 'users', user.uid);
-                await setDoc(userRef, {
-                    fcmToken: token,
-                    lastTokenUpdate: serverTimestamp(),
-                    notificationsEnabled: true
-                }, { merge: true });
-                console.log('✅ Token guardado en Firestore');
+                await guardarTokenUnico(user.uid, token);
+                console.log('✅ Token guardado o verificado');
 
                 // Escuchar cambios de token para actualizarlo en Firestore
                 if (messaging.onTokenRefresh) {
@@ -80,11 +128,7 @@ export async function initializeNotifications() {
                                 serviceWorkerRegistration: registration
                             });
                             if (newToken) {
-                                await setDoc(userRef, {
-                                    fcmToken: newToken,
-                                    lastTokenUpdate: serverTimestamp(),
-                                    notificationsEnabled: true
-                                }, { merge: true });
+                                await guardarTokenUnico(user.uid, newToken);
                                 console.log('🔄 Token FCM actualizado en Firestore');
                             }
                         } catch (refreshError) {
