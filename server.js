@@ -19,24 +19,45 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.post('/api/send-notification', async (req, res) => {
     const { token, title, body } = req.body;
 
-    const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-        method: 'POST',
-        headers: {
-            'Authorization': `key=${process.env.FCM_SERVER_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            to: token,
-            notification: {
-                title,
-                body,
-                icon: '/images/icon-192.png'
-            }
-        })
-    });
+    if (!process.env.FCM_SERVER_KEY) {
+        return res.status(500).json({ error: 'FCM_SERVER_KEY not configured' });
+    }
 
-    const result = await response.json();
-    res.json(result);
+    try {
+        const response = await fetch('https://fcm.googleapis.com/fcm/send', {
+            method: 'POST',
+            headers: {
+                'Authorization': `key=${process.env.FCM_SERVER_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                to: token,
+                notification: {
+                    title,
+                    body,
+                    icon: '/images/icon-192.png'
+                }
+            })
+        });
+
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (err) {
+            data = { raw: text };
+        }
+
+        if (!response.ok) {
+            console.error('FCM request failed', response.status, data);
+            return res.status(response.status).json(data);
+        }
+
+        res.json(data);
+    } catch (err) {
+        console.error('Error sending notification', err);
+        res.status(500).json({ error: err.message });
+    }
 });
 
 // Servir index.html para todas las rutas
