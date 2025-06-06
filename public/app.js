@@ -159,7 +159,7 @@ let isGroupCreationMode = false;
 // Se vuelve a habilitar para asegurar envíos desde el cliente cuando
 // las Cloud Functions no estén disponibles. Las notificaciones se
 // deduplican por `messageId` en el Service Worker.
-const manualPushNotifications = true;
+const manualPushNotifications = false;
 
 
 // Variables para grabación de audio
@@ -1037,7 +1037,8 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
             const snapshotVersion = ++chatsSnapshotVersion;
-            try {
+            try {
+
 
                 if (snapshot.empty) {
                     if (container) {
