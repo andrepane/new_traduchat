@@ -159,7 +159,7 @@ let isGroupCreationMode = false;
 // Se vuelve a habilitar para asegurar envíos desde el cliente cuando
 // las Cloud Functions no estén disponibles. Las notificaciones se
 // deduplican por `messageId` en el Service Worker.
-const manualPushNotifications = false;
+const manualPushNotifications = true;
 
 
 // Variables para grabación de audio
