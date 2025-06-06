@@ -21,8 +21,8 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Endpoint para enviar notificación push FCM
-// Esta ruta se expone como /api/send-notification en Vercel
-app.post('/api/send-notification', async (req, res) => {
+// Maneja tanto /api/send-notification como /send-notification en producción
+app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
     const { token, title, body, data: extraData } = req.body;
 
     const serverKey = process.env.FCM_SERVER_KEY;
