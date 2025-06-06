@@ -18,13 +18,36 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 console.log('✅ Firebase Messaging inicializado en Service Worker');
 
+let activeChatId = null;
+
+// Recibir mensajes desde la aplicación para actualizar el chat activo
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'setActiveChat') {
+    activeChatId = event.data.chatId || null;
+    console.log('[SW] Chat activo actualizado:', activeChatId);
+  }
+});
+
 // Manejar mensajes en segundo plano
 messaging.onBackgroundMessage((payload) => {
   console.log('📬 Recibido mensaje en background:', payload);
 
-  const notificationTitle = payload.notification.title;
+  const incomingChatId = payload.data?.chatId;
+  if (incomingChatId && incomingChatId === activeChatId) {
+    console.log('[SW] Mensaje del chat activo ignorado:', incomingChatId);
+    return;
+  }
+
+  // Si el mensaje incluye el campo notification, Firebase ya se encarga de
+  // mostrar la notificación. Solo se personaliza en caso de mensajes de datos
+  // para evitar notificaciones duplicadas.
+  if (payload.notification) {
+    return;
+  }
+
+  const notificationTitle = payload.data?.title || 'TraduChat';
   const notificationOptions = {
-    body: payload.notification.body,
+    body: payload.data?.body || '',
     icon: '/images/icon-192.png',
     badge: '/images/icon-72x72.png',
     vibrate: [200, 100, 200],
@@ -32,9 +55,12 @@ messaging.onBackgroundMessage((payload) => {
     data: payload.data
   };
 
-  console.log('🔔 Mostrando notificación:', { title: notificationTitle, options: notificationOptions });
+  console.log('🔔 Mostrando notificación personalizada:', {
+    title: notificationTitle,
+    options: notificationOptions
+  });
 
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Manejar clic en la notificación
