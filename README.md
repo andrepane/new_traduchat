@@ -30,16 +30,16 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 2. Instala las dependencias con `npm install`
 3. Configura las variables de entorno necesarias. Para las notificaciones puedes
    usar la clave del servidor `FCM_SERVER_KEY` (API legacy) o, de preferencia,
-   definir `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio) junto con
-   `FCM_PROJECT_ID` para emplear la API HTTP v1 de FCM.
+   definir `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL` y
+   `FIREBASE_PRIVATE_KEY` para emplear la API HTTP v1 de FCM.
 4. Ejecuta el servidor con `npm start`. Asegúrate de que las variables de
    entorno estén cargadas previamente.
 
    Si al desplegar en Vercel obtienes un error con una página HTML en la
    respuesta de FCM, revisa que las variables de notificación estén correctamente
    definidas. Si usas la clave de servidor, comprueba `FCM_SERVER_KEY`. Si optas
-   por la API HTTP v1, asegúrate de incluir `FIREBASE_SERVICE_ACCOUNT` y
-   `FCM_PROJECT_ID`.
+   por la API HTTP v1, asegúrate de incluir `FIREBASE_PROJECT_ID`,
+   `FIREBASE_CLIENT_EMAIL` y `FIREBASE_PRIVATE_KEY`.
 
 ## Configuración
 
@@ -48,8 +48,8 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 3. Habilita la autenticación por email en Firebase
 4. Configura las variables de entorno necesarias. En el archivo `.env` deberás incluir
    las claves de Firebase y los valores para enviar notificaciones. Puedes optar por
-   la clave de servidor (**FCM_SERVER_KEY**) o definir **FIREBASE_SERVICE_ACCOUNT**
-   junto a **FCM_PROJECT_ID** para utilizar la API HTTP v1.
+   la clave de servidor (**FCM_SERVER_KEY**) o definir **FIREBASE_PROJECT_ID**,
+   **FIREBASE_CLIENT_EMAIL** y **FIREBASE_PRIVATE_KEY** para utilizar la API HTTP v1.
 
 ## Compatibilidad
 
