@@ -64,8 +64,13 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                             token,
                             notification: {
                                 title,
-                                body,
-                                icon: '/images/icon-192.png'
+                                body
+                            },
+                            webpush: {
+                                notification: {
+                                    icon: '/images/icon-192.png',
+                                    badge: '/images/icon-72x72.png'
+                                }
                             },
                             data: extraData
                         }
