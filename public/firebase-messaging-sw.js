@@ -18,8 +18,10 @@ firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 console.log('✅ Firebase Messaging inicializado en Service Worker');
 
+const shownMessages = new Set();
+
 // Manejar mensajes en segundo plano
-messaging.onBackgroundMessage((payload) => {
+messaging.onBackgroundMessage(async (payload) => {
   console.log('📬 Recibido mensaje en background:', payload);
 
   const notificationTitle =
@@ -29,16 +31,24 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/images/icon-192.png',
     badge: '/images/icon-72x72.png',
     vibrate: [200, 100, 200],
-    tag: 'new-message',
+    tag: payload.data?.messageId || 'new-message',
     data: payload.data
   };
+
+  const msgId = notificationOptions.tag;
 
   console.log('🔔 Mostrando notificación:', {
     title: notificationTitle,
     options: notificationOptions
   });
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+  if (!shownMessages.has(msgId)) {
+    shownMessages.add(msgId);
+    const existing = await self.registration.getNotifications({ tag: msgId });
+    if (existing.length === 0) {
+      self.registration.showNotification(notificationTitle, notificationOptions);
+    }
+  }
 });
 
 // Manejar clic en la notificación
@@ -48,7 +58,8 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   // Navegar a la aplicación cuando se hace clic en la notificación
-  const urlToOpen = new URL('/', self.location.origin).href;
+  const chat = event.notification.data?.chatId;
+  const urlToOpen = new URL(chat ? `/?chatId=${chat}` : '/', self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
