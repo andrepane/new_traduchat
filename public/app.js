@@ -146,6 +146,7 @@ let unsubscribeChats = null;
 let initialLoadComplete = false; // Variable para controlar la carga inicial de mensajes
 let currentListType = 'individual';
 let inMemoryReadTimes = {};
+let chatsSnapshotVersion = 0; // Controlar versiones de snapshots para evitar duplicados
 
 // Variables para grupos
 let selectedUsers = new Set();
@@ -1035,8 +1036,8 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
         const q = query(collection(db, 'chats'), ...constraints);
 
         unsubscribeChats = onSnapshot(q, async (snapshot) => {
-            try {
-                if (container) container.innerHTML = '';
+            const snapshotVersion = ++chatsSnapshotVersion;
+            try {
 
                 if (snapshot.empty) {
                     if (container) {
@@ -1096,6 +1097,11 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                         participants: data.participants
                     };
                 }));
+                if (snapshotVersion !== chatsSnapshotVersion) {
+                    return;
+                }
+
+                if (container) container.innerHTML = "";
 
                 chats.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
 
