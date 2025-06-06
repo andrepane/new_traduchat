@@ -1,9 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import path from 'path';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 
@@ -17,7 +23,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Endpoint para enviar notificación push FCM
 // Esta ruta se expone como /api/send-notification en Vercel
 app.post('/api/send-notification', async (req, res) => {
-    const { token, title, body } = req.body;
+    const { token, title, body, data: extraData } = req.body;
 
     if (!process.env.FCM_SERVER_KEY) {
         return res.status(500).json({ error: 'FCM_SERVER_KEY not configured' });
@@ -36,28 +42,38 @@ app.post('/api/send-notification', async (req, res) => {
                     title,
                     body,
                     icon: '/images/icon-192.png'
-                }
+                },
+                data: extraData
             })
         });
 
         const text = await response.text();
-        let data;
+        let responseData;
         try {
-            data = JSON.parse(text);
+            responseData = JSON.parse(text);
         } catch (err) {
-            data = { raw: text };
+            responseData = { raw: text };
         }
 
         if (!response.ok) {
-            console.error('FCM request failed', response.status, data);
-            return res.status(response.status).json(data);
+            console.error('FCM request failed', response.status, responseData);
+            return res.status(response.status).json(responseData);
         }
 
-        res.json(data);
+        res.json(responseData);
     } catch (err) {
         console.error('Error sending notification', err);
         res.status(500).json({ error: err.message });
     }
+});
+
+// Endpoints simulados para el envío y verificación de códigos SMS
+app.post('/api/send-code', (req, res) => {
+    res.json({ success: true });
+});
+
+app.post('/api/verify-code', (req, res) => {
+    res.json({ success: true });
 });
 
 // Servir index.html para todas las rutas
@@ -74,4 +90,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Exportar la app para Vercel
-module.exports = app; 
+export default app;
