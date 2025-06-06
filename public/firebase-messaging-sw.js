@@ -22,16 +22,10 @@ console.log('✅ Firebase Messaging inicializado en Service Worker');
 messaging.onBackgroundMessage((payload) => {
   console.log('📬 Recibido mensaje en background:', payload);
 
-  // Si el mensaje incluye el campo notification, Firebase ya se encarga de
-  // mostrar la notificación. Solo se personaliza en caso de mensajes de datos
-  // para evitar notificaciones duplicadas.
-  if (payload.notification) {
-    return;
-  }
-
-  const notificationTitle = payload.data?.title || 'TraduChat';
+  const notificationTitle =
+    payload.notification?.title || payload.data?.title || 'TraduChat';
   const notificationOptions = {
-    body: payload.data?.body || '',
+    body: payload.notification?.body || payload.data?.body || '',
     icon: '/images/icon-192.png',
     badge: '/images/icon-72x72.png',
     vibrate: [200, 100, 200],
@@ -39,7 +33,7 @@ messaging.onBackgroundMessage((payload) => {
     data: payload.data
   };
 
-  console.log('🔔 Mostrando notificación personalizada:', {
+  console.log('🔔 Mostrando notificación:', {
     title: notificationTitle,
     options: notificationOptions
   });
