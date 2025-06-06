@@ -52,4 +52,8 @@ pantalla de inicio para poder solicitar el permiso y recibirlas correctamente.
 
 ## Contribuir
 
-Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer. 
+Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer.
+
+### Cambios recientes
+
+- Se eliminó la duplicación de notificaciones push y se mejoró el manejo del estado de escritura para evitar parpadeos en la lista de chats.

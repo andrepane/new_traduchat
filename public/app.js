@@ -27,7 +27,8 @@ import {
     writeBatch,
     arrayUnion,
     Timestamp,
-    getCountFromServer
+    getCountFromServer,
+    deleteDoc
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
 import {
@@ -882,6 +883,10 @@ function resetChatState() {
         chatList.innerHTML = '';
     }
     
+    // Ocultar indicador de escritura y limpiar estado de escritura remoto
+    hideTypingIndicator();
+    setTypingStatus(false);
+
     // Limpiar estado
     currentChat = null;
     lastSender = null;
@@ -889,10 +894,6 @@ function resetChatState() {
     initialLoadComplete = false;
     allMessagesLoaded = false;
     lastVisibleMessage = null;
-    
-    // Ocultar indicador de escritura
-    hideTypingIndicator();
-    setTypingStatus(false);
     
     console.log('✅ Estado del chat reseteado completamente');
 }
@@ -1689,26 +1690,21 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
         unsubscribeTypingStatus();
     }
 
-    unsubscribeTypingStatus = onSnapshot(doc(db, 'chats', chatId), (chatDoc) => {
-        if (!chatDoc.exists()) return;
+    const typingCollection = collection(db, 'chats', chatId, 'typingStatus');
+    unsubscribeTypingStatus = onSnapshot(typingCollection, (typingSnap) => {
+        const typingUsers = typingSnap.docs
+            .map(doc => doc.data())
+            .filter(t => t.userId !== currentUser.uid);
 
-        const data = chatDoc.data();
-        const typingStatus = data.typingStatus;
-        console.log('📝 Estado de escritura recibido:', typingStatus);
-
-        const currentLang = document.getElementById('languageSelect')?.value || 
-                           document.getElementById('languageSelectMain')?.value || 
+        const currentLang = document.getElementById('languageSelect')?.value ||
+                           document.getElementById('languageSelectMain')?.value ||
                            getUserLanguage();
 
-        console.log('🌐 Idioma actual para indicador de escritura:', currentLang);
-
-        if (typingStatus && typingStatus.userId && typingStatus.userId !== currentUser.uid) {
-            const username = typingStatus.username || typingStatus.userId;
+        if (typingUsers.length > 0) {
+            const username = typingUsers[0].username || typingUsers[0].userId;
             const typingMessage = getTypingMessage(username, currentLang);
-            console.log('💬 Usuario escribiendo:', username);
             showTypingIndicator(typingMessage);
         } else {
-            console.log('💬 Nadie está escribiendo');
             hideTypingIndicator();
         }
     });
@@ -2102,19 +2098,20 @@ async function setTypingStatus(isTyping) {
 
     console.log(`🔄 setTypingStatus llamado con: ${isTyping}`);
 
-    const chatRef = doc(db, 'chats', currentChat);
+    const typingRef = doc(db, 'chats', currentChat, 'typingStatus', currentUser.uid);
 
     try {
-        const typingData = isTyping ? {
-            userId: currentUser.uid,
-            timestamp: serverTimestamp(),
-            username: currentUser.username || currentUser.email.split('@')[0]
-        } : null;
-
-        await updateDoc(chatRef, {
-            typingStatus: typingData
-        });
-        console.log('✅ Estado de escritura actualizado:', typingData);
+        if (isTyping) {
+            await setDoc(typingRef, {
+                userId: currentUser.uid,
+                timestamp: serverTimestamp(),
+                username: currentUser.username || currentUser.email.split('@')[0]
+            });
+            console.log('✅ Estado de escritura actualizado (escribiendo)');
+        } else {
+            await deleteDoc(typingRef);
+            console.log('✅ Estado de escritura eliminado');
+        }
     } catch (error) {
         console.error('❌ Error actualizando estado de escritura:', error);
     }
