@@ -28,14 +28,18 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 
 1. Clona este repositorio
 2. Instala las dependencias con `npm install`
-3. Configura las variables de entorno necesarias (incluye `FCM_SERVER_KEY` para
-   las notificaciones FCM)
+3. Configura las variables de entorno necesarias. Para las notificaciones puedes
+   usar la clave del servidor `FCM_SERVER_KEY` (API legacy) o, de preferencia,
+   definir `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio) junto con
+   `FCM_PROJECT_ID` para emplear la API HTTP v1 de FCM.
 4. Ejecuta el servidor con `npm start`. Asegúrate de que las variables de
    entorno estén cargadas previamente.
 
-   Si al desplegar en Vercel obtienes un error relacionado con un HTML en lugar
-   de la respuesta JSON de FCM, verifica que la variable `FCM_SERVER_KEY` esté
-   correctamente configurada en el panel de entorno de Vercel.
+   Si al desplegar en Vercel obtienes un error con una página HTML en la
+   respuesta de FCM, revisa que las variables de notificación estén correctamente
+   definidas. Si usas la clave de servidor, comprueba `FCM_SERVER_KEY`. Si optas
+   por la API HTTP v1, asegúrate de incluir `FIREBASE_SERVICE_ACCOUNT` y
+   `FCM_PROJECT_ID`.
 
 ## Configuración
 
@@ -43,8 +47,9 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 2. Configura las credenciales en `firebase-config.js`
 3. Habilita la autenticación por email en Firebase
 4. Configura las variables de entorno necesarias. En el archivo `.env` deberás incluir
-   todas las claves de Firebase y **FCM_SERVER_KEY** para poder enviar notificaciones
-   push mediante FCM.
+   las claves de Firebase y los valores para enviar notificaciones. Puedes optar por
+   la clave de servidor (**FCM_SERVER_KEY**) o definir **FIREBASE_SERVICE_ACCOUNT**
+   junto a **FCM_PROJECT_ID** para utilizar la API HTTP v1.
 
 ## Compatibilidad
 
