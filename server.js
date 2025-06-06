@@ -1,9 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import path from 'path';
+import fetch from 'node-fetch';
+import dotenv from 'dotenv';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -15,8 +21,13 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Endpoint para enviar notificación push FCM
-app.post('/send-notification', async (req, res) => {
+// Esta ruta se expone como /api/send-notification en Vercel
+app.post('/api/send-notification', async (req, res) => {
     const { token, title, body } = req.body;
+
+    if (!process.env.FCM_SERVER_KEY) {
+        return res.status(500).json({ error: 'FCM_SERVER_KEY not configured' });
+    }
 
     const response = await fetch('https://fcm.googleapis.com/fcm/send', {
         method: 'POST',
@@ -29,7 +40,7 @@ app.post('/send-notification', async (req, res) => {
             notification: {
                 title,
                 body,
-                icon: '/images/icon-192x192.png'
+                icon: '/images/icon-192.png'
             }
         })
     });
@@ -52,4 +63,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Exportar la app para Vercel
-module.exports = app; 
+export default app;

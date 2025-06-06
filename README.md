@@ -29,7 +29,9 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 1. Clona este repositorio
 2. Instala las dependencias con `npm install`
 3. Configura las variables de entorno necesarias (incluye `FCM_SERVER_KEY` para
-   las notificaciones FCM)
+   las notificaciones FCM). En Vercel recuerda definir esta variable en la sección
+   de **Environment Variables** para que las funciones de notificación funcionen
+   correctamente.
 4. Ejecuta el servidor con `npm start`. Asegúrate de que las variables de
    entorno estén cargadas previamente.
 
@@ -44,9 +46,9 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 
 ## Compatibilidad
 
-Las notificaciones push basadas en FCM no funcionan en Safari para iOS debido a la
-falta de soporte para Service Workers. Si necesitas notificar a los usuarios de iOS,
-considera alternativas como correos electrónicos o mensajes SMS.
+Desde iOS 16.4, Safari y las PWA instaladas permiten recibir notificaciones push
+mediante Service Workers. Asegúrate de que la aplicación esté instalada en la
+pantalla de inicio para poder solicitar el permiso y recibirlas correctamente.
 
 ## Contribuir
 

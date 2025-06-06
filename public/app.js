@@ -217,6 +217,41 @@ let allMessagesLoaded = false;
 let lastVisibleMessage = null;
 let lastProcessedMessageId = null; // Variable para evitar duplicados
 
+// Enviar notificaciones push a los participantes de un chat
+async function sendPushNotifications(chatData, messageText) {
+    try {
+        const sender = getCurrentUser();
+        if (!sender) return;
+        const senderName = sender.username || sender.email.split('@')[0] || 'Usuario';
+
+        const recipientIds = (chatData.participants || []).filter(uid => uid !== sender.uid);
+        if (recipientIds.length === 0) return;
+
+        const recipientDocs = await Promise.all(
+            recipientIds.map(uid => getDoc(doc(db, 'users', uid)))
+        );
+
+        const tokens = recipientDocs
+            .filter(snap => snap.exists())
+            .map(snap => snap.data().fcmToken)
+            .filter(Boolean);
+
+        await Promise.all(tokens.map(token =>
+            fetch('/api/send-notification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token,
+                    title: `Nuevo mensaje de ${senderName}`,
+                    body: messageText
+                })
+            })
+        ));
+    } catch (err) {
+        console.error('Error enviando notificaciones:', err);
+    }
+}
+
 
 
 // Función para generar un código aleatorio de 6 dígitos
@@ -1980,6 +2015,9 @@ async function sendMessage(text) {
         const chatDoc = await getDoc(chatRef);
         const chatData = chatDoc.data();
         const isGroupChat = chatData.type === 'group';
+
+        // Enviar notificaciones push a los demás participantes
+        sendPushNotifications(chatData, text.trim());
         
         // Determinar los idiomas necesarios para traducción
         let targetLanguages = new Set();
