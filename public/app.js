@@ -155,7 +155,10 @@ let isGroupCreationMode = false;
 // desde el cliente como desde las Cloud Functions, pudiendo
 // producir duplicados. Mantener en "true" para forzar los
 // envíos manuales de notificación.
-const manualPushNotifications = false;
+// Se vuelve a habilitar para asegurar envíos desde el cliente cuando
+// las Cloud Functions no estén disponibles. Las notificaciones se
+// deduplican por `messageId` en el Service Worker.
+const manualPushNotifications = true;
 
 // Variables para grabación de audio
 let isRecording = false;
@@ -228,7 +231,7 @@ let lastProcessedMessageId = null; // Variable para evitar duplicados
 // Esta función quedó obsoleta ya que las notificaciones se manejan
 // mediante Cloud Functions al crear cada mensaje. Se mantiene por si se
 // requieren envíos manuales en el futuro, pero no se invoca desde el cliente.
-async function sendPushNotifications(chatData, messageText) {
+async function sendPushNotifications(chatData, messageText, chatId, messageId) {
     try {
         const sender = getCurrentUser();
         if (!sender) return;
@@ -241,10 +244,12 @@ async function sendPushNotifications(chatData, messageText) {
             recipientIds.map(uid => getDoc(doc(db, 'users', uid)))
         );
 
-        const tokens = recipientDocs
-            .filter(snap => snap.exists())
-            .map(snap => snap.data().fcmToken)
-            .filter(Boolean);
+        const tokens = Array.from(new Set(
+            recipientDocs
+                .filter(snap => snap.exists())
+                .map(snap => snap.data().fcmToken)
+                .filter(Boolean)
+        ));
 
         await Promise.all(tokens.map(token =>
             fetch('/api/send-notification', {
@@ -253,7 +258,8 @@ async function sendPushNotifications(chatData, messageText) {
                 body: JSON.stringify({
                     token,
                     title: `Nuevo mensaje de ${senderName}`,
-                    body: messageText
+                    body: messageText,
+                    data: { chatId, messageId }
                 })
             })
         ));
@@ -305,7 +311,7 @@ function simulateSendSMS(phoneNumber, code) {
 // Función para enviar el código vía API
 async function sendVerificationCode(phoneNumber) {
     try {
-        const response = await fetch('http://localhost:3000/api/send-code', {
+        const response = await fetch('/api/send-code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -329,7 +335,7 @@ async function sendVerificationCode(phoneNumber) {
 // Función para verificar el código vía API
 async function verifyCode(phoneNumber, code) {
     try {
-        const response = await fetch('http://localhost:3000/api/verify-code', {
+        const response = await fetch('/api/verify-code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -2021,14 +2027,11 @@ async function sendMessage(text) {
         const chatData = chatDoc.data();
         const isGroupChat = chatData.type === 'group';
 
-        // Las notificaciones push ahora las envían las Cloud Functions al
-        // detectarse la creación del mensaje, por lo que no es necesario
-        // enviarlas manualmente desde el cliente.
-       // sendPushNotifications(chatData, text.trim());
+
 
         // Enviar notificaciones push manualmente si no se utilizan Cloud Functions
         if (manualPushNotifications) {
-            sendPushNotifications(chatData, text.trim());
+            sendPushNotifications(chatData, text.trim(), currentChat, docRef.id);
         }
         
         // Determinar los idiomas necesarios para traducción

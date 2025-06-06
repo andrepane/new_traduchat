@@ -29,7 +29,7 @@ messaging.onBackgroundMessage((payload) => {
     icon: '/images/icon-192.png',
     badge: '/images/icon-72x72.png',
     vibrate: [200, 100, 200],
-    tag: 'new-message',
+    tag: payload.data?.messageId || 'new-message',
     data: payload.data
   };
 
@@ -48,7 +48,8 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   // Navegar a la aplicación cuando se hace clic en la notificación
-  const urlToOpen = new URL('/', self.location.origin).href;
+  const chat = event.notification.data?.chatId;
+  const urlToOpen = new URL(chat ? `/?chatId=${chat}` : '/', self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
