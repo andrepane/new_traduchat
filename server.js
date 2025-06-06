@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
-// import dotenv from 'dotenv';
+import { GoogleAuth } from 'google-auth-library';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -25,30 +25,73 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
     const { token, title, body, data: extraData } = req.body;
 
+    const projectId = process.env.FIREBASE_PROJECT_ID;
+    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
     const serverKey = process.env.FCM_SERVER_KEY?.trim();
 
-    if (!serverKey) {
-        return res.status(500).json({ error: 'FCM_SERVER_KEY not configured' });
+    if (!(projectId && clientEmail && privateKey) && !serverKey) {
+        return res.status(500).json({ error: 'FCM credentials not configured' });
     }
 
     try {
-        const response = await fetch('https://fcm.googleapis.com/fcm/send', {
-            method: 'POST',
-            headers: {
-                Authorization: `key=${serverKey}`,
-                'Content-Type': 'application/json',
-                Accept: 'application/json'
-            },
-            body: JSON.stringify({
-                to: token,
-                notification: {
-                    title,
-                    body,
-                    icon: '/images/icon-192.png'
+        let response;
+
+        if (projectId && clientEmail && privateKey) {
+            // Preferir la API HTTP v1 con la cuenta de servicio
+            const auth = new GoogleAuth({
+                credentials: {
+                    project_id: projectId,
+                    client_email: clientEmail,
+                    private_key: privateKey
                 },
-                data: extraData
-            })
-        });
+                scopes: ['https://www.googleapis.com/auth/firebase.messaging']
+            });
+
+            const client = await auth.getClient();
+            const { token: accessToken } = await client.getAccessToken();
+
+            response = await fetch(
+                `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: {
+                            token,
+                            notification: {
+                                title,
+                                body,
+                                icon: '/images/icon-192.png'
+                            },
+                            data: extraData
+                        }
+                    })
+                }
+            );
+        } else {
+            // Uso de la API legacy con la clave del servidor
+            response = await fetch('https://fcm.googleapis.com/fcm/send', {
+                method: 'POST',
+                headers: {
+                    Authorization: `key=${serverKey}`,
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json'
+                },
+                body: JSON.stringify({
+                    to: token,
+                    notification: {
+                        title,
+                        body,
+                        icon: '/images/icon-192.png'
+                    },
+                    data: extraData
+                })
+            });
+        }
 
         const text = await response.text();
         let responseData;
