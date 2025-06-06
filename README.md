@@ -33,6 +33,10 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 4. Ejecuta el servidor con `npm start`. Asegúrate de que las variables de
    entorno estén cargadas previamente.
 
+   Si al desplegar en Vercel obtienes un error relacionado con un HTML en lugar
+   de la respuesta JSON de FCM, verifica que la variable `FCM_SERVER_KEY` esté
+   correctamente configurada en el panel de entorno de Vercel.
+
 ## Configuración
 
 1. Crea un proyecto en Firebase
