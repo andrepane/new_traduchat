@@ -29,6 +29,7 @@ app.post('/api/send-notification', async (req, res) => {
         return res.status(500).json({ error: 'FCM_SERVER_KEY not configured' });
     }
 
+
     const response = await fetch('https://fcm.googleapis.com/fcm/send', {
         method: 'POST',
         headers: {
