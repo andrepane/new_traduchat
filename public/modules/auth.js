@@ -10,11 +10,14 @@ import {
     setDoc,
     serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+import { gestionarTokenFCM } from './notificaciones.js';
 
 import { setCurrentUser } from './state.js'; // <--- usamos esto en lugar de una variable local
 
 // Esto se puede pasar desde app.js si quieres más flexibilidad
 let userLanguage = 'es';
+
+let lastUserId = null;
 
 function setUserLanguage(lang) {
     userLanguage = lang;
@@ -57,6 +60,16 @@ function startAuthListener(callback) {
                 }
 
                 setCurrentUser(userData); // <-- actualizamos el estado global
+
+                if (user.uid !== lastUserId) {
+                    try {
+                        await gestionarTokenFCM(user.uid);
+                        lastUserId = user.uid;
+                    } catch (tokenError) {
+                        console.error('Error al gestionar token FCM:', tokenError);
+                    }
+                }
+
                 callback(userData);
             } catch (error) {
                 console.error('Error al verificar/crear documento de usuario:', error);
@@ -65,6 +78,7 @@ function startAuthListener(callback) {
             }
         } else {
             setCurrentUser(null); // <-- limpiamos el estado
+            lastUserId = null;
             callback(null);
         }
     });
