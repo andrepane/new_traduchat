@@ -151,6 +151,12 @@ let inMemoryReadTimes = {};
 let selectedUsers = new Set();
 let isGroupCreationMode = false;
 
+// Si se habilita, las notificaciones push se enviarán tanto
+// desde el cliente como desde las Cloud Functions, pudiendo
+// producir duplicados. Mantener en "true" para forzar los
+// envíos manuales de notificación.
+const manualPushNotifications = true;
+
 // Variables para grabación de audio
 let isRecording = false;
 
