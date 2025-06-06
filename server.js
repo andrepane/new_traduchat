@@ -19,6 +19,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.post('/api/send-notification', async (req, res) => {
     const { token, title, body } = req.body;
 
+    if (!process.env.FCM_SERVER_KEY) {
+        return res.status(500).json({ error: 'FCM_SERVER_KEY not configured' });
+    }
+
     const response = await fetch('https://fcm.googleapis.com/fcm/send', {
         method: 'POST',
         headers: {
