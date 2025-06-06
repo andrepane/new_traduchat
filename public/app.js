@@ -2018,7 +2018,7 @@ async function sendMessage(text) {
         // Las notificaciones push ahora las envían las Cloud Functions al
         // detectarse la creación del mensaje, por lo que no es necesario
         // enviarlas manualmente desde el cliente.
-        // sendPushNotifications(chatData, text.trim());
+        sendPushNotifications(chatData, text.trim());
         
         // Determinar los idiomas necesarios para traducción
         let targetLanguages = new Set();
