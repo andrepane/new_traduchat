@@ -3,11 +3,11 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import path from 'path';
 import admin from 'firebase-admin';
-import dotenv from 'dotenv';
+// import dotenv from 'dotenv';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-dotenv.config();
+// dotenv.config();
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
