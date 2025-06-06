@@ -44,9 +44,9 @@ innecesarias a la API y así ahorrar tiempo y créditos.
 
 ## Compatibilidad
 
-Las notificaciones push basadas en FCM no funcionan en Safari para iOS debido a la
-falta de soporte para Service Workers. Si necesitas notificar a los usuarios de iOS,
-considera alternativas como correos electrónicos o mensajes SMS.
+Desde iOS 16.4, Safari y las PWA instaladas permiten recibir notificaciones push
+mediante Service Workers. Asegúrate de que la aplicación esté instalada en la
+pantalla de inicio para poder solicitar el permiso y recibirlas correctamente.
 
 ## Contribuir
 
