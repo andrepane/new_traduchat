@@ -11,7 +11,7 @@ import {
     collection,
     limit
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+import { getToken, deleteToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
 function showForegroundToast(title, body) {
     if (typeof window.showToast === 'function') {
@@ -60,6 +60,57 @@ export async function guardarTokenUnico(userId, token) {
     } catch (err) {
         console.error('❌ Error al guardar token único:', err);
         throw err;
+    }
+}
+
+export async function gestionarTokenFCM(userId) {
+    try {
+        if (!messaging) {
+            console.warn('⚠️ Firebase Messaging no está disponible');
+            return;
+        }
+
+        let registration;
+        if ('serviceWorker' in navigator) {
+            try {
+                registration = await navigator.serviceWorker.ready;
+            } catch (err) {
+                console.error('❌ Error al obtener Service Worker:', err);
+            }
+        }
+
+        try {
+            await deleteToken(messaging);
+            console.log('🗑️ Token FCM anterior eliminado');
+        } catch (err) {
+            console.warn('⚠️ No se pudo eliminar el token anterior:', err);
+        }
+
+        const newToken = await getToken(messaging, {
+            vapidKey: 'BHOz-BX2_ZDpjjQEvZ03bfRVTWyMgBd6CcZ5HgpLAJnKre2UbZYd4vMmCTVVF1MY17nJJTEb7nPiAJ9M5xIXTeY',
+            serviceWorkerRegistration: registration
+        });
+
+        if (!newToken) {
+            console.error('❌ No se pudo obtener el token FCM');
+            return;
+        }
+
+        await setDoc(
+            doc(db, 'users', userId),
+            {
+                fcmToken: newToken,
+                lastTokenUpdate: serverTimestamp(),
+                notificationsEnabled: true
+            },
+            { merge: true }
+        );
+
+        console.log('✅ Nuevo token FCM guardado para usuario:', userId);
+        return newToken;
+    } catch (error) {
+        console.error('❌ Error en gestionarTokenFCM:', error);
+        throw error;
     }
 }
 
