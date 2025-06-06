@@ -1,9 +1,14 @@
-const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const path = require('path');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import path from 'path';
+import dotenv from 'dotenv';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+dotenv.config();
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
@@ -53,4 +58,4 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 // Exportar la app para Vercel
-module.exports = app; 
+export default app;
