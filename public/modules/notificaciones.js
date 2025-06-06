@@ -96,12 +96,20 @@ export async function initializeNotifications() {
                 // Configurar listener para mensajes en primer plano
                 onMessage(messaging, (payload) => {
                     console.log('🔔 Mensaje recibido en primer plano:', payload);
-                    
+
+                    // Si el mensaje contiene el campo notification, el navegador
+                    // ya mostrará la notificación automáticamente. Solo
+                    // mostramos un toast ligero para no duplicar notificaciones.
+                    if (payload.notification) {
+                        showForegroundToast(payload.notification.title, payload.notification.body);
+                        return;
+                    }
+
                     if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
                         navigator.serviceWorker.ready.then(registration => {
-                            const notificationTitle = payload.notification.title;
+                            const notificationTitle = payload.data?.title || 'TraduChat';
                             const notificationOptions = {
-                                body: payload.notification.body,
+                                body: payload.data?.body || '',
                                 icon: '/images/icon-192.png',
                                 badge: '/images/icon-72x72.png',
                                 vibrate: [200, 100, 200],
@@ -111,7 +119,7 @@ export async function initializeNotifications() {
                             };
 
                             registration.showNotification(notificationTitle, notificationOptions);
-                            showForegroundToast(notificationTitle, payload.notification.body);
+                            showForegroundToast(notificationTitle, notificationOptions.body);
                         });
                     }
                 });
