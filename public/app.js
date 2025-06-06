@@ -3284,9 +3284,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // Volver desde ajustes
-    if (backFromSettings) {
-        backFromSettings.addEventListener('click', function() {
             if (settingsPage && chatList) {
                 settingsPage.classList.add('hidden');
                 chatList.classList.remove('hidden');
