@@ -9,9 +9,11 @@ import {
     query,
     where,
     collection,
-    limit
+    limit,
+    updateDoc,
+    deleteField
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-import { getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
+import { getToken, onMessage, deleteToken } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
 function showForegroundToast(title, body) {
     if (typeof window.showToast === 'function') {
@@ -60,6 +62,29 @@ export async function guardarTokenUnico(userId, token) {
     } catch (err) {
         console.error('❌ Error al guardar token único:', err);
         throw err;
+    }
+}
+
+export async function eliminarTokenUsuario(userId) {
+    try {
+        if (!userId) return;
+
+        try {
+            await deleteToken(messaging);
+            console.log('🗑️ Token FCM local eliminado');
+        } catch (err) {
+            console.warn('⚠️ No se pudo eliminar el token local:', err);
+        }
+
+        await updateDoc(doc(db, 'users', userId), {
+            fcmToken: deleteField(),
+            notificationsEnabled: false,
+            lastTokenUpdate: serverTimestamp()
+        });
+
+        console.log('🗑️ Token FCM eliminado en Firestore');
+    } catch (err) {
+        console.error('❌ Error al eliminar token FCM:', err);
     }
 }
 

@@ -48,7 +48,7 @@ import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia
 import { state } from './modules/state.js';
 import { startAuthListener, setUserLanguage } from './modules/auth.js';
 
-import { initializeNotifications } from './modules/notificaciones.js';
+import { initializeNotifications, eliminarTokenUsuario } from './modules/notificaciones.js';
 
 import {
     getUserLanguage,
@@ -2171,13 +2171,19 @@ function hideTypingIndicator() {
 // Eventos para enviar mensajes
 sendMessageBtn.addEventListener('click', (e) => {
     createRipple(e);
-    console.log('Botón enviar clickeado');
-    sendMessage(messageInput.value);
-});
+async function handleLogout() {
+    try {
+        const user = getCurrentUser();
 
-messageInput.addEventListener('input', () => {
-    handleTyping();
-});
+        if (user) {
+            await eliminarTokenUsuario(user.uid);
+        }
+
+        // Cancelar todas las suscripciones antes de cerrar sesión
+        if (unsubscribeChats) {
+            unsubscribeChats();
+            unsubscribeChats = null;
+        }
 
 messageInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
