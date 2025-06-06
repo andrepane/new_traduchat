@@ -57,3 +57,4 @@ Las contribuciones son bienvenidas. Por favor, abre un issue primero para discut
 ### Cambios recientes
 
 - Se eliminó la duplicación de notificaciones push y se mejoró el manejo del estado de escritura para evitar parpadeos en la lista de chats.
+- Se ajustó el *service worker* para mostrar correctamente las notificaciones cuando la aplicación está en segundo plano.
