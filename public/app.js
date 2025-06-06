@@ -218,6 +218,9 @@ let lastVisibleMessage = null;
 let lastProcessedMessageId = null; // Variable para evitar duplicados
 
 // Enviar notificaciones push a los participantes de un chat
+// Esta función quedó obsoleta ya que las notificaciones se manejan
+// mediante Cloud Functions al crear cada mensaje. Se mantiene por si se
+// requieren envíos manuales en el futuro, pero no se invoca desde el cliente.
 async function sendPushNotifications(chatData, messageText) {
     try {
         const sender = getCurrentUser();
@@ -2016,8 +2019,10 @@ async function sendMessage(text) {
         const chatData = chatDoc.data();
         const isGroupChat = chatData.type === 'group';
 
-        // Enviar notificaciones push a los demás participantes
-        sendPushNotifications(chatData, text.trim());
+        // Las notificaciones push ahora las envían las Cloud Functions al
+        // detectarse la creación del mensaje, por lo que no es necesario
+        // enviarlas manualmente desde el cliente.
+        // sendPushNotifications(chatData, text.trim());
         
         // Determinar los idiomas necesarios para traducción
         let targetLanguages = new Set();
