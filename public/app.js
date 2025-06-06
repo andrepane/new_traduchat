@@ -155,7 +155,7 @@ let isGroupCreationMode = false;
 // desde el cliente como desde las Cloud Functions, pudiendo
 // producir duplicados. Mantener en "true" para forzar los
 // envíos manuales de notificación.
-const manualPushNotifications = true;
+const manualPushNotifications = false;
 
 // Variables para grabación de audio
 let isRecording = false;
