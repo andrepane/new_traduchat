@@ -73,7 +73,7 @@ startAuthListener(async (userData) => {
 
         resetChatState();
         hideLoadingScreen();
-        showMainScreen();
+        MainScreen();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
         initializeNotifications(); // Aquí está bien colocada
@@ -82,7 +82,7 @@ startAuthListener(async (userData) => {
         currentUser = null;
         resetChatState();
         hideLoadingScreen();
-        showAuthScreen();
+        AuthScreen();
     }
 });
 
@@ -307,7 +307,7 @@ function startTimer(duration) {
 function simulateSendSMS(phoneNumber, code) {
     console.log(`Código enviado a ${phoneNumber}: ${code}`);
     // En una implementación real, aquí se llamaría a un servicio de SMS
-    showToast(getTranslation('demoVerificationCode', getUserLanguage(), code));
+    Toast(getTranslation('demoVerificationCode', getUserLanguage(), code));
 }
 
 // Función para enviar el código vía API
@@ -1182,7 +1182,7 @@ function notifyNewChat(userEmail) {
             icon: '/icon.png'
         };
 
-        new Notification("TraduChat", options);
+        // new Notification("TraduChat", options);
     };
 
     if (Notification.permission === "granted") {
