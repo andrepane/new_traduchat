@@ -62,17 +62,11 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                     body: JSON.stringify({
                         message: {
                             token,
-                            notification: {
+                            data: {
                                 title,
-                                body
-                            },
-                            webpush: {
-                                notification: {
-                                    icon: '/images/icon-192.png',
-                                    badge: '/images/icon-72x72.png'
-                                }
-                            },
-                            data: extraData
+                                body,
+                                ...extraData
+                            }
                         }
                     })
                 }
@@ -88,12 +82,11 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                 },
                 body: JSON.stringify({
                     to: token,
-                    notification: {
+                    data: {
                         title,
                         body,
-                        icon: '/images/icon-192.png'
-                    },
-                    data: extraData
+                        ...extraData
+                    }
                 })
             });
         }

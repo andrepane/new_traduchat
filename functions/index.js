@@ -78,11 +78,9 @@ exports.sendMessageNotification = functions.firestore
                 try {
                     const notificationMessage = {
                         token: token,
-                        notification: {
-                            title: senderName,
-                            body: message.text
-                        },
                         data: {
+                            title: senderName,
+                            body: message.text,
                             chatId: chatId,
                             messageId: context.params.messageId,
                             type: 'new_message'
@@ -98,12 +96,6 @@ exports.sendMessageNotification = functions.firestore
                         webpush: {
                             headers: {
                                 Urgency: 'high'
-                            },
-                            notification: {
-                                icon: '/images/icon-192.png',
-                                badge: '/images/icon-72.png',
-                                vibrate: [200, 100, 200],
-                                requireInteraction: true
                             },
                             fcmOptions: {
                                 link: `/?chatId=${chatId}`
