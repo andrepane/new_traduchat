@@ -42,11 +42,13 @@ messaging.onBackgroundMessage(async (payload) => {
     options: notificationOptions
   });
 
-  if (!shownMessages.has(msgId)) {
-    shownMessages.add(msgId);
-    const existing = await self.registration.getNotifications({ tag: msgId });
-    if (existing.length === 0) {
-      self.registration.showNotification(notificationTitle, notificationOptions);
+  if (!payload.notification) {
+    if (!shownMessages.has(msgId)) {
+      shownMessages.add(msgId);
+      const existing = await self.registration.getNotifications({ tag: msgId });
+      if (existing.length === 0) {
+        self.registration.showNotification(notificationTitle, notificationOptions);
+      }
     }
   }
 });
