@@ -79,7 +79,7 @@ exports.sendMessageNotification = functions.firestore
                     const notificationMessage = {
                         token: token,
                         notification: {
-                            title: `Nuevo mensaje de ${senderName}`,
+                            title: senderName,
                             body: message.text
                         },
                         data: {
