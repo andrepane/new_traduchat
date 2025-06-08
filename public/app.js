@@ -259,7 +259,7 @@ async function sendPushNotifications(chatData, messageText, chatId, messageId) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     token,
-                    title: senderName,
+                    title: `Nuevo mensaje de ${senderName}`,
                     body: messageText,
                     data: { chatId, messageId }
                 })
