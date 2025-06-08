@@ -1712,9 +1712,18 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
 
     const typingCollection = collection(db, 'chats', chatId, 'typingStatus');
     unsubscribeTypingStatus = onSnapshot(typingCollection, (typingSnap) => {
+        const now = Date.now();
+        const TTL = 5000; // Ignorar estados de escritura antiguos
+
         const typingUsers = typingSnap.docs
-            .map(doc => doc.data())
-            .filter(t => t.userId !== currentUser.uid);
+            .map(doc => {
+                const data = doc.data();
+                const ts = data.timestamp && typeof data.timestamp.toMillis === 'function'
+                    ? data.timestamp.toMillis()
+                    : 0;
+                return { ...data, _ts: ts };
+            })
+            .filter(t => t.userId !== currentUser.uid && (now - t._ts) < TTL);
 
         const currentLang = document.getElementById('languageSelect')?.value ||
                            document.getElementById('languageSelectMain')?.value ||
