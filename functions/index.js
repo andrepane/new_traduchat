@@ -78,11 +78,9 @@ exports.sendMessageNotification = functions.firestore
                 try {
                     const notificationMessage = {
                         token: token,
-                        notification: {
-                            title: senderName,
-                            body: message.text
-                        },
                         data: {
+                            title: senderName,
+                            body: message.text,
                             chatId: chatId,
                             messageId: context.params.messageId,
                             type: 'new_message'
