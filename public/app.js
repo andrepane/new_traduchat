@@ -74,7 +74,7 @@ startAuthListener(async (userData) => {
 
         resetChatState();
         hideLoadingScreen();
-        MainScreen();
+        showMainScreen();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
         handleChatFromUrl();
@@ -84,7 +84,7 @@ startAuthListener(async (userData) => {
         currentUser = null;
         resetChatState();
         hideLoadingScreen();
-        AuthScreen();
+        showAuthScreen();
     }
 });
 
