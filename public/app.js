@@ -77,6 +77,7 @@ startAuthListener(async (userData) => {
         MainScreen();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
+        handleChatFromUrl();
         initializeNotifications(); // Aquí está bien colocada
     } else {
         console.log('No hay usuario autenticado');
@@ -152,6 +153,9 @@ let chatsSnapshotVersion = 0; // Controlar versiones de snapshots para evitar du
 // Variables para grupos
 let selectedUsers = new Set();
 let isGroupCreationMode = false;
+
+// Controla que solo se abra un chat por parámetro una vez
+let chatFromUrlHandled = false;
 
 // Si se habilita, las notificaciones push se enviarán tanto
 // desde el cliente como desde las Cloud Functions, pudiendo
@@ -720,6 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (languageSelectMain) languageSelectMain.value = lang;
 
                 showMainScreen();
+                handleChatFromUrl();
             } catch (error) {
                 console.error('❌ Error cargando idioma:', error);
                 showError('errorGeneric');
@@ -872,9 +877,20 @@ function showMainScreen() {
             localStorage.setItem("selectedTheme", selectedTheme);
             
             // Actualizar tema e idioma
-            updateThemeAndLanguage(selectedTheme, currentLang);
-        });
+        updateThemeAndLanguage(selectedTheme, currentLang);
+    });
     }
+}
+
+// Abre automáticamente el chat indicado en la URL (si existe)
+function handleChatFromUrl() {
+    if (chatFromUrlHandled) return;
+    const params = new URLSearchParams(window.location.search);
+    const chatId = params.get('chatId');
+    if (chatId) {
+        openChat(chatId);
+    }
+    chatFromUrlHandled = true;
 }
 
 // Función para limpiar el estado del chat
@@ -2220,6 +2236,7 @@ window.addEventListener('load', () => {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         showMainScreen();
+        handleChatFromUrl();
     }
 });
 
