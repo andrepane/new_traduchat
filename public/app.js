@@ -457,12 +457,7 @@ loginBtn.addEventListener('click', async () => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             console.log('Login exitoso:', userCredential.user.uid);
 
-            const userDocRef = doc(db, 'users', userCredential.user.uid);
-            await setDoc(userDocRef, {
-                email: email,
-                username: username,
-                lastLogin: serverTimestamp()
-            }, { merge: true });
+            await updateUserData(userCredential.user, username, false);
 
             return;
         } catch (loginError) {
@@ -3214,6 +3209,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsLanguage = document.getElementById('settingsLanguage');
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+    const editUsernameBtn = document.getElementById('editUsernameBtn');
 
 
     // Función para actualizar los botones activos
@@ -3298,6 +3294,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateActiveButtons('btnChats');
                 currentListType = 'individual';
                 setupRealtimeChats(chatList, 'individual');
+            }
+        });
+    }
+
+    if (editUsernameBtn && settingsUsername) {
+        editUsernameBtn.addEventListener('click', async function() {
+            if (settingsUsername.hasAttribute('readonly')) {
+                settingsUsername.removeAttribute('readonly');
+                settingsUsername.focus();
+                editUsernameBtn.textContent = getTranslation('save', getUserLanguage());
+            } else {
+                const newUsername = settingsUsername.value.trim();
+                const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+                if (!usernameRegex.test(newUsername)) {
+                    showToast(getTranslation('errorUsernameChars', getUserLanguage()));
+                    return;
+                }
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    await updateUserData(currentUser, newUsername, false);
+                    settingsUsername.setAttribute('readonly', true);
+                    editUsernameBtn.textContent = getTranslation('edit', getUserLanguage());
+                }
             }
         });
     }

@@ -2253,6 +2253,22 @@ select:focus-visible {
   border: none;
 }
 
+.edit-btn {
+  margin-top: 5px;
+  padding: 6px 12px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.edit-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .app-version {
   font-size: 0.9rem;
   color: var(--color-text);
