@@ -52,7 +52,8 @@ import { initializeNotifications } from './modules/notificaciones.js';
 
 import {
     getUserLanguage,
-    getCurrentUser
+    getCurrentUser,
+    setCurrentUser
 } from './modules/state.js';
 
 
@@ -457,13 +458,7 @@ loginBtn.addEventListener('click', async () => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             console.log('Login exitoso:', userCredential.user.uid);
 
-            const userDocRef = doc(db, 'users', userCredential.user.uid);
-            await setDoc(userDocRef, {
-                email: email,
-                username: username,
-                lastLogin: serverTimestamp()
-            }, { merge: true });
-
+            await updateUserData(userCredential.user, username, false, true);
             return;
         } catch (loginError) {
             console.log('Fallo al iniciar sesión:', loginError.code);
@@ -515,29 +510,27 @@ function updateUITranslations() {
 
 
 // Función auxiliar para actualizar datos de usuario
-async function updateUserData(user, username, isNewUser) {
+async function updateUserData(user, username, isNewUser, signOutOnConflict = false) {
     
     try {
-        // Verificar si el nombre de usuario está disponible
         const userDocRef = doc(db, 'users', user.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-            const currentData = userDoc.data();
-            if (currentData.username !== username) {
-                // Verificar si el nuevo nombre de usuario está disponible
-                const usernameQuery = query(
-                    collection(db, 'users'),
-                    where('username', '==', username)
-                );
-                const usernameSnapshot = await getDocs(usernameQuery);
-                
-                if (!usernameSnapshot.empty) {
-                    await signOut(auth); // Cerrar sesión si el nombre de usuario no está disponible
-                    showError('errorUsernameInUse');
-                    return;
-                }
+
+        // Verificar si el nombre de usuario está disponible
+        const usernameQuery = query(
+            collection(db, 'users'),
+            where('username', '==', username)
+        );
+        const usernameSnapshot = await getDocs(usernameQuery);
+        const usernameTaken = usernameSnapshot.docs.some(doc => doc.id !== user.uid);
+
+        if (usernameTaken) {
+            if (signOutOnConflict) {
+                await signOut(auth);
+                showError('errorUsernameInUse');
+            } else {
+                showToast(getTranslation('errorUsernameChange', getUserLanguage()));
             }
+            return;
         }
 
         // Preparar datos del usuario
@@ -551,6 +544,8 @@ async function updateUserData(user, username, isNewUser) {
 
         if (isNewUser) {
             userData.createdAt = serverTimestamp();
+        } else {
+            userData.lastLogin = serverTimestamp();
         }
 
         console.log('Guardando datos en Firestore para usuario:', user.uid);
@@ -567,10 +562,17 @@ async function updateUserData(user, username, isNewUser) {
         }
         console.log('Documento guardado:', savedDoc.data());
 
+        // Actualizar estado local
+        currentUser = { ...user, username };
+        setCurrentUser(currentUser);
+
         // Actualizar la interfaz
         localStorage.setItem('userLanguage', userLanguage);
+        if (!signOutOnConflict && !isNewUser) {
+            showToast(getTranslation('usernameUpdated', getUserLanguage()));
+        }
         showMainScreen();
-        updateUserInfo({...user, username});
+        updateUserInfo({ ...user, username });
         setupRealtimeChats(chatList, 'individual');
     } catch (error) {
         console.error('Error al actualizar datos del usuario:', error);
@@ -583,6 +585,21 @@ async function updateUserData(user, username, isNewUser) {
             throw error;
         }
     }
+}
+
+async function changeUsername(newUsername) {
+    const settingsUsername = document.getElementById('settingsUsername');
+    const currentUser = getCurrentUser();
+    if (!currentUser || !settingsUsername) return;
+
+    const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+    if (!usernameRegex.test(newUsername)) {
+        showToast(getTranslation('errorUsernameChars', getUserLanguage()));
+        settingsUsername.value = currentUser.username || currentUser.email.split('@')[0];
+        return;
+    }
+
+    await updateUserData(currentUser, newUsername, false, false);
 }
 
 // Función para mostrar la pantalla de autenticación
@@ -3214,6 +3231,50 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsLanguage = document.getElementById('settingsLanguage');
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+    const editUsernameBtn = document.getElementById('editUsernameBtn');
+
+    if (settingsUsername && editUsernameBtn) {
+        let original;
+
+        function startEditing() {
+            original = settingsUsername.value;
+            settingsUsername.removeAttribute('readonly');
+            settingsUsername.classList.remove('readonly-input');
+            settingsUsername.focus();
+            editUsernameBtn.innerHTML = '<i class="fas fa-check"></i>';
+            const label = getTranslation('save', getUserLanguage());
+            editUsernameBtn.setAttribute('aria-label', label);
+            editUsernameBtn.setAttribute('title', label);
+        }
+
+        editUsernameBtn.addEventListener('click', () => {
+            if (settingsUsername.hasAttribute('readonly')) {
+                startEditing();
+            } else {
+                settingsUsername.blur();
+            }
+        });
+
+        settingsUsername.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                settingsUsername.blur();
+            }
+        });
+
+        settingsUsername.addEventListener('blur', () => {
+            if (!settingsUsername.hasAttribute('readonly')) {
+                settingsUsername.classList.add('readonly-input');
+                settingsUsername.setAttribute('readonly', true);
+                editUsernameBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                const label = getTranslation('edit', getUserLanguage());
+                editUsernameBtn.setAttribute('aria-label', label);
+                editUsernameBtn.setAttribute('title', label);
+                if (settingsUsername.value.trim() !== original) {
+                    changeUsername(settingsUsername.value.trim());
+                }
+            }
+        });
+    }
 
 
     // Función para actualizar los botones activos
@@ -3263,12 +3324,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 chatList.classList.add('hidden');
                 if (groupsPage) groupsPage.classList.remove('active');
                 updateActiveButtons('btnSettings');
-                
+
                 // Actualizar el nombre de usuario en ajustes
                 if (settingsUsername && currentUser) {
                     const name = currentUser.username || currentUser.email?.split('@')[0] || 'Usuario';
                     settingsUsername.value = name;
                     settingsUsername.setAttribute('readonly', true);
+                }
+                if (editUsernameBtn) {
+                    const label = getTranslation('edit', getUserLanguage());
+                    editUsernameBtn.setAttribute('aria-label', label);
+                    editUsernameBtn.setAttribute('title', label);
+                    editUsernameBtn.innerHTML = '<i class="fas fa-edit"></i>';
                 }
             }
         });

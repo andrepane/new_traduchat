@@ -2253,6 +2253,17 @@ select:focus-visible {
   border: none;
 }
 
+.settings-input-wrap {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.settings-edit-btn {
+  width: 32px;
+  height: 32px;
+}
+
 .app-version {
   font-size: 0.9rem;
   color: var(--color-text);
