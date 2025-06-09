@@ -166,12 +166,22 @@
                 <i class="fas fa-user"></i>
                 <div class="settings-item-content">
                   <label data-translate="username">Nombre de usuario</label>
-                  <input
-                    type="text"
-                    id="settingsUsername"
-                    readonly
-                    class="readonly-input"
-                  />
+                  <div class="settings-input-wrap">
+                    <input
+                      type="text"
+                      id="settingsUsername"
+                      readonly
+                      class="readonly-input"
+                    />
+                    <button
+                      id="editUsernameBtn"
+                      class="icon-button settings-edit-btn"
+                      aria-label="Editar"
+                      title="Editar"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
