@@ -68,9 +68,8 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                                 ...extraData
                             },
                             webpush: {
-                                notification: {
-                                    icon: '/images/icon-192.png',
-                                    badge: '/images/icon-72x72.png'
+                                fcmOptions: {
+                                    link: extraData?.chatId ? `/?chatId=${extraData.chatId}` : '/'
                                 }
                             }
                         }
@@ -91,7 +90,6 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                     data: {
                         title,
                         body,
-                        icon: '/images/icon-192.png',
                         ...extraData
                     }
                 })

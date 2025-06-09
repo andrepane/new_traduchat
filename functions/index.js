@@ -77,32 +77,15 @@ exports.sendMessageNotification = functions.firestore
             const results = await Promise.all(tokens.map(async (token) => {
                 try {
                     const notificationMessage = {
-                        token: token,
+                        token,
                         data: {
                             title: senderName,
                             body: message.text,
-                            chatId: chatId,
+                            chatId,
                             messageId: context.params.messageId,
                             type: 'new_message'
                         },
-                        android: {
-                            priority: 'high',
-                            notification: {
-                                clickAction: 'FLUTTER_NOTIFICATION_CLICK',
-                                priority: 'high',
-                                sound: 'default'
-                            }
-                        },
                         webpush: {
-                            headers: {
-                                Urgency: 'high'
-                            },
-                            notification: {
-                                icon: '/images/icon-192.png',
-                                badge: '/images/icon-72.png',
-                                vibrate: [200, 100, 200],
-                                requireInteraction: true
-                            },
                             fcmOptions: {
                                 link: `/?chatId=${chatId}`
                             }
