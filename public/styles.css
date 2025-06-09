@@ -436,6 +436,7 @@ body {
       100% - var(--header-height) - var(--message-input-height) -
         var(--keyboard-height)
     );
+    padding-top: calc(var(--header-height) + 20px);
   }
 
   .keyboard-open .message-input {
@@ -866,6 +867,12 @@ body {
   }
 
   .chat-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 10;
     padding-top: max(10px, var(--safe-area-top));
   }
 
@@ -875,6 +882,7 @@ body {
 
   .messages-list {
     height: calc(100% - var(--header-height) - var(--message-input-height));
+    padding-top: calc(var(--header-height) + 20px);
     padding-bottom: max(20px, var(--safe-area-bottom));
   }
 }
@@ -892,6 +900,7 @@ body {
       100% - var(--header-height) - var(--message-input-height) -
         var(--keyboard-height)
     );
+    padding-top: calc(var(--header-height) + 20px);
   }
 
   .keyboard-open .message-input {
@@ -1745,6 +1754,7 @@ select:focus-visible {
     100vh - var(--header-height) - var(--message-input-height) -
       var(--keyboard-height, 0px)
   );
+  padding-top: calc(var(--header-height) + 20px);
 }
 
 .keyboard-open .message-input {
