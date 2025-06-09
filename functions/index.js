@@ -120,4 +120,40 @@ exports.sendMessageNotification = functions.firestore
             console.error('❌ Error general al enviar notificaciones:', error);
             return { error: error.message };
         }
-    }); 
+    });
+
+exports.incrementUnreadCount = functions.firestore
+    .document('chats/{chatId}/messages/{messageId}')
+    .onCreate(async (snap, context) => {
+        const message = snap.data();
+        const chatId = context.params.chatId;
+        const senderId = message.senderId;
+
+        if (!senderId) {
+            console.warn('Mensaje sin senderId, se omite actualización de unreadCount');
+            return null;
+        }
+
+        const chatRef = admin.firestore().collection('chats').doc(chatId);
+
+        await admin.firestore().runTransaction(async (tx) => {
+            const chatDoc = await tx.get(chatRef);
+            if (!chatDoc.exists) {
+                console.warn('Chat no encontrado para actualizar unreadCount:', chatId);
+                return;
+            }
+
+            const data = chatDoc.data();
+            const counts = data.unreadCounts || {};
+
+            (data.participants || []).forEach(uid => {
+                if (uid !== senderId) {
+                    counts[uid] = (counts[uid] || 0) + 1;
+                }
+            });
+
+            tx.update(chatRef, { unreadCounts: counts });
+        });
+
+        return null;
+    });

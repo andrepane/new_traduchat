@@ -26,8 +26,6 @@ import {
     startAfter,
     writeBatch,
     arrayUnion,
-    Timestamp,
-    getCountFromServer,
     deleteDoc
 } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
@@ -1084,8 +1082,6 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                     return;
                 }
 
-                const readTimes = getChatReadTimes();
-
                 const chats = await Promise.all(snapshot.docs.map(async docSnap => {
                     const data = docSnap.data();
                     let name = '';
@@ -1103,22 +1099,8 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                     }
 
                     const lastMsgTime = data.lastMessageTime ? data.lastMessageTime.toDate() : new Date(0);
-                    const unread = lastMsgTime.getTime() > (readTimes[docSnap.id] || 0);
-
-                    let unreadCount = 0;
-                    if (unread) {
-                        try {
-                            const countQuery = query(
-                                collection(db, 'chats', docSnap.id, 'messages'),
-                                where('timestamp', '>', Timestamp.fromMillis(readTimes[docSnap.id] || 0)),
-                                where('senderId', '!=', currentUser.uid)
-                            );
-                            const countSnap = await getCountFromServer(countQuery);
-                            unreadCount = countSnap.data().count || 0;
-                        } catch (err) {
-                            console.error('Error counting unread messages:', err);
-                        }
-                    }
+                    const unreadCount = (data.unreadCounts && data.unreadCounts[currentUser.uid]) || 0;
+                    const unread = unreadCount > 0;
 
                     return {
                         id: docSnap.id,
@@ -1925,7 +1907,7 @@ async function loadMoreMessages(chatId) {
 }
 
 // Guardar la marca de lectura de un chat
-function markChatAsRead(chatId) {
+async function markChatAsRead(chatId) {
     try {
         const times = JSON.parse(localStorage.getItem('chatReadTimes') || '{}');
         times[chatId] = Date.now();
@@ -1941,6 +1923,17 @@ function markChatAsRead(chatId) {
         chatEl.classList.remove('unread');
         const badge = chatEl.querySelector('.unread-badge');
         if (badge) badge.remove();
+    }
+
+    const user = getCurrentUser();
+    if (user) {
+        try {
+            await updateDoc(doc(db, 'chats', chatId), {
+                [`unreadCounts.${user.uid}`]: 0
+            });
+        } catch (e) {
+            console.error('Error al actualizar unreadCount:', e);
+        }
     }
 }
 
