@@ -77,6 +77,7 @@ startAuthListener(async (userData) => {
         MainScreen();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
+        setupChatRequests(requestsListEl);
         initializeNotifications(); // Aquí está bien colocada
     } else {
         console.log('No hay usuario autenticado');
@@ -123,6 +124,8 @@ const searchInput = document.getElementById('searchContacts');
 const newChatBtn = document.getElementById('newChat');
 const userInfo = document.getElementById('userInfo');
 const currentChatInfo = document.getElementById('currentChatInfo');
+const requestsListEl = document.getElementById('requestsList');
+const requestsSection = document.getElementById('requestsSection');
 
 const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
 
@@ -574,6 +577,7 @@ async function updateUserData(user, username, isNewUser, signOutOnConflict = fal
         showMainScreen();
         updateUserInfo({ ...user, username });
         setupRealtimeChats(chatList, 'individual');
+        setupChatRequests(requestsListEl);
     } catch (error) {
         console.error('Error al actualizar datos del usuario:', error);
         if (error.code === 'permission-denied') {
@@ -581,6 +585,7 @@ async function updateUserData(user, username, isNewUser, signOutOnConflict = fal
             showMainScreen();
             updateUserInfo({...user, username});
             setupRealtimeChats(chatList, 'individual');
+            setupChatRequests(requestsListEl);
         } else {
             throw error;
         }
@@ -720,6 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (languageSelectMain) languageSelectMain.value = lang;
 
                 showMainScreen();
+                setupChatRequests(requestsListEl);
             } catch (error) {
                 console.error('❌ Error cargando idioma:', error);
                 showError('errorGeneric');
@@ -1322,7 +1328,25 @@ function displaySearchResults(users, showGroupButton = false) {
     });
 }
 
-// Función para crear un nuevo chat
+// Enviar solicitud de chat
+async function sendChatRequest(otherUserId) {
+    console.log('Enviando solicitud de chat a:', otherUserId);
+    const currentUser = getCurrentUser();
+    if (!currentUser || !otherUserId) return;
+    try {
+        const reqRef = doc(db, 'chatRequests', otherUserId, currentUser.uid);
+        await setDoc(reqRef, {
+            estado: 'pendiente',
+            timestamp: serverTimestamp()
+        });
+        showToast(getTranslation('requestSent', getUserLanguage()));
+    } catch (error) {
+        console.error('Error al enviar solicitud:', error);
+        showError('errorCreateChat');
+    }
+}
+
+// Función para crear un nuevo chat (o enviar solicitud)
 async function createChat(otherUserId) {
     console.log('Creando chat con usuario:', otherUserId);
     try {
@@ -1362,19 +1386,9 @@ async function createChat(otherUserId) {
             return;
         }
 
-        console.log('Creando nuevo chat individual...');
-        // Si no existe, crear nuevo chat individual
-        const newChatRef = await addDoc(collection(db, 'chats'), {
-            participants: [currentUser.uid, otherUserId],
-            type: 'individual',
-            createdAt: serverTimestamp(),
-            lastMessage: null,
-            lastMessageTime: null
-        });
+        // Enviar solicitud si no existe chat
+        await sendChatRequest(otherUserId);
 
-        console.log('Nuevo chat individual creado:', newChatRef.id);
-        openChat(newChatRef.id);
-        
         // En móvil, ocultar la lista de chats y mostrar el chat
         if (window.innerWidth <= 768) {
             toggleChatList(false);
@@ -1382,6 +1396,115 @@ async function createChat(otherUserId) {
     } catch (error) {
         console.error('Error al crear chat:', error);
         showError('errorCreateChat');
+    }
+}
+
+let unsubscribeRequests = null;
+function setupChatRequests(container = requestsListEl) {
+    if (unsubscribeRequests) unsubscribeRequests();
+    if (!container) return;
+    container.innerHTML = '';
+    const user = getCurrentUser();
+    if (!user) return;
+
+    const chatReqRef = collection(db, 'chatRequests', user.uid);
+    const groupReqRef = collection(db, 'groupInvites', user.uid);
+    unsubscribeRequests = onSnapshot(chatReqRef, async chatSnap => {
+        container.innerHTML = '';
+        const groupSnap = await getDocs(groupReqRef);
+        if (chatSnap.empty && groupSnap.empty) {
+            requestsSection.classList.add('hidden');
+            return;
+        }
+        requestsSection.classList.remove('hidden');
+        for (const docSnap of chatSnap.docs) {
+            const data = docSnap.data();
+            if (data.estado !== 'pendiente') continue;
+            const senderId = docSnap.id;
+            const senderDoc = await getDoc(doc(db, 'users', senderId));
+            const name = senderDoc.exists() ? (senderDoc.data().username || senderDoc.data().email.split('@')[0]) : senderId;
+            const item = document.createElement('div');
+            item.className = 'request-item';
+            item.innerHTML = `
+                <div class="request-info"><div class="request-name">${name}</div></div>
+                <div class="request-actions">
+                    <button class="accept" data-id="${senderId}">${getTranslation('acceptRequest', getUserLanguage())}</button>
+                    <button class="reject" data-id="${senderId}">${getTranslation('rejectRequest', getUserLanguage())}</button>
+                </div>`;
+            const [acceptBtn, rejectBtn] = item.querySelectorAll('button');
+            acceptBtn.addEventListener('click', () => acceptChatRequest(senderId));
+            rejectBtn.addEventListener('click', () => rejectChatRequest(senderId));
+            container.appendChild(item);
+        }
+        for (const docSnap of groupSnap.docs) {
+            const data = docSnap.data();
+            if (data.estado !== 'pendiente') continue;
+            const groupId = docSnap.id;
+            const groupName = data.groupName || 'Grupo';
+            const item = document.createElement('div');
+            item.className = 'request-item';
+            item.innerHTML = `
+                <div class="request-info"><div class="request-name">${groupName}</div></div>
+                <div class="request-actions">
+                    <button class="accept" data-id="${groupId}">${getTranslation('acceptRequest', getUserLanguage())}</button>
+                    <button class="reject" data-id="${groupId}">${getTranslation('rejectRequest', getUserLanguage())}</button>
+                </div>`;
+            const [acceptBtn, rejectBtn] = item.querySelectorAll('button');
+            acceptBtn.addEventListener('click', () => acceptGroupInvite(groupId));
+            rejectBtn.addEventListener('click', () => rejectGroupInvite(groupId));
+            container.appendChild(item);
+        }
+    });
+}
+
+async function acceptChatRequest(senderId) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    try {
+        const chatRef = await addDoc(collection(db, 'chats'), {
+            participants: [currentUser.uid, senderId],
+            type: 'individual',
+            createdAt: serverTimestamp(),
+            lastMessage: null,
+            lastMessageTime: null
+        });
+        await updateDoc(doc(db, 'chatRequests', currentUser.uid, senderId), { estado: 'aceptada' });
+        openChat(chatRef.id);
+    } catch (err) {
+        console.error('Error al aceptar solicitud:', err);
+    }
+}
+
+async function rejectChatRequest(senderId) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    try {
+        await updateDoc(doc(db, 'chatRequests', currentUser.uid, senderId), { estado: 'rechazada' });
+    } catch (err) {
+        console.error('Error al rechazar solicitud:', err);
+    }
+}
+
+async function acceptGroupInvite(groupId) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    try {
+        const chatRef = doc(db, 'chats', groupId);
+        await updateDoc(chatRef, { participants: arrayUnion(currentUser.uid) });
+        await updateDoc(doc(db, 'groupInvites', currentUser.uid, groupId), { estado: 'aceptada' });
+        openChat(groupId);
+    } catch (err) {
+        console.error('Error al aceptar invitación:', err);
+    }
+}
+
+async function rejectGroupInvite(groupId) {
+    const currentUser = getCurrentUser();
+    if (!currentUser) return;
+    try {
+        await updateDoc(doc(db, 'groupInvites', currentUser.uid, groupId), { estado: 'rechazada' });
+    } catch (err) {
+        console.error('Error al rechazar invitación:', err);
     }
 }
 
@@ -2220,6 +2343,7 @@ window.addEventListener('load', () => {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         showMainScreen();
+        setupChatRequests(requestsListEl);
     }
 });
 
@@ -2737,19 +2861,11 @@ async function createGroupChat(groupName, participants) {
     }
 
     try {
-        // Añadir el usuario actual a los participantes
-        const allParticipants = [
-            currentUser.uid,
-            ...participants.map(p => p.id)
-        ];
-
-        console.log('Todos los participantes:', allParticipants);
-
-        // Crear el documento del grupo
+        // Crear el documento del grupo solo con el creador
         const groupChatRef = await addDoc(collection(db, 'chats'), {
             name: groupName,
             type: 'group',
-            participants: allParticipants,
+            participants: [currentUser.uid],
             createdBy: currentUser.uid,
             createdAt: serverTimestamp(),
             lastMessage: null,
@@ -2757,6 +2873,16 @@ async function createGroupChat(groupName, participants) {
         });
 
         console.log('Grupo creado exitosamente:', groupChatRef.id);
+
+        // Enviar invitaciones a los demás participantes
+        for (const p of participants) {
+            await setDoc(doc(db, 'groupInvites', p.id, groupChatRef.id), {
+                groupName,
+                from: currentUser.uid,
+                estado: 'pendiente',
+                timestamp: serverTimestamp()
+            });
+        }
 
         // Crear mensaje de sistema inicial
         const lang = getUserLanguage();
@@ -2877,26 +3003,16 @@ async function addMembersToGroup(chatId, members) {
     const lang = getUserLanguage();
 
     try {
-        const chatRef = doc(db, 'chats', chatId);
-        await updateDoc(chatRef, {
-            participants: arrayUnion(...members.map(m => m.id))
-        });
-
-        const memberNames = await Promise.all(members.map(async m => {
-            const docSnap = await getDoc(doc(db, 'users', m.id));
-            const data = docSnap.exists() ? docSnap.data() : null;
-            return data?.username || (data?.email || m.email).split('@')[0];
-        }));
-
-        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-        const senderName = userDoc.exists() ? (userDoc.data().username || userDoc.data().email.split('@')[0]) : 'Usuario';
-
-        await addDoc(collection(db, 'chats', chatId, 'messages'), {
-            text: `${senderName} ${getTranslation('addedMembers', lang)} ${memberNames.join(', ')}`,
-            type: 'system',
-            timestamp: serverTimestamp(),
-            senderId: 'system'
-        });
+        const chatSnap = await getDoc(doc(db, 'chats', chatId));
+        const groupName = chatSnap.exists() ? chatSnap.data().name : '';
+        for (const m of members) {
+            await setDoc(doc(db, 'groupInvites', m.id, chatId), {
+                groupName,
+                from: currentUser.uid,
+                estado: 'pendiente',
+                timestamp: serverTimestamp()
+            });
+        }
     } catch (error) {
         console.error('Error al agregar miembros:', error);
         throw error;

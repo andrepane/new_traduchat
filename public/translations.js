@@ -74,6 +74,10 @@ const translations = {
         deleteChat: 'Borrar chat',
         deleteChatConfirm: '¿Estás seguro de que quieres borrar este chat?',
         chatDeleted: 'Chat eliminado correctamente',
+        pendingRequests: 'Solicitudes pendientes',
+        acceptRequest: 'Aceptar',
+        rejectRequest: 'Rechazar',
+        requestSent: 'Solicitud enviada',
         
         // Notificaciones
         newMessageFrom: 'Nuevo mensaje de {user}',
@@ -185,6 +189,10 @@ const translations = {
         deleteChat: 'Delete chat',
         deleteChatConfirm: 'Are you sure you want to delete this chat?',
         chatDeleted: 'Chat successfully deleted',
+        pendingRequests: 'Pending requests',
+        acceptRequest: 'Accept',
+        rejectRequest: 'Reject',
+        requestSent: 'Request sent',
         
         // Notifications
         newMessageFrom: 'New message from {user}',
@@ -299,6 +307,10 @@ const translations = {
         deleteChat: 'Elimina chat',
         deleteChatConfirm: 'Sei sicuro di voler eliminare questa chat?',
         chatDeleted: 'Chat eliminata con successo',
+        pendingRequests: 'Richieste in sospeso',
+        acceptRequest: 'Accetta',
+        rejectRequest: 'Rifiuta',
+        requestSent: 'Richiesta inviata',
         
         // Notifiche
         newMessageFrom: 'Nuovo messaggio da {user}',

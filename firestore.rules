@@ -53,5 +53,15 @@ service cloud.firestore {
                            .data.participants.hasAny([request.auth.uid]);
       }
     }
+
+    // Solicitudes de chat
+    match /chatRequests/{receiverId}/{senderId} {
+      allow create, read, update, delete: if isAuthenticated() && (request.auth.uid == receiverId || request.auth.uid == senderId);
+    }
+
+    // Invitaciones a grupos
+    match /groupInvites/{userId}/{groupId} {
+      allow create, read, update, delete: if isAuthenticated() && request.auth.uid == userId;
+    }
   }
 }

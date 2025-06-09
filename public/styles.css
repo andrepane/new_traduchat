@@ -1510,6 +1510,46 @@ select:focus-visible {
   font-size: 1rem;
 }
 
+.request-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-bg);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+}
+
+.request-item .request-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.request-item .request-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.request-actions button {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.request-actions .accept {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.request-actions .reject {
+  background: #e11d48;
+  color: #fff;
+}
+
 /* Ajustes móviles para resultados de búsqueda */
 @media (max-width: 768px) {
   .chat-item.search-result {
