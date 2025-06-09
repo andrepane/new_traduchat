@@ -109,6 +109,8 @@ const translations = {
         theme: 'Tema',
         about: 'Acerca de',
         developer: 'Desarrollado por Andrea Panepinto',
+        edit: 'Editar',
+        save: 'Guardar',
     },
     en: {
         // Authentication
@@ -218,6 +220,8 @@ const translations = {
         theme: 'Theme',
         about: 'About',
         developer: 'Developed by Andrea Panepinto',
+        edit: 'Edit',
+        save: 'Save',
     },
     it: {
         // Autenticazione
@@ -242,6 +246,7 @@ const translations = {
         errorPassword: 'La password deve contenere almeno 6 caratteri',
         errorInvalidEmail: 'Email non valida',
         errorEmailInUse: 'Questa email è già registrata',
+        errorUsernameInUse: 'Questo nome utente è già in uso',
         errorNetwork: 'Errore di connessione. Verifica la tua connessione internet',
         errorGeneric: 'Si è verificato un errore',
         errorSendingCode: 'Errore nell\'invio del codice: {0}',
@@ -325,6 +330,8 @@ const translations = {
         theme: 'Tema',
         about: 'Informazioni',
         developer: 'Sviluppato da Andrea Panepinto',
+        edit: 'Modifica',
+        save: 'Salva',
     }
 };
 

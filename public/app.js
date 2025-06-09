@@ -457,22 +457,20 @@ loginBtn.addEventListener('click', async () => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             console.log('Login exitoso:', userCredential.user.uid);
 
-            const userDocRef = doc(db, 'users', userCredential.user.uid);
-            await setDoc(userDocRef, {
-                email: email,
-                username: username,
-                lastLogin: serverTimestamp()
-            }, { merge: true });
-
-            return;
+            const updated = await updateUserData(userCredential.user, username, false);
+            if (updated) {
+                return;
+            }
         } catch (loginError) {
             console.log('Fallo al iniciar sesión:', loginError.code);
 
             if (loginError.code === 'auth/user-not-found' || loginError.code === 'auth/invalid-credential') {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-                await updateUserData(userCredential.user, username, true);
+                const created = await updateUserData(userCredential.user, username, true);
                 console.log('Usuario creado correctamente:', userCredential.user.uid);
-                return;
+                if (created) {
+                    return;
+                }
             } else if (loginError.code === 'auth/wrong-password') {
                 showError('errorPassword');
             } else {
@@ -525,18 +523,23 @@ async function updateUserData(user, username, isNewUser) {
         if (userDoc.exists()) {
             const currentData = userDoc.data();
             if (currentData.username !== username) {
-                // Verificar si el nuevo nombre de usuario está disponible
                 const usernameQuery = query(
                     collection(db, 'users'),
                     where('username', '==', username)
                 );
                 const usernameSnapshot = await getDocs(usernameQuery);
-                
-                if (!usernameSnapshot.empty) {
-                    await signOut(auth); // Cerrar sesión si el nombre de usuario no está disponible
+                const isTaken = usernameSnapshot.docs.some(doc => doc.id !== user.uid);
+                if (isTaken) {
                     showError('errorUsernameInUse');
-                    return;
+                    return false;
                 }
+            }
+        } else {
+            const usernameQuery = query(collection(db, 'users'), where('username', '==', username));
+            const usernameSnapshot = await getDocs(usernameQuery);
+            if (!usernameSnapshot.empty) {
+                showError('errorUsernameInUse');
+                return false;
             }
         }
 
@@ -572,6 +575,7 @@ async function updateUserData(user, username, isNewUser) {
         showMainScreen();
         updateUserInfo({...user, username});
         setupRealtimeChats(chatList, 'individual');
+        return true;
     } catch (error) {
         console.error('Error al actualizar datos del usuario:', error);
         if (error.code === 'permission-denied') {
@@ -582,6 +586,7 @@ async function updateUserData(user, username, isNewUser) {
         } else {
             throw error;
         }
+        return false;
     }
 }
 
@@ -3214,6 +3219,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const settingsLanguage = document.getElementById('settingsLanguage');
     const settingsTheme = document.getElementById('settingsTheme');
     const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+    const editUsernameBtn = document.getElementById('editUsernameBtn');
 
 
     // Función para actualizar los botones activos
@@ -3298,6 +3304,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateActiveButtons('btnChats');
                 currentListType = 'individual';
                 setupRealtimeChats(chatList, 'individual');
+            }
+        });
+    }
+
+    if (editUsernameBtn && settingsUsername) {
+        editUsernameBtn.addEventListener('click', async function() {
+            if (settingsUsername.hasAttribute('readonly')) {
+                settingsUsername.removeAttribute('readonly');
+                settingsUsername.focus();
+                editUsernameBtn.textContent = getTranslation('save', getUserLanguage());
+            } else {
+                const newUsername = settingsUsername.value.trim();
+                const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
+                if (!usernameRegex.test(newUsername)) {
+                    showToast(getTranslation('errorUsernameChars', getUserLanguage()));
+                    return;
+                }
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    const updated = await updateUserData(currentUser, newUsername, false);
+                    if (updated) {
+                        settingsUsername.setAttribute('readonly', true);
+                        editUsernameBtn.textContent = getTranslation('edit', getUserLanguage());
+                    }
+                }
             }
         });
     }
