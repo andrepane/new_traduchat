@@ -44,7 +44,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { translations, getTranslation, translateInterface, animateTitleWave, getTypingText, getTypingMessage } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
-import { auth } from './modules/firebase.js'; // Esto lo importa de forma limpia y segura
+import { auth, db } from './modules/firebase.js'; // Importamos también la instancia de Firestore
 import { state } from './modules/state.js';
 import { startAuthListener, setUserLanguage } from './modules/auth.js';
 
