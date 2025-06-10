@@ -400,7 +400,7 @@ function translateInterface(language) {
     console.log('✅ Traducción de interfaz completada');
 }
 
-function animateTitleWave() {
+function animateTitleWave({ colors = [], heights = [] } = {}) {
     const h1 = document.getElementById("titulo-wave");
     if (h1) {
         const text = h1.textContent;
@@ -409,6 +409,12 @@ function animateTitleWave() {
             const span = document.createElement("span");
             span.textContent = char === ' ' ? '\u00A0' : char;
             span.style.setProperty('--i', i);
+            if (colors[i]) {
+                span.style.color = colors[i];
+            }
+            if (heights[i]) {
+                span.style.setProperty('--wave-height', heights[i]);
+            }
             h1.appendChild(span);
         });
     }

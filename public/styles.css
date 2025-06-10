@@ -978,6 +978,7 @@ body {
   color: var(--color-primary-dark);
   font-weight: 700;
   text-shadow: 0 2px 18px rgba(30, 233, 142, 0.27);
+  --wave-height: 10px;
 }
 
 #titulo-wave span {
@@ -1247,7 +1248,7 @@ body {
     transform: translateY(0);
   }
   30% {
-    transform: translateY(-10px);
+    transform: translateY(calc(var(--wave-height, 10px) * -1));
   }
 }
 
@@ -1293,6 +1294,7 @@ body {
 
   #titulo-wave {
     font-size: 1.8rem;
+    --wave-height: 8px;
   }
 
   .auth-container {
