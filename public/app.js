@@ -2236,7 +2236,9 @@ window.addEventListener('load', () => {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         showMainScreen();
-        handleChatFromUrl();
+        // ⚠️ No abrimos el chat aún. Esperamos a que Firebase
+        // restaure la autenticación real para evitar errores de
+        // permisos al cargar mensajes.
     }
 });
 
