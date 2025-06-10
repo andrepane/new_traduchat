@@ -1247,7 +1247,7 @@ body {
     transform: translateY(0) rotate(0);
   }
   25% {
-    transform: translateY(-2.75rem) rotate(-1turn);
+    transform: translateY(-1.5rem) rotate(-1turn);
   }
   45% {
     transform: translateY(0.25rem) rotate(-1turn);
@@ -1302,6 +1302,7 @@ body {
 
   #titulo-wave {
     font-size: 1.8rem;
+    text-shadow: 0 1px 6px rgba(30, 233, 142, 0.15);
   }
 
   .auth-container {
@@ -1330,6 +1331,10 @@ body {
   #authScreen {
     padding-top: var(--safe-area-top);
     padding-bottom: var(--safe-area-bottom);
+  }
+
+  #titulo-wave {
+    text-shadow: 0 1px 6px rgba(30, 233, 142, 0.15);
   }
 }
 
