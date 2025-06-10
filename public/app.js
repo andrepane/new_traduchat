@@ -66,48 +66,6 @@ window.addEventListener('languageChanged', (e) => {
     userLanguage = e.detail;
 });
 
-startAuthListener(async (userData) => {
-    if (userData) {
-        console.log('Usuario autenticado:', userData.email);
-        console.log('User ID:', userData.uid);
-        currentUser = userData;
-
-        resetChatState();
-        hideLoadingScreen();
-        showMainScreen();
-        updateUserInfo(userData);
-        setupRealtimeChats(chatList, 'individual');
-        if (pendingChatId && !chatFromUrlHandled) {
-            openChat(pendingChatId);
-            chatFromUrlHandled = true;
-            pendingChatId = null;
-        }
-        initializeNotifications(); // Aquí está bien colocada
-    } else {
-        console.log('No hay usuario autenticado');
-        currentUser = null;
-        resetChatState();
-        hideLoadingScreen();
-        showAuthScreen();
-    }
-});
-
-
-
-
-
-
-// Verificar inicialización de Firebase
-
-// Obtener la instancia de Firebase Messaging
-let messaging;
-try {
-    messaging = window.messaging;
-    console.log('Firebase Messaging obtenido correctamente');
-} catch (error) {
-    console.log('Firebase Messaging no está soportado en este navegador');
-}
-
 // Referencias a elementos del DOM
 const authScreen = document.getElementById('authScreen');
 const mainScreen = document.getElementById('mainScreen');
@@ -166,18 +124,54 @@ let pendingChatId = null;
 const initialParams = new URLSearchParams(window.location.search);
 pendingChatId = initialParams.get('chatId');
 
-// Si se habilita, las notificaciones push se enviarán tanto
-// desde el cliente como desde las Cloud Functions, pudiendo
-// producir duplicados. Mantener en "true" para forzar los
-// envíos manuales de notificación.
-// Se vuelve a habilitar para asegurar envíos desde el cliente cuando
-// las Cloud Functions no estén disponibles. Las notificaciones se
-// deduplican por `messageId` en el Service Worker.
+// Se habilitan las notificaciones manuales por defecto
 const manualPushNotifications = true;
-
 
 // Variables para grabación de audio
 let isRecording = false;
+
+startAuthListener(async (userData) => {
+    if (userData) {
+        console.log('Usuario autenticado:', userData.email);
+        console.log('User ID:', userData.uid);
+        currentUser = userData;
+
+        resetChatState();
+        hideLoadingScreen();
+        showMainScreen();
+        updateUserInfo(userData);
+        setupRealtimeChats(chatList, 'individual');
+        if (pendingChatId && !chatFromUrlHandled) {
+            openChat(pendingChatId);
+            chatFromUrlHandled = true;
+            pendingChatId = null;
+        }
+        initializeNotifications(); // Aquí está bien colocada
+    } else {
+        console.log('No hay usuario autenticado');
+        currentUser = null;
+        resetChatState();
+        hideLoadingScreen();
+        showAuthScreen();
+    }
+});
+
+
+
+
+
+
+// Verificar inicialización de Firebase
+
+// Obtener la instancia de Firebase Messaging
+let messaging;
+try {
+    messaging = window.messaging;
+    console.log('Firebase Messaging obtenido correctamente');
+} catch (error) {
+    console.log('Firebase Messaging no está soportado en este navegador');
+}
+
 
 // Texto a voz
 let currentUtterance = null;
