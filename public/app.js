@@ -75,6 +75,7 @@ startAuthListener(async (userData) => {
         resetChatState();
         hideLoadingScreen();
         showMainScreen();
+        handleViewFromUrl();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
         if (pendingChatId && !chatFromUrlHandled) {
@@ -907,6 +908,21 @@ function handleChatFromUrl() {
     if (auth.currentUser) {
         openChat(chatId);
         chatFromUrlHandled = true;
+    }
+}
+
+// Muestra la lista de grupos si la URL incluye ?view=groups
+function handleViewFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const view = params.get('view');
+    if (view === 'groups' && groupsPage && chatList) {
+        groupsPage.classList.add('active');
+        chatList.classList.add('hidden');
+        if (settingsPage) settingsPage.classList.add('hidden');
+        document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('#btnGroups').forEach(btn => btn.classList.add('active'));
+        currentListType = 'group';
+        setupRealtimeChats(groupsListEl, 'group');
     }
 }
 
@@ -3406,6 +3422,9 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('createGroupFromGroups').addEventListener('click', () => {
         showGroupCreationModal();
     });
+
+    // Aplicar vista inicial según la URL
+    handleViewFromUrl();
 });
 
 

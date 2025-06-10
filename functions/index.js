@@ -34,6 +34,7 @@ exports.sendMessageNotification = functions.firestore
 
             const chatData = chatDoc.data();
             console.log('💬 Datos del chat:', chatData);
+            const chatType = chatData.type || 'individual';
 
             // Obtener los participantes del chat
             const participants = chatData.participants || [];
@@ -83,11 +84,12 @@ exports.sendMessageNotification = functions.firestore
                             body: message.text,
                             chatId,
                             messageId: context.params.messageId,
-                            type: 'new_message'
+                            type: 'new_message',
+                            chatType
                         },
                         webpush: {
                             fcmOptions: {
-                                link: `/?chatId=${chatId}`
+                                link: chatType === 'group' ? '/?view=groups' : '/'
                             }
                         }
                     };
