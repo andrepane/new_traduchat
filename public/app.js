@@ -137,6 +137,19 @@ const backButton = document.getElementById('backToChats');
 const addMembersBtn = document.getElementById('addMembersBtn');
 const sidebar = document.querySelector('.sidebar');
 
+function fadeTransition(element) {
+    if (!element) return;
+    element.classList.add('fade-enter');
+    requestAnimationFrame(() => {
+        element.classList.add('fade-enter-active');
+    });
+    const cleanup = () => {
+        element.classList.remove('fade-enter', 'fade-enter-active');
+        element.removeEventListener('transitionend', cleanup);
+    };
+    element.addEventListener('transitionend', cleanup, { once: true });
+}
+
 // Variables globales
 let languageSelect;
 let languageSelectMain;
@@ -620,6 +633,7 @@ async function changeUsername(newUsername) {
 function showAuthScreen() {
     document.getElementById('mainScreen').classList.remove('active');
     document.getElementById('authScreen').classList.add('active');
+    fadeTransition(authScreen);
     document.body.classList.remove('in-chat');
 }
 
@@ -873,6 +887,7 @@ function updateThemeAndLanguage(theme, lang) {
 function showMainScreen() {
     document.getElementById('authScreen').classList.remove('active');
     document.getElementById('mainScreen').classList.add('active');
+    fadeTransition(mainScreen);
     toggleChatList(true);
     
     // Inicializar el selector de tema
@@ -917,6 +932,7 @@ function handleViewFromUrl() {
     const view = params.get('view');
     if (view === 'groups' && groupsPage && chatList) {
         groupsPage.classList.add('active');
+        fadeTransition(groupsPage);
         chatList.classList.add('hidden');
         if (settingsPage) settingsPage.classList.add('hidden');
         document.querySelectorAll('.nav-button').forEach(btn => btn.classList.remove('active'));
@@ -2417,7 +2433,10 @@ function toggleChatList(show) {
 
         // Recargar la lista correspondiente
         if (currentListType === 'group') {
-            if (groupsPage) groupsPage.classList.add('active');
+            if (groupsPage) {
+                groupsPage.classList.add('active');
+                fadeTransition(groupsPage);
+            }
             if (chatList) chatList.classList.add('hidden');
             setupRealtimeChats(groupsListEl, 'group');
         } else {
@@ -3355,6 +3374,7 @@ document.addEventListener('DOMContentLoaded', function() {
         btn.addEventListener('click', function() {
             if (groupsPage && chatList) {
                 groupsPage.classList.add('active');
+                fadeTransition(groupsPage);
                 chatList.classList.add('hidden');
                 if (settingsPage) settingsPage.classList.add('hidden');
                 updateActiveButtons('btnGroups');
