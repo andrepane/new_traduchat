@@ -1333,7 +1333,7 @@ body {
   }
 
      #titulo-wave {
-    text-shadow: 0 1px 6px #0007;
+    text-shadow: 0 1px 6px rgba(30, 233, 142, 0.15);
   }
 }
 
