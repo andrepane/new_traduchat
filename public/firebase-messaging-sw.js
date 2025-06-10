@@ -57,9 +57,8 @@ self.addEventListener('notificationclick', (event) => {
 
   event.notification.close();
 
-  // Navegar a la aplicación cuando se hace clic en la notificación
-  const chat = event.notification.data?.chatId;
-  const urlToOpen = new URL(chat ? `/?chatId=${chat}` : '/', self.location.origin).href;
+  // Navegar a la aplicación raíz al hacer clic en la notificación
+  const urlToOpen = new URL('/', self.location.origin).href;
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
