@@ -77,7 +77,11 @@ startAuthListener(async (userData) => {
         showMainScreen();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
-        handleChatFromUrl();
+        if (pendingChatId && !chatFromUrlHandled) {
+            openChat(pendingChatId);
+            chatFromUrlHandled = true;
+            pendingChatId = null;
+        }
         initializeNotifications(); // Aquí está bien colocada
     } else {
         console.log('No hay usuario autenticado');
@@ -156,6 +160,7 @@ let isGroupCreationMode = false;
 
 // Controla que solo se abra un chat por parámetro una vez
 let chatFromUrlHandled = false;
+let pendingChatId = null;
 
 // Si se habilita, las notificaciones push se enviarán tanto
 // desde el cliente como desde las Cloud Functions, pudiendo
@@ -724,7 +729,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (languageSelectMain) languageSelectMain.value = lang;
 
                 showMainScreen();
-                handleChatFromUrl();
+                if (pendingChatId && !chatFromUrlHandled && auth.currentUser) {
+                    openChat(pendingChatId);
+                    chatFromUrlHandled = true;
+                    pendingChatId = null;
+                }
             } catch (error) {
                 console.error('❌ Error cargando idioma:', error);
                 showError('errorGeneric');
@@ -887,10 +896,14 @@ function handleChatFromUrl() {
     if (chatFromUrlHandled) return;
     const params = new URLSearchParams(window.location.search);
     const chatId = params.get('chatId');
-    if (chatId) {
+    if (!chatId) return;
+
+    pendingChatId = chatId;
+
+    if (auth.currentUser) {
         openChat(chatId);
+        chatFromUrlHandled = true;
     }
-    chatFromUrlHandled = true;
 }
 
 // Función para limpiar el estado del chat
@@ -2236,9 +2249,10 @@ window.addEventListener('load', () => {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         showMainScreen();
-        // ⚠️ No abrimos el chat aún. Esperamos a que Firebase
-        // restaure la autenticación real para evitar errores de
-        // permisos al cargar mensajes.
+        // ⚠️ Esperamos a que Firebase restaure la autenticación real
+        // antes de abrir el chat. Solo guardamos el chat de la URL
+        // si es que existe.
+        handleChatFromUrl();
     }
 });
 
