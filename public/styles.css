@@ -970,7 +970,7 @@ body {
   border: 1.5px solid var(--color-border);
 }
 
-/* Título con animación wave */
+/* Título con animación bounce + rotate */
 #titulo-wave {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -978,13 +978,14 @@ body {
   color: var(--color-primary-dark);
   font-weight: 700;
   text-shadow: 0 2px 18px rgba(30, 233, 142, 0.27);
-  --wave-height: 10px;
 }
 
 #titulo-wave span {
+  position: relative;
   display: inline-block;
-  animation: wave 1.5s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.1s);
+  transform-origin: center bottom;
+  animation: bounceRotate 2.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
+  animation-delay: calc(var(--i) * 0.05s);
 }
 
 /* Campos de autenticación */
@@ -1241,14 +1242,21 @@ body {
   }
 }
 
-@keyframes wave {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
+@keyframes bounceRotate {
+  0% {
+    transform: translateY(0) rotate(0);
   }
-  30% {
-    transform: translateY(calc(var(--wave-height, 10px) * -1));
+  25% {
+    transform: translateY(-1.5rem) rotate(-1turn);
+  }
+  45% {
+    transform: translateY(0.25rem) rotate(-1turn);
+  }
+  58% {
+    transform: translateY(0) rotate(-1turn);
+  }
+  100% {
+    transform: translateY(0) rotate(-1turn);
   }
 }
 
@@ -1294,7 +1302,7 @@ body {
 
   #titulo-wave {
     font-size: 1.8rem;
-    --wave-height: 8px;
+    text-shadow: 0 1px 6px rgba(30, 233, 142, 0.15);
   }
 
   .auth-container {
@@ -1323,6 +1331,10 @@ body {
   #authScreen {
     padding-top: var(--safe-area-top);
     padding-bottom: var(--safe-area-bottom);
+  }
+
+  #titulo-wave {
+    text-shadow: 0 1px 6px rgba(30, 233, 142, 0.15);
   }
 }
 
