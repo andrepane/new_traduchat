@@ -1824,7 +1824,7 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
 }
 
 // Función para cargar los mensajes iniciales
-async function loadInitialMessages(chatId) {
+async function loadInitialMessages(chatId, retries = 0) {
     initialLoadComplete = false; // Resetear el estado de carga inicial
     const messagesRef = collection(db, 'chats', chatId, 'messages');
 
@@ -1877,6 +1877,11 @@ async function loadInitialMessages(chatId) {
         console.log('✅ Carga inicial completada, último mensaje procesado:', lastProcessedMessageId);
     } catch (error) {
         console.error('Error al cargar mensajes iniciales:', error);
+        if (['permission-denied', 'unauthenticated', 'unavailable'].includes(error.code) && retries < 3) {
+            console.log(`Reintentando carga de mensajes (${retries + 1})…`);
+            setTimeout(() => loadInitialMessages(chatId, retries + 1), 500);
+            return;
+        }
         showError('errorGeneric');
         initialLoadComplete = true; // Marcar como completo incluso en caso de error
     }
