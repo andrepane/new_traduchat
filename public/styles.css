@@ -1331,6 +1331,10 @@ body {
     padding-top: var(--safe-area-top);
     padding-bottom: var(--safe-area-bottom);
   }
+
+     #titulo-wave {
+    text-shadow: 0 1px 6px rgba(30, 233, 142, 0.15);
+  }
 }
 
 /* ==========================================================================
