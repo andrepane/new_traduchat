@@ -1247,7 +1247,7 @@ body {
     transform: translateY(0) rotate(0);
   }
   25% {
-    transform: translateY(-2.75rem) rotate(-1turn);
+    transform: translateY(-1.50rem) rotate(-1turn);
   }
   45% {
     transform: translateY(0.25rem) rotate(-1turn);
