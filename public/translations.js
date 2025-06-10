@@ -1,4 +1,5 @@
 import { getUserLanguage } from './modules/state.js';
+import { animate } from 'https://cdn.jsdelivr.net/npm/motion@10.16.4/+esm';
 
 
 const translations = {
@@ -408,7 +409,6 @@ function animateTitleWave({ colors = [], heights = [] } = {}) {
         [...text].forEach((char, i) => {
             const span = document.createElement("span");
             span.textContent = char === ' ' ? '\u00A0' : char;
-            span.style.setProperty('--i', i);
             if (colors[i]) {
                 span.style.color = colors[i];
             }
@@ -416,6 +416,20 @@ function animateTitleWave({ colors = [], heights = [] } = {}) {
                 span.style.setProperty('--wave-height', heights[i]);
             }
             h1.appendChild(span);
+        });
+        animate('#titulo-wave span', {
+            y: [
+                { to: '-2.75rem', ease: 'outExpo', duration: 600 },
+                { to: 0, ease: 'outBounce', duration: 800, delay: 100 }
+            ],
+            rotate: {
+                from: '-1turn',
+                delay: 0
+            },
+            delay: (_, i) => i * 50,
+            ease: 'inOutCirc',
+            loopDelay: 1000,
+            loop: true
         });
     }
 }

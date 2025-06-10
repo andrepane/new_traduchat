@@ -970,7 +970,7 @@ body {
   border: 1.5px solid var(--color-border);
 }
 
-/* Título con animación wave */
+/* Título animado */
 #titulo-wave {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -983,8 +983,6 @@ body {
 
 #titulo-wave span {
   display: inline-block;
-  animation: wave 1.5s ease-in-out infinite;
-  animation-delay: calc(var(--i) * 0.1s);
 }
 
 /* Campos de autenticación */
@@ -1241,16 +1239,6 @@ body {
   }
 }
 
-@keyframes wave {
-  0%,
-  60%,
-  100% {
-    transform: translateY(0);
-  }
-  30% {
-    transform: translateY(calc(var(--wave-height, 10px) * -1));
-  }
-}
 
 @keyframes pulse {
   0% {
