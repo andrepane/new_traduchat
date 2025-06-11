@@ -69,7 +69,9 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                             },
                             webpush: {
                                 fcmOptions: {
-                                    link: extraData?.chatId ? `/?chatId=${extraData.chatId}` : '/'
+                                    link: extraData?.chatId
+                                        ? `/?chatId=${extraData.chatId}${extraData.chatType === 'group' ? '&view=groups' : ''}`
+                                        : (extraData?.chatType === 'group' ? '/?view=groups' : '/')
                                 }
                             }
                         }
