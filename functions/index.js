@@ -89,7 +89,7 @@ exports.sendMessageNotification = functions.firestore
                         },
                         webpush: {
                             fcmOptions: {
-                                link: `/?chatId=${chatId}${chatType === 'group' ? '&view=groups' : ''}`
+                                link: chatType === 'group' ? '/?view=groups' : '/'
                             }
                         }
                     };
