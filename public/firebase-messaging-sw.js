@@ -58,10 +58,18 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   const data = event.notification.data || {};
+  const chatId = data.chatId;
   let urlPath = '/';
-  if (data.chatType === 'group') {
+
+  if (chatId) {
+    urlPath = `/?chatId=${chatId}`;
+    if (data.chatType === 'group') {
+      urlPath += '&view=groups';
+    }
+  } else if (data.chatType === 'group') {
     urlPath = '/?view=groups';
   }
+
   const urlToOpen = new URL(urlPath, self.location.origin).href;
 
   event.waitUntil(
