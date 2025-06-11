@@ -2430,8 +2430,8 @@ select:focus-visible {
 .spinner {
   width: 60px;
   height: 60px;
-  border: 6px solid var(--color-primary-light);
-  border-top-color: var(--color-primary-dark);
+  border: 6px solid #2e7d58;
+  border-top-color: #1b5e20;
   border-radius: 50%;
   animation: spin 1s ease-in-out infinite;
 }
