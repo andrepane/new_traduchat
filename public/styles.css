@@ -2430,7 +2430,7 @@ select:focus-visible {
 .spinner {
   width: 60px;
   height: 60px;
-  border: 6px solid #2e7d58;
+  border: 6px solid #d3d3d3;
   border-top-color: #1b5e20;
   border-radius: 50%;
   animation: spin 1s ease-in-out infinite;
