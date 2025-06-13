@@ -113,6 +113,8 @@ const translations = {
         developer: 'Desarrollado por Andrea Panepinto',
         edit: 'Editar',
         save: 'Guardar',
+        profileImage: 'Foto de perfil',
+        avatarUpdated: 'Foto de perfil actualizada',
     },
     en: {
         // Authentication
@@ -226,6 +228,8 @@ const translations = {
         developer: 'Developed by Andrea Panepinto',
         edit: 'Edit',
         save: 'Save',
+        profileImage: 'Profile picture',
+        avatarUpdated: 'Profile picture updated',
     },
     it: {
         // Autenticazione
@@ -338,6 +342,8 @@ const translations = {
         developer: 'Sviluppato da Andrea Panepinto',
         edit: 'Modifica',
         save: 'Salva',
+        profileImage: 'Foto profilo',
+        avatarUpdated: 'Foto profilo aggiornata',
     }
 };
 

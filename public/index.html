@@ -163,6 +163,25 @@
             <div class="settings-section">
               <h3 data-translate="profile">Perfil</h3>
               <div class="settings-item">
+                <i class="fas fa-image"></i>
+                <div class="settings-item-content">
+                  <label data-translate="profileImage">Foto de perfil</label>
+                  <div class="avatar-input-wrap">
+                    <div id="avatarDisplay" class="avatar-placeholder"></div>
+                    <img id="profileAvatar" class="avatar hidden" alt="Avatar" />
+                    <input type="file" id="avatarInput" accept="image/*" class="hidden" />
+                    <button
+                      id="changeAvatarBtn"
+                      class="icon-button settings-edit-btn"
+                      aria-label="Editar"
+                      title="Editar"
+                    >
+                      <i class="fas fa-edit"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-item">
                 <i class="fas fa-user"></i>
                 <div class="settings-item-content">
                   <label data-translate="username">Nombre de usuario</label>

@@ -44,7 +44,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { translations, getTranslation, translateInterface, animateTitleWave, getTypingText, getTypingMessage } from './translations.js';
 import { translateText, getFlagEmoji, AVAILABLE_LANGUAGES } from './translation-service.js';
 
-import { auth, db } from './modules/firebase.js'; // Importamos también la instancia de Firestore
+import { auth, db, storage } from './modules/firebase.js'; // Importamos también la instancia de Firestore y storage
 import { state } from './modules/state.js';
 import { startAuthListener, setUserLanguage } from './modules/auth.js';
 
@@ -131,6 +131,10 @@ const userInfo = document.getElementById('userInfo');
 const currentChatInfo = document.getElementById('currentChatInfo');
 
 const settingsLogoutBtn = document.getElementById('settingsLogoutBtn');
+const avatarDisplay = document.getElementById('avatarDisplay');
+const profileAvatar = document.getElementById('profileAvatar');
+const avatarInput = document.getElementById('avatarInput');
+const changeAvatarBtn = document.getElementById('changeAvatarBtn');
 
 // Referencias adicionales para móvil
 const backButton = document.getElementById('backToChats');
@@ -407,6 +411,18 @@ function updateUserInfo(user) {
         settingsUsername.value = name;
         settingsUsername.setAttribute('readonly', true);
     }
+
+    if (avatarDisplay) {
+        if (user.avatarUrl) {
+            profileAvatar.src = user.avatarUrl;
+            profileAvatar.classList.remove('hidden');
+            avatarDisplay.classList.add('hidden');
+        } else {
+            avatarDisplay.textContent = name.charAt(0).toUpperCase();
+            avatarDisplay.classList.remove('hidden');
+            profileAvatar.classList.add('hidden');
+        }
+    }
 }
 
 
@@ -598,6 +614,28 @@ async function updateUserData(user, username, isNewUser, signOutOnConflict = fal
         } else {
             throw error;
         }
+    }
+}
+
+async function updateProfileImage(file) {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !file) return;
+
+    try {
+        const fileRef = storageRef(storage, `avatars/${currentUser.uid}/${file.name}`);
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+        await updateDoc(doc(db, 'users', currentUser.uid), {
+            avatarUrl: url,
+            lastUpdated: serverTimestamp()
+        });
+        currentUser.avatarUrl = url;
+        setCurrentUser(currentUser);
+        updateUserInfo(currentUser);
+        showToast(getTranslation('avatarUpdated', getUserLanguage()));
+    } catch (err) {
+        console.error('Error al actualizar foto de perfil:', err);
+        showError('errorGeneric');
     }
 }
 
@@ -1122,6 +1160,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                 const chats = await Promise.all(snapshot.docs.map(async docSnap => {
                     const data = docSnap.data();
                     let name = '';
+                    let avatarUrl = '';
                     if (data.type === 'group') {
                         name = data.name;
                     } else {
@@ -1131,6 +1170,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                             if (otherDoc.exists()) {
                                 const od = otherDoc.data();
                                 name = od.username || od.email.split('@')[0];
+                                avatarUrl = od.avatarUrl || '';
                             }
                         }
                     }
@@ -1156,6 +1196,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                     return {
                         id: docSnap.id,
                         name,
+                        avatarUrl,
                         isUnread: unread,
                         unreadCount,
                         lastMessageTime: lastMsgTime,
@@ -1186,7 +1227,12 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
 
                     const unreadBadge = chat.unreadCount > 0 ? `<div class="unread-badge">${chat.unreadCount}</div>` : '';
 
+                    const avatar = chat.avatarUrl ?
+                        `<img src="${chat.avatarUrl}" class="avatar" alt="Avatar" />` :
+                        `<div class="avatar-placeholder">${chat.name.charAt(0).toUpperCase()}</div>`;
+
                     chatElement.innerHTML = `
+                        <div class="chat-avatar">${avatar}</div>
                         <div class="chat-info">
                             <div class="chat-details">
                                 <div class="chat-name">${chat.name}</div>
@@ -1294,7 +1340,8 @@ async function searchUsers(searchTerm) {
                     users.push({
                         id: userData.uid,
                         username: userData.username || email.split('@')[0],
-                        email: userData.email
+                        email: userData.email,
+                        avatarUrl: userData.avatarUrl || ''
                     });
                 }
             }
@@ -1349,7 +1396,12 @@ function displaySearchResults(users, showGroupButton = false) {
         const userElement = document.createElement('div');
         userElement.className = 'chat-item search-result';
 
+        const avatar = user.avatarUrl ?
+            `<img src="${user.avatarUrl}" class="avatar" alt="Avatar" />` :
+            `<div class="avatar-placeholder">${user.username.charAt(0).toUpperCase()}</div>`;
+
         userElement.innerHTML = `
+            <div class="chat-avatar">${avatar}</div>
             <div class="user-info">
                 <div class="user-name">${user.username}</div>
                 <div class="user-email">${user.email}</div>
@@ -2035,7 +2087,11 @@ async function setupIndividualChatInterface(chatData, currentUser) {
 
     const otherUserData = otherUserDoc.data();
     if (currentChatInfo) {
-        currentChatInfo.textContent = otherUserData.username || otherUserData.email.split('@')[0];
+        const name = otherUserData.username || otherUserData.email.split('@')[0];
+        const avatar = otherUserData.avatarUrl ?
+            `<img src="${otherUserData.avatarUrl}" class="avatar" alt="Avatar" />` :
+            `<div class="avatar-placeholder">${name.charAt(0).toUpperCase()}</div>`;
+        currentChatInfo.innerHTML = `<div class="chat-avatar">${avatar}</div><div class="chat-header-name">${name}</div>`;
     }
 }
 
@@ -2701,7 +2757,8 @@ async function searchUsersForGroup(searchTerm, excludeIds = []) {
                 users.push({
                     id: userData.uid,
                     email: userData.email,
-                    username: userData.username || null
+                    username: userData.username || null,
+                    avatarUrl: userData.avatarUrl || ''
                 });
             }
         });
@@ -2722,7 +2779,7 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
 
     container.innerHTML = users.map(user => `
         <div class="user-item" data-userid="${user.id}" data-email="${user.email}">
-            <i class="fas fa-user"></i>
+            <div class="chat-avatar">${user.avatarUrl ? `<img src="${user.avatarUrl}" class="avatar" alt="Avatar" />` : `<div class="avatar-placeholder">${(user.username || user.email).charAt(0).toUpperCase()}</div>`}</div>
             <div class="user-info">
                 <div class="user-name">${user.username || user.email.split('@')[0]}</div>
                 <div class="user-email">${user.email}</div>
@@ -3321,6 +3378,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (settingsUsername.value.trim() !== original) {
                     changeUsername(settingsUsername.value.trim());
                 }
+            }
+        });
+    }
+
+    if (changeAvatarBtn && avatarInput) {
+        changeAvatarBtn.addEventListener('click', () => avatarInput.click());
+        avatarInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                updateProfileImage(file);
+                e.target.value = '';
             }
         });
     }

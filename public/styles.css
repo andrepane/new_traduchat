@@ -501,6 +501,17 @@ body {
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-header-name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
 }
 
 /* Información del chat grupal */
@@ -558,6 +569,39 @@ body {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
   position: relative;
   padding-right: 40px;
+}
+
+.chat-avatar {
+  width: 40px;
+  height: 40px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.avatar-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .chat-item:hover {
