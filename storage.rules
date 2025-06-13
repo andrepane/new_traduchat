@@ -9,9 +9,17 @@ service firebase.storage {
     // Reglas para archivos de audio
     match /audios/{chatId}/{fileName} {
       allow read: if isAuthenticated();
-      allow write: if isAuthenticated() 
+      allow write: if isAuthenticated()
         && request.resource.contentType.matches('audio/.*')
         && request.resource.size < 10 * 1024 * 1024; // Máximo 10MB
     }
+
+    match /avatars/{userId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+        && request.auth.uid == userId
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
+    }
   }
-} 
+}
