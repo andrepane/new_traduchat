@@ -51,6 +51,33 @@ innecesarias a la API y así ahorrar tiempo y créditos.
    la clave de servidor (**FCM_SERVER_KEY**) o definir **FIREBASE_PROJECT_ID**,
    **FIREBASE_CLIENT_EMAIL** y **FIREBASE_PRIVATE_KEY** para utilizar la API HTTP v1.
 
+### Configurar CORS en Firebase Storage
+
+Si la aplicación se ejecuta desde un dominio distinto a `firebaseapp.com`, es
+necesario habilitar CORS en el bucket de Storage para permitir la subida de
+archivos desde el navegador. En este repositorio se incluye el archivo
+`storage-cors.json` con una configuración de ejemplo:
+
+```json
+[
+  {
+    "origin": ["https://traduchat.vercel.app"],
+    "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
+    "responseHeader": ["Authorization"],
+    "maxAgeSeconds": 3600
+  }
+]
+```
+
+Aplica la configuración ejecutando:
+
+```bash
+gsutil cors set storage-cors.json gs://traduchat-2.appspot.com
+```
+
+Esto permitirá que las peticiones a Firebase Storage desde la web superen la
+verificación CORS del navegador.
+
 ## Compatibilidad
 
 Desde iOS 16.4, Safari y las PWA instaladas permiten recibir notificaciones push
