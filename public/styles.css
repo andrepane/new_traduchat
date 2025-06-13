@@ -604,6 +604,26 @@ body {
   gap: 8px;
 }
 
+/* Tamaño compacto del avatar en ajustes */
+#avatarDisplay,
+#profileAvatar {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+/* Vista ampliada del avatar */
+.avatar-large {
+  width: 200px;
+  height: 200px;
+}
+
+.avatar-modal-content {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+}
+
 .chat-item:hover {
   background-color: #f0f2f5;
   transform: translateY(-1px);

@@ -3393,6 +3393,34 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Vista ampliada de la foto de perfil
+    function showAvatarPreview() {
+        const hasImage = profileAvatar && !profileAvatar.classList.contains('hidden');
+        const content = hasImage
+            ? `<img src="${profileAvatar.src}" alt="Avatar" class="avatar-large">`
+            : `<div class="avatar-placeholder avatar-large">${avatarDisplay.textContent}</div>`;
+
+        const modalHtml = `
+            <div id="avatarModal" class="modal">
+                <div class="modal-content avatar-modal-content">
+                    ${content}
+                </div>
+            </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        const modal = document.getElementById('avatarModal');
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+    }
+
+    [profileAvatar, avatarDisplay].forEach(el => {
+        if (el) el.addEventListener('click', showAvatarPreview);
+    });
+
 
     // Función para actualizar los botones activos
     function updateActiveButtons(activeId) {
