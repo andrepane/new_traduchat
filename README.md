@@ -72,7 +72,7 @@ archivos desde el navegador. En este repositorio se incluye el archivo
 Aplica la configuración ejecutando:
 
 ```bash
-gsutil cors set storage-cors.json gs://traduchat-2.appspot.com
+gsutil cors set storage-cors.json gs://traduchat-2.firebasestorage.app
 ```
 
 Esto permitirá que las peticiones a Firebase Storage desde la web superen la

@@ -23,6 +23,6 @@ setPersistence(auth, browserLocalPersistence);
 
 const db = getFirestore(app);
 const messaging = getMessaging(app);
-const storage = getStorage(app);
+const storage = getStorage(app, "gs://traduchat-2.firebasestorage.app");
 
 export { app, auth, db, messaging, storage };
