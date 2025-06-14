@@ -2,7 +2,7 @@
   {
     "origin": ["https://traduchat.vercel.app"],
     "method": ["GET", "HEAD", "PUT", "POST", "DELETE"],
-    "responseHeader": ["Authorization"],
+    "responseHeader": ["Authorization", "Content-Type"],
     "maxAgeSeconds": 3600
   }
 ]
