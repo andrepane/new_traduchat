@@ -5,7 +5,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBPurWNRib5yjg-jEe3x2hBewL_Cvy132E",
   authDomain: "traduchat-2.firebaseapp.com",
   projectId: "traduchat-2",
-  storageBucket: "traduchat-2.appspot.com",
+  storageBucket: "traduchat-2.firebasestorage.app",
   messagingSenderId: "304746474467",
   appId: "1:304746474467:web:a0496a8d1d891cec170ed6"
 };
