@@ -2426,6 +2426,11 @@ select:focus-visible {
   height: 32px;
 }
 
+/* Asegura contraste para los iconos dentro de los botones de edición */
+.settings-edit-btn i {
+  color: var(--color-text-light);
+}
+
 .app-version {
   font-size: 0.9rem;
   color: var(--color-text);
