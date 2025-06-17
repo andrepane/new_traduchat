@@ -102,6 +102,8 @@ const translations = {
         membersAdded: 'Miembros agregados exitosamente',
         errorAddMembers: 'Error al agregar miembros',
         addedMembers: 'ha agregado a los miembros',
+        groupImage: 'Imagen del grupo',
+        groupAvatarUpdated: 'Foto de grupo actualizada',
         groups: 'Grupos',
         
         // Ajustes
@@ -215,6 +217,8 @@ const translations = {
         membersAdded: 'Members added successfully',
         errorAddMembers: 'Error adding members',
         addedMembers: 'has added members',
+        groupImage: 'Group image',
+        groupAvatarUpdated: 'Group picture updated',
         groups: 'Groups',
 
 
@@ -331,6 +335,8 @@ const translations = {
         membersAdded: 'Membri aggiunti con successo',
         errorAddMembers: 'Errore durante l\'aggiunta dei membri',
         addedMembers: 'ha aggiunto i membri',
+        groupImage: 'Immagine del gruppo',
+        groupAvatarUpdated: 'Foto del gruppo aggiornata',
         groups: 'Gruppi',
         
         // Impostazioni
