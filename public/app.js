@@ -663,6 +663,41 @@ async function updateGroupImage(chatId, file) {
     }
 }
 
+function showGroupAvatarPreview() {
+    if (!currentGroupData) return;
+    const content = currentGroupData.avatarUrl ?
+        `<img src="${currentGroupData.avatarUrl}" alt="Avatar" class="avatar-large">` :
+        `<div class="avatar-placeholder avatar-large">${currentGroupData.name.charAt(0).toUpperCase()}</div>`;
+
+    const modalHtml = `
+            <div id="groupAvatarModal" class="modal">
+                <div class="modal-content avatar-modal-content">
+                    ${content}
+                    <input type="file" id="groupAvatarChange" class="hidden" accept="image/*" />
+                    <button id="editGroupAvatar" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', getUserLanguage())}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    const modal = document.getElementById('groupAvatarModal');
+    const input = document.getElementById('groupAvatarChange');
+    const btn = document.getElementById('editGroupAvatar');
+    btn.addEventListener('click', () => input.click());
+    input.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            await updateGroupImage(currentGroupData.id, file);
+            modal.remove();
+        }
+    });
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+}
+
 async function changeUsername(newUsername) {
     const settingsUsername = document.getElementById('settingsUsername');
     const currentUser = getCurrentUser();
@@ -3495,40 +3530,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (el) el.addEventListener('click', showAvatarPreview);
     });
 
-    function showGroupAvatarPreview() {
-        if (!currentGroupData) return;
-        const content = currentGroupData.avatarUrl ?
-            `<img src="${currentGroupData.avatarUrl}" alt="Avatar" class="avatar-large">` :
-            `<div class="avatar-placeholder avatar-large">${currentGroupData.name.charAt(0).toUpperCase()}</div>`;
-
-        const modalHtml = `
-            <div id="groupAvatarModal" class="modal">
-                <div class="modal-content avatar-modal-content">
-                    ${content}
-                    <input type="file" id="groupAvatarChange" class="hidden" accept="image/*" />
-                    <button id="editGroupAvatar" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', getUserLanguage())}">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </div>
-            </div>`;
-
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-
-        const modal = document.getElementById('groupAvatarModal');
-        const input = document.getElementById('groupAvatarChange');
-        const btn = document.getElementById('editGroupAvatar');
-        btn.addEventListener('click', () => input.click());
-        input.addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                await updateGroupImage(currentGroupData.id, file);
-                modal.remove();
-            }
-        });
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.remove();
-        });
-    }
 
 
     // Función para actualizar los botones activos
