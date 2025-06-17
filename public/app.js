@@ -1464,11 +1464,9 @@ function displaySearchResults(users, showGroupButton = false) {
             <div class="chat-avatar">${avatar}</div>
             <div class="user-info">
                 <div class="user-name">${user.username}</div>
-                <div class="user-email">${user.email}</div>
             </div>
-            <button class="start-chat-btn" data-userid="${user.id}" data-translate="startChat" aria-label="${getTranslation('startChat', currentLang)}">
+            <button class="start-chat-btn" data-userid="${user.id}" aria-label="${getTranslation('startChat', currentLang)}">
                 <i class="fas fa-comment"></i>
-                <span>${getTranslation('startChat', currentLang)}</span>
             </button>
         `;
 
@@ -2886,9 +2884,10 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
             <div class="chat-avatar">${user.avatarUrl ? `<img src="${user.avatarUrl}" class="avatar" alt="Avatar" />` : `<div class="avatar-placeholder">${(user.username || user.email).charAt(0).toUpperCase()}</div>`}</div>
             <div class="user-info">
                 <div class="user-name">${user.username || user.email.split('@')[0]}</div>
-                <div class="user-email">${user.email}</div>
             </div>
-
+            <button class="add-user-btn" aria-label="${getTranslation('addMembers', userLanguage)}">
+                <i class="fas fa-plus"></i>
+            </button>
         </div>
     `).join('');
 
