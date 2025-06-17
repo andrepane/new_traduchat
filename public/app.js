@@ -147,6 +147,7 @@ let languageSelectMain;
 let currentUser = null;
 let currentChat = null;
 let currentChatParticipants = [];
+let currentGroupData = null;
 let verificationCode = null;
 let timerInterval = null;
 const CODE_EXPIRY_TIME = 5 * 60; // 5 minutos en segundos
@@ -635,6 +636,29 @@ async function updateProfileImage(file) {
         showToast(getTranslation('avatarUpdated', getUserLanguage()));
     } catch (err) {
         console.error('Error al actualizar foto de perfil:', err);
+        showError('errorGeneric');
+    }
+}
+
+async function updateGroupImage(chatId, file) {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !file || !chatId) return;
+
+    try {
+        const fileRef = storageRef(storage, `groupAvatars/${chatId}/${file.name}`);
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+        await updateDoc(doc(db, 'chats', chatId), { avatarUrl: url });
+        if (currentGroupData && currentGroupData.id === chatId) {
+            currentGroupData.avatarUrl = url;
+            const avatarEl = document.querySelector('#groupAvatar');
+            if (avatarEl) {
+                avatarEl.innerHTML = `<img src="${url}" class="avatar" alt="Avatar" />`;
+            }
+        }
+        showToast(getTranslation('groupAvatarUpdated', getUserLanguage()));
+    } catch (err) {
+        console.error('Error al actualizar foto de grupo:', err);
         showError('errorGeneric');
     }
 }
@@ -1163,6 +1187,7 @@ async function setupRealtimeChats(container = chatList, chatType = null) {
                     let avatarUrl = '';
                     if (data.type === 'group') {
                         name = data.name;
+                        avatarUrl = data.avatarUrl || '';
                     } else {
                         const otherId = data.participants.find(id => id !== currentUser.uid);
                         if (otherId) {
@@ -1738,6 +1763,11 @@ async function openChat(chatId) {
 
         const chatData = chatDoc.data();
         console.log('Datos del chat:', chatData);
+        if (chatData.type === 'group') {
+            currentGroupData = { ...chatData, id: chatId };
+        } else {
+            currentGroupData = null;
+        }
         currentChatParticipants = chatData.participants || [];
         if (addMembersBtn) {
             if (chatData.type === 'group') {
@@ -2055,15 +2085,27 @@ async function setupGroupChatInterface(chatData) {
 
     const groupInfoElement = document.createElement('div');
     groupInfoElement.className = 'group-info';
+    const avatarHtml = chatData.avatarUrl ?
+        `<img src="${chatData.avatarUrl}" class="avatar" alt="Avatar" />` :
+        `<div class="avatar-placeholder">${chatData.name.charAt(0).toUpperCase()}</div>`;
     groupInfoElement.innerHTML = `
-        <div class="group-name">${chatData.name}</div>
-        <div class="group-participants">
-            ${participantNames.join(', ')}
+        <div class="chat-avatar" id="groupAvatar">${avatarHtml}</div>
+        <div class="group-text">
+            <div class="group-name">${chatData.name}</div>
+            <div class="group-participants">${participantNames.join(', ')}</div>
         </div>
     `;
 
     groupInfoElement.title = participantNames.join(', ');
     groupInfoElement.onclick = () => showToast(participantNames.join(', '));
+
+    const avatarEl = groupInfoElement.querySelector('#groupAvatar');
+    if (avatarEl) {
+        avatarEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showGroupAvatarPreview();
+        });
+    }
 
     if (currentChatInfo) {
         currentChatInfo.innerHTML = '';
@@ -2618,6 +2660,15 @@ function showGroupCreationModal() {
             <div class="modal-content">
                 <h2 data-translate="createGroup">${getTranslation('createGroup', userLanguage)}</h2>
                 <div class="group-form">
+                    <div class="group-avatar-input">
+                        <label data-translate="groupImage">${getTranslation('groupImage', userLanguage)}</label>
+                        <div class="avatar-input-wrap">
+                            <div id="groupAvatarDisplay" class="avatar-placeholder"></div>
+                            <img id="groupAvatarPreview" class="avatar hidden" alt="Avatar" />
+                            <input type="file" id="groupAvatarInput" accept="image/*" class="hidden" />
+                            <button id="changeGroupAvatarBtn" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', userLanguage)}" title="${getTranslation('edit', userLanguage)}"><i class="fas fa-edit"></i></button>
+                        </div>
+                    </div>
                     <input type="text" id="groupName" data-translate="groupNamePlaceholder" placeholder="${getTranslation('groupNamePlaceholder', userLanguage)}" />
                     <div class="selected-users">
                         <h3>
@@ -2648,7 +2699,25 @@ function showGroupCreationModal() {
     // Eventos del modal
     const modal = document.getElementById('groupModal');
     const groupNameInput = document.getElementById('groupName');
+    const groupAvatarInput = document.getElementById('groupAvatarInput');
+    const groupAvatarPreview = document.getElementById('groupAvatarPreview');
+    const groupAvatarDisplay = document.getElementById('groupAvatarDisplay');
+    const changeGroupAvatarBtn = document.getElementById('changeGroupAvatarBtn');
     const userSearchInput = document.getElementById('groupUserSearch');
+    let groupImageFile = null;
+
+    if (changeGroupAvatarBtn && groupAvatarInput) {
+        changeGroupAvatarBtn.addEventListener('click', () => groupAvatarInput.click());
+        groupAvatarInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                groupImageFile = file;
+                groupAvatarPreview.src = URL.createObjectURL(file);
+                groupAvatarPreview.classList.remove('hidden');
+                groupAvatarDisplay.classList.add('hidden');
+            }
+        });
+    }
     const createGroupBtn = document.getElementById('createGroupBtn');
     const cancelGroupBtn = document.getElementById('cancelGroupBtn');
     const selectedUsersList = document.getElementById('selectedUsersList');
@@ -2696,7 +2765,7 @@ function showGroupCreationModal() {
         }
 
         try {
-            await createGroupChat(groupName, Array.from(selectedUsers));
+            await createGroupChat(groupName, Array.from(selectedUsers), groupImageFile);
             modal.remove();
             // Mostrar mensaje de éxito
             showToast(getTranslation('groupCreated', getUserLanguage()));
@@ -2825,7 +2894,7 @@ function displayUserSearchResults(users, container, selectedUsersList, createGro
 }
 
 // Función para crear un chat grupal
-async function createGroupChat(groupName, participants) {
+async function createGroupChat(groupName, participants, imageFile = null) {
     console.log('Intentando crear grupo:', groupName);
     console.log('Participantes:', participants);
 
@@ -2859,8 +2928,13 @@ async function createGroupChat(groupName, participants) {
             createdBy: currentUser.uid,
             createdAt: serverTimestamp(),
             lastMessage: null,
-            lastMessageTime: null
+            lastMessageTime: null,
+            avatarUrl: ''
         });
+
+        if (imageFile) {
+            await updateGroupImage(groupChatRef.id, imageFile);
+        }
 
         console.log('Grupo creado exitosamente:', groupChatRef.id);
 
@@ -3420,6 +3494,41 @@ document.addEventListener('DOMContentLoaded', function() {
     [profileAvatar, avatarDisplay].forEach(el => {
         if (el) el.addEventListener('click', showAvatarPreview);
     });
+
+    function showGroupAvatarPreview() {
+        if (!currentGroupData) return;
+        const content = currentGroupData.avatarUrl ?
+            `<img src="${currentGroupData.avatarUrl}" alt="Avatar" class="avatar-large">` :
+            `<div class="avatar-placeholder avatar-large">${currentGroupData.name.charAt(0).toUpperCase()}</div>`;
+
+        const modalHtml = `
+            <div id="groupAvatarModal" class="modal">
+                <div class="modal-content avatar-modal-content">
+                    ${content}
+                    <input type="file" id="groupAvatarChange" class="hidden" accept="image/*" />
+                    <button id="editGroupAvatar" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', getUserLanguage())}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+        const modal = document.getElementById('groupAvatarModal');
+        const input = document.getElementById('groupAvatarChange');
+        const btn = document.getElementById('editGroupAvatar');
+        btn.addEventListener('click', () => input.click());
+        input.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await updateGroupImage(currentGroupData.id, file);
+                modal.remove();
+            }
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
+    }
 
 
     // Función para actualizar los botones activos
