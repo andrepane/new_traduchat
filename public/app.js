@@ -2506,7 +2506,7 @@ function toggleChatList(show) {
         }
         if (chatContainer) {
             chatContainer.classList.remove('hidden');
-            chatContainer.style.display = 'block';
+            chatContainer.style.display = '';
         }
     }
 
@@ -2518,7 +2518,7 @@ function toggleChatList(show) {
         }
         if (chatContainer) {
             chatContainer.classList.add('hidden');
-            chatContainer.style.display = 'none';
+            chatContainer.style.display = '';
         }
         
         // Cancelar suscripción a mensajes si existe
@@ -2565,7 +2565,7 @@ function toggleChatList(show) {
         }
         if (chatContainer) {
             chatContainer.classList.remove('hidden');
-            chatContainer.style.display = 'block';
+            chatContainer.style.display = '';
         }
     }
 
@@ -2594,11 +2594,11 @@ window.addEventListener('resize', () => {
         }
         if (chatContainer) {
             chatContainer.classList.remove('hidden');
-            chatContainer.style.display = 'block';
+            chatContainer.style.display = '';
         }
         if (backButton) backButton.style.display = 'none';
     } else if (backButton) {
-        backButton.style.display = chatContainer?.style.display !== 'none' ? 'block' : 'none';
+        backButton.style.display = chatContainer && !chatContainer.classList.contains('hidden') ? 'block' : 'none';
     }
 });
 
