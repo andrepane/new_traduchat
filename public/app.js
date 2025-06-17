@@ -674,8 +674,9 @@ function showGroupAvatarPreview() {
                 <div class="modal-content avatar-modal-content">
                     ${content}
                     <input type="file" id="groupAvatarChange" class="hidden" accept="image/*" />
-                    <button id="editGroupAvatar" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', getUserLanguage())}">
+                    <button id="editGroupAvatar" class="settings-edit-btn" aria-label="${getTranslation('edit', getUserLanguage())}">
                         <i class="fas fa-edit"></i>
+                        <span>${getTranslation('edit', getUserLanguage())}</span>
                     </button>
                 </div>
             </div>`;
@@ -2699,7 +2700,10 @@ function showGroupCreationModal() {
                             <div id="groupAvatarDisplay" class="avatar-placeholder"></div>
                             <img id="groupAvatarPreview" class="avatar hidden" alt="Avatar" />
                             <input type="file" id="groupAvatarInput" accept="image/*" class="hidden" />
-                            <button id="changeGroupAvatarBtn" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', userLanguage)}" title="${getTranslation('edit', userLanguage)}"><i class="fas fa-edit"></i></button>
+                            <button id="changeGroupAvatarBtn" class="settings-edit-btn" aria-label="${getTranslation('edit', userLanguage)}" title="${getTranslation('edit', userLanguage)}">
+                                <i class="fas fa-edit"></i>
+                                <span>${getTranslation('edit', userLanguage)}</span>
+                            </button>
                         </div>
                     </div>
                     <input type="text" id="groupName" data-translate="groupNamePlaceholder" placeholder="${getTranslation('groupNamePlaceholder', userLanguage)}" />
@@ -3455,8 +3459,8 @@ document.addEventListener('DOMContentLoaded', function() {
             settingsUsername.removeAttribute('readonly');
             settingsUsername.classList.remove('readonly-input');
             settingsUsername.focus();
-            editUsernameBtn.innerHTML = '<i class="fas fa-check"></i>';
             const label = getTranslation('save', getUserLanguage());
+            editUsernameBtn.innerHTML = `<i class="fas fa-check"></i> <span>${label}</span>`;
             editUsernameBtn.setAttribute('aria-label', label);
             editUsernameBtn.setAttribute('title', label);
         }
@@ -3479,8 +3483,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!settingsUsername.hasAttribute('readonly')) {
                 settingsUsername.classList.add('readonly-input');
                 settingsUsername.setAttribute('readonly', true);
-                editUsernameBtn.innerHTML = '<i class="fas fa-edit"></i>';
                 const label = getTranslation('edit', getUserLanguage());
+                editUsernameBtn.innerHTML = `<i class="fas fa-edit"></i> <span>${label}</span>`;
                 editUsernameBtn.setAttribute('aria-label', label);
                 editUsernameBtn.setAttribute('title', label);
                 if (settingsUsername.value.trim() !== original) {
@@ -3589,7 +3593,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const label = getTranslation('edit', getUserLanguage());
                     editUsernameBtn.setAttribute('aria-label', label);
                     editUsernameBtn.setAttribute('title', label);
-                    editUsernameBtn.innerHTML = '<i class="fas fa-edit"></i>';
+                    editUsernameBtn.innerHTML = `<i class="fas fa-edit"></i> <span>${label}</span>`;
                 }
             }
         });
