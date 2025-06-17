@@ -122,4 +122,87 @@ exports.sendMessageNotification = functions.firestore
             console.error('❌ Error general al enviar notificaciones:', error);
             return { error: error.message };
         }
-    }); 
+    });
+
+exports.sendGroupCreationNotification = functions.firestore
+    .document('chats/{chatId}')
+    .onCreate(async (snap, context) => {
+        try {
+            const chatData = snap.data();
+
+            if (!chatData || chatData.type !== 'group') {
+                return null;
+            }
+
+            const chatId = context.params.chatId;
+            const { participants = [], createdBy, name } = chatData;
+
+            const recipientIds = participants.filter(uid => uid !== createdBy);
+
+            if (recipientIds.length === 0) {
+                console.log('⚠️ No hay destinatarios para notificar creación de grupo');
+                return null;
+            }
+
+            const userDocs = await Promise.all(
+                recipientIds.map(uid =>
+                    admin.firestore().collection('users').doc(uid).get()
+                )
+            );
+
+            const tokens = userDocs
+                .map(doc => doc.exists ? doc.data()?.fcmToken : null)
+                .filter(token => token);
+
+            if (tokens.length === 0) {
+                console.log('⚠️ No se encontraron tokens FCM para la creación de grupo');
+                return null;
+            }
+
+            const creatorDoc = await admin.firestore().collection('users').doc(createdBy).get();
+            const creatorData = creatorDoc.data();
+            const creatorName = creatorData?.username || creatorData?.email?.split('@')[0] || 'Usuario';
+
+            const results = await Promise.all(tokens.map(async (token) => {
+                try {
+                    const notificationMessage = {
+                        token,
+                        data: {
+                            title: name,
+                            body: `${creatorName} ha creado este grupo`,
+                            chatId,
+                            type: 'group_created',
+                            chatType: 'group'
+                        },
+                        webpush: {
+                            fcmOptions: {
+                                link: '/?view=groups'
+                            }
+                        }
+                    };
+
+                    const result = await admin.messaging().send(notificationMessage);
+                    console.log('✅ Notificación de creación de grupo enviada:', result);
+                    return { success: true, messageId: result };
+                } catch (error) {
+                    console.error('❌ Error al enviar notificación de creación de grupo:', error);
+                    return { success: false, error };
+                }
+            }));
+
+            const successCount = results.filter(r => r.success).length;
+            const failureCount = results.length - successCount;
+
+            console.log('📊 Resumen de notificación de grupo:', {
+                total: results.length,
+                success: successCount,
+                failure: failureCount
+            });
+
+            return { successCount, failureCount };
+
+        } catch (error) {
+            console.error('❌ Error general en notificación de creación de grupo:', error);
+            return { error: error.message };
+        }
+    });
