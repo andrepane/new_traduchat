@@ -21,5 +21,13 @@ service firebase.storage {
         && request.resource.contentType.matches('image/.*')
         && request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
     }
+
+    // Reglas para avatares de grupos
+    match /groupAvatars/{groupId}/{fileName} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated()
+        && request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024; // Máximo 5MB
+    }
   }
 }
