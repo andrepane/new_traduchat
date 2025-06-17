@@ -673,7 +673,7 @@ function showGroupAvatarPreview() {
             <div id="groupAvatarModal" class="modal">
                 <div class="modal-content avatar-modal-content">
                     ${content}
-                    <input type="file" id="groupAvatarChange" class="hidden" accept="image/*" capture="environment" />
+                    <input type="file" id="groupAvatarChange" class="hidden" accept="image/*" />
                     <button id="editGroupAvatar" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', getUserLanguage())}">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -2698,7 +2698,7 @@ function showGroupCreationModal() {
                         <div class="avatar-input-wrap">
                             <div id="groupAvatarDisplay" class="avatar-placeholder"></div>
                             <img id="groupAvatarPreview" class="avatar hidden" alt="Avatar" />
-                            <input type="file" id="groupAvatarInput" accept="image/*" capture="environment" class="hidden" />
+                            <input type="file" id="groupAvatarInput" accept="image/*" class="hidden" />
                             <button id="changeGroupAvatarBtn" class="icon-button settings-edit-btn" aria-label="${getTranslation('edit', userLanguage)}" title="${getTranslation('edit', userLanguage)}"><i class="fas fa-edit"></i></button>
                         </div>
                     </div>
