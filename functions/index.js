@@ -128,9 +128,10 @@ exports.sendGroupCreationNotification = functions.firestore
     .document('chats/{chatId}')
     .onCreate(async (snap, context) => {
         try {
+            console.log('🆕 Creación de chat detectada:', context.params.chatId);
             const chatData = snap.data();
 
-            if (!chatData || chatData.type !== 'group') {
+            if (!chatData || (chatData.type !== 'group' && (!Array.isArray(chatData.participants) || chatData.participants.length <= 2))) {
                 return null;
             }
 
@@ -205,4 +206,15 @@ exports.sendGroupCreationNotification = functions.firestore
             console.error('❌ Error general en notificación de creación de grupo:', error);
             return { error: error.message };
         }
+    });
+
+exports.ensureGroupType = functions.firestore
+    .document('chats/{chatId}')
+    .onCreate(async (snap, context) => {
+        const data = snap.data();
+        if (data && Array.isArray(data.participants) && data.participants.length > 2 && data.type !== 'group') {
+            console.log('🔧 Corrigiendo tipo de chat a group para', context.params.chatId);
+            await snap.ref.update({ type: 'group' });
+        }
+        return null;
     });
