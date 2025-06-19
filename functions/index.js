@@ -126,14 +126,22 @@ exports.sendMessageNotification = functions.firestore
 
 exports.sendGroupCreationNotification = functions.firestore
     .document('chats/{chatId}')
-    .onCreate(async (snap, context) => {
+    .onWrite(async (change, context) => {
         try {
-            console.log('🆕 Creación de chat detectada:', context.params.chatId);
-            const chatData = snap.data();
+            const beforeData = change.before.exists ? change.before.data() : null;
+            const chatData = change.after.data();
 
-            if (!chatData || (chatData.type !== 'group' && (!Array.isArray(chatData.participants) || chatData.participants.length <= 2))) {
+            const beforeCount = beforeData?.participants?.length || 0;
+            const afterCount = chatData?.participants?.length || 0;
+
+            const wasGroup = beforeData && (beforeData.type === 'group' || beforeCount > 2);
+            const isGroup = chatData && (chatData.type === 'group' || afterCount > 2);
+
+            if (!isGroup || wasGroup || afterCount <= 2) {
                 return null;
             }
+
+            console.log('🆕 Creación de chat detectada:', context.params.chatId);
 
             const chatId = context.params.chatId;
             const { participants = [], createdBy, name } = chatData;
@@ -210,11 +218,11 @@ exports.sendGroupCreationNotification = functions.firestore
 
 exports.ensureGroupType = functions.firestore
     .document('chats/{chatId}')
-    .onCreate(async (snap, context) => {
-        const data = snap.data();
+    .onWrite(async (change, context) => {
+        const data = change.after.data();
         if (data && Array.isArray(data.participants) && data.participants.length > 2 && data.type !== 'group') {
             console.log('🔧 Corrigiendo tipo de chat a group para', context.params.chatId);
-            await snap.ref.update({ type: 'group' });
+            await change.after.ref.update({ type: 'group' });
         }
         return null;
     });
