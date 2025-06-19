@@ -164,38 +164,26 @@ exports.sendGroupCreationNotification = functions.firestore
             const creatorData = creatorDoc.data();
             const creatorName = creatorData?.username || creatorData?.email?.split('@')[0] || 'Usuario';
 
-            const results = await Promise.all(tokens.map(async (token) => {
-                try {
-                    const notificationMessage = {
-                        token,
-                        data: {
-                            title: name,
-                            body: `${creatorName} ha creado este grupo`,
-                            chatId,
-                            type: 'group_created',
-                            chatType: 'group'
-                        },
-                        webpush: {
-                            fcmOptions: {
-                                link: '/?view=groups'
-                            }
-                        }
-                    };
-
-                    const result = await admin.messaging().send(notificationMessage);
-                    console.log('✅ Notificación de creación de grupo enviada:', result);
-                    return { success: true, messageId: result };
-                } catch (error) {
-                    console.error('❌ Error al enviar notificación de creación de grupo:', error);
-                    return { success: false, error };
+            const multicastMessage = {
+                tokens,
+                data: {
+                    title: name,
+                    body: `${creatorName} ha creado este grupo`,
+                    chatId,
+                    type: 'group_created',
+                    chatType: 'group'
+                },
+                webpush: {
+                    fcmOptions: {
+                        link: '/?view=groups'
+                    }
                 }
-            }));
+            };
 
-            const successCount = results.filter(r => r.success).length;
-            const failureCount = results.length - successCount;
+            const { responses, successCount, failureCount } = await admin.messaging().sendEachForMulticast(multicastMessage);
 
             console.log('📊 Resumen de notificación de grupo:', {
-                total: results.length,
+                total: responses.length,
                 success: successCount,
                 failure: failureCount
             });
