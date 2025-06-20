@@ -1105,6 +1105,19 @@ async function deleteChat(chatId) {
             return;
         }
 
+        // Cancelar escuchas si el chat a borrar está abierto
+        if (currentChat === chatId) {
+            if (unsubscribeMessagesFn) {
+                unsubscribeMessagesFn();
+                unsubscribeMessagesFn = null;
+            }
+            if (unsubscribeTypingStatus) {
+                unsubscribeTypingStatus();
+                unsubscribeTypingStatus = null;
+            }
+            currentChat = null;
+        }
+
         // Obtener referencia al chat
         const chatRef = doc(db, 'chats', chatId);
         const chatDoc = await getDoc(chatRef);
