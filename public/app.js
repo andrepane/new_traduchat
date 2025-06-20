@@ -602,6 +602,7 @@ async function updateUserData(user, username, isNewUser, signOutOnConflict = fal
         if (!signOutOnConflict && !isNewUser) {
             showToast(getTranslation('usernameUpdated', getUserLanguage()));
         }
+        currentListType = 'individual';
         showMainScreen();
         updateUserInfo({ ...user, username });
         setupRealtimeChats(chatList, 'individual');
@@ -609,6 +610,7 @@ async function updateUserData(user, username, isNewUser, signOutOnConflict = fal
         console.error('Error al actualizar datos del usuario:', error);
         if (error.code === 'permission-denied') {
             // Si es un error de permisos pero el usuario está autenticado, continuar
+            currentListType = 'individual';
             showMainScreen();
             updateUserInfo({...user, username});
             setupRealtimeChats(chatList, 'individual');
