@@ -593,8 +593,12 @@ async function updateUserData(user, username, isNewUser, signOutOnConflict = fal
         }
         console.log('Documento guardado:', savedDoc.data());
 
-        // Actualizar estado local
-        currentUser = { ...user, username };
+        // Actualizar estado local con los datos guardados
+        currentUser = {
+            uid: user.uid,
+            email: user.email.toLowerCase(),
+            ...savedDoc.data()
+        };
         setCurrentUser(currentUser);
 
         // Actualizar la interfaz
@@ -604,7 +608,7 @@ async function updateUserData(user, username, isNewUser, signOutOnConflict = fal
         }
         currentListType = 'individual';
         showMainScreen();
-        updateUserInfo({ ...user, username });
+        updateUserInfo(currentUser);
         setupRealtimeChats(chatList, 'individual');
     } catch (error) {
         console.error('Error al actualizar datos del usuario:', error);
