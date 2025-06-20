@@ -716,9 +716,14 @@ async function changeUsername(newUsername) {
 }
 
 // Función para mostrar la pantalla de autenticación
+function switchScreen(targetId) {
+    document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+    const target = document.getElementById(targetId);
+    if (target) target.classList.add('active');
+}
+
 function showAuthScreen() {
-    document.getElementById('mainScreen').classList.remove('active');
-    document.getElementById('authScreen').classList.add('active');
+    switchScreen('authScreen');
     document.body.classList.remove('in-chat');
 }
 
@@ -981,8 +986,7 @@ function updateThemeAndLanguage(theme, lang) {
 
 // Función para mostrar la pantalla principal
 function showMainScreen() {
-    document.getElementById('authScreen').classList.remove('active');
-    document.getElementById('mainScreen').classList.add('active');
+    switchScreen('mainScreen');
     toggleChatList(true);
     
     // Inicializar el selector de tema
