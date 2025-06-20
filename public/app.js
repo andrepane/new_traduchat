@@ -167,6 +167,7 @@ let isGroupCreationMode = false;
 // Controla que solo se abra un chat por parámetro una vez
 let chatFromUrlHandled = false;
 let pendingChatId = null;
+let deletedChatIds = new Set();
 
 // Detectar si hay un chat especificado en la URL lo antes posible
 const initialParams = new URLSearchParams(window.location.search);
@@ -1063,7 +1064,8 @@ function resetChatState() {
         unsubscribeTypingStatus();
         unsubscribeTypingStatus = null;
     }
-    
+    deletedChatIds.clear();
+
     // Limpiar UI
     if (messagesList) {
         messagesList.innerHTML = '';
@@ -1105,6 +1107,23 @@ async function deleteChat(chatId) {
             return;
         }
 
+        // Cancelar escuchas activas relacionadas con este chat
+        if (currentChat === chatId) {
+            if (unsubscribeMessagesFn) {
+                unsubscribeMessagesFn();
+                unsubscribeMessagesFn = null;
+            }
+            if (unsubscribeTypingStatus) {
+                unsubscribeTypingStatus();
+                unsubscribeTypingStatus = null;
+            }
+            deletedChatIds.add(chatId);
+            if (pendingChatId === chatId) {
+                pendingChatId = null;
+            }
+            currentChat = null;
+        }
+
         // Obtener referencia al chat
         const chatRef = doc(db, 'chats', chatId);
         const chatDoc = await getDoc(chatRef);
@@ -1128,6 +1147,9 @@ async function deleteChat(chatId) {
 
         // Ejecutar el batch
         await batch.commit();
+
+        // Actualizar la lista de chats en tiempo real
+        setupRealtimeChats(chatList, 'individual');
 
         // Mostrar mensaje de éxito
         showToast(getTranslation('chatDeleted', getUserLanguage()));
@@ -1781,6 +1803,11 @@ async function displayMessage(messageData) {
 // Función para abrir un chat
 async function openChat(chatId) {
     console.log('Abriendo chat:', chatId);
+
+    if (deletedChatIds.has(chatId)) {
+        console.warn('Intento de abrir chat ya eliminado:', chatId);
+        return;
+    }
     
     const currentUser = getCurrentUser();
     if (!currentUser) {
@@ -1788,10 +1815,17 @@ async function openChat(chatId) {
         return;
     }
 
-    // Cancelar la suscripción anterior si existe
+    // Cancelar las suscripciones anteriores si existen
     if (unsubscribeMessagesFn) {
         unsubscribeMessagesFn();
     }
+
+    if (unsubscribeTypingStatus) {
+        unsubscribeTypingStatus();
+        unsubscribeTypingStatus = null;
+    }
+
+
 
     // Resetear variables de paginación
     isLoadingMore = false;
@@ -1938,6 +1972,8 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
         } else {
             hideTypingIndicator();
         }
+    }, (error) => {
+        console.error('Error en la suscripción de typingStatus:', error);
     });
 
     snapshot.docChanges().forEach(async change => {
@@ -1966,6 +2002,8 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
             markChatAsRead(chatId);
         }
     });
+}, (error) => {
+    console.error('Error en la suscripción de mensajes:', error);
 });
 
 
