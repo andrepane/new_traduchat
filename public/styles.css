@@ -382,6 +382,7 @@ body {
   z-index: 2000;
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
+  pointer-events: none;
 }
 
 /* ==========================================================================

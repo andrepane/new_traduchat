@@ -2414,6 +2414,8 @@ window.addEventListener('load', () => {
         currentUser = JSON.parse(savedUser);
         showMainScreen();
     }
+    // Asegura que la pantalla de carga no bloquee la interfaz
+    setTimeout(hideLoadingScreen, 1000);
 });
 
 // Mejorar la función de cerrar sesión
