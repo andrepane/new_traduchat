@@ -892,12 +892,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // Funciones de UI mejoradas
+// Loading screen helpers con temporizador de seguridad
+let loadingTimeout;
 function showLoadingScreen() {
-    document.querySelector('.loading-screen').style.display = 'flex';
+    const screen = document.querySelector('.loading-screen');
+    if (!screen) return;
+    screen.style.display = 'flex';
+    clearTimeout(loadingTimeout);
+    loadingTimeout = setTimeout(() => {
+        screen.style.display = 'none';
+    }, 5000); // evita que la pantalla bloquee la interacción
 }
 
 function hideLoadingScreen() {
-    document.querySelector('.loading-screen').style.display = 'none';
+    const screen = document.querySelector('.loading-screen');
+    if (!screen) return;
+    screen.style.display = 'none';
+    clearTimeout(loadingTimeout);
 }
 
 // Función para ajustar el diseño en móvil
