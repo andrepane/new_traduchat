@@ -1108,15 +1108,17 @@ async function deleteChat(chatId) {
         }
 
         // Cancelar escuchas activas relacionadas con este chat
+        if (unsubscribeMessagesFn) {
+            unsubscribeMessagesFn();
+            unsubscribeMessagesFn = null;
+        }
+
+        if (unsubscribeTypingStatus) {
+            unsubscribeTypingStatus();
+            unsubscribeTypingStatus = null;
+        }
+
         if (currentChat === chatId) {
-            if (unsubscribeMessagesFn) {
-                unsubscribeMessagesFn();
-                unsubscribeMessagesFn = null;
-            }
-            if (unsubscribeTypingStatus) {
-                unsubscribeTypingStatus();
-                unsubscribeTypingStatus = null;
-            }
             deletedChatIds.add(chatId);
             if (pendingChatId === chatId) {
                 pendingChatId = null;
@@ -1972,8 +1974,17 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
         } else {
             hideTypingIndicator();
         }
-    }, (error) => {
-        console.error('Error en la suscripción de typingStatus:', error);
+    }, async (error) => {
+        console.warn('Error en la suscripción de typingStatus:', error);
+        try {
+            const chatExists = (await getDoc(doc(db, 'chats', chatId))).exists();
+            if (!chatExists) {
+                console.warn('El chat ya no existe, se ignora el listener de typingStatus');
+                return;
+            }
+        } catch (err) {
+            console.warn('Error comprobando existencia de chat:', err);
+        }
     });
 
     snapshot.docChanges().forEach(async change => {
