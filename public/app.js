@@ -253,6 +253,13 @@ let lastVisibleMessage = null;
 let lastProcessedMessageId = null; // Variable para evitar duplicados
 let chatMessagesCache = state.messagesCache; // Persistir mensajes en memoria por chat
 
+function trimMessagesList() {
+    if (!messagesList) return;
+    while (messagesList.childElementCount > MAX_DISPLAYED_MESSAGES) {
+        messagesList.removeChild(messagesList.firstElementChild);
+    }
+}
+
 // Enviar notificaciones push a los participantes de un chat
 // Esta función quedó obsoleta ya que las notificaciones se manejan
 // mediante Cloud Functions al crear cada mensaje. Se mantiene por si se
@@ -1797,6 +1804,7 @@ async function displayMessage(messageData) {
 
         messagesList.appendChild(messageElement);
         addSwipeActions(messageElement);
+        trimMessagesList();
         messagesList.scrollTop = messagesList.scrollHeight;
     } else {
         console.error('❌ Lista de mensajes no encontrada');
@@ -2336,6 +2344,7 @@ function displaySystemMessage(messageData) {
     `;
 
     messagesList.appendChild(messageElement);
+    trimMessagesList();
     messagesList.scrollTop = messagesList.scrollHeight;
 }
 
