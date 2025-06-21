@@ -21,14 +21,11 @@ console.log('✅ Firebase Messaging inicializado en Service Worker');
 const shownMessages = new Set();
 
 async function showNotification(payload) {
-  if (payload.notification) {
-    // Si FCM ya maneja la notificación, no duplicar
-    return;
-  }
-
-  const notificationTitle = payload.data?.title || 'TraduChat';
+  const notificationTitle = payload.data?.title ||
+    payload.notification?.title ||
+    'TraduChat';
   const notificationOptions = {
-    body: payload.data?.body || '',
+    body: payload.data?.body || payload.notification?.body || '',
     icon: '/images/icon-192.png',
     badge: '/images/icon-72x72.png',
     vibrate: [200, 100, 200],
@@ -38,15 +35,20 @@ async function showNotification(payload) {
 
   const msgId = notificationOptions.tag;
 
-  if (!shownMessages.has(msgId)) {
-    shownMessages.add(msgId);
-    const existing = await self.registration.getNotifications({ tag: msgId });
-    if (existing.length === 0) {
-      await self.registration.showNotification(
-        notificationTitle,
-        notificationOptions
-      );
+  // Evitar duplicados solo si FCM ya incluyó la notificación
+  if (payload.notification) {
+    if (shownMessages.has(msgId)) {
+      return;
     }
+    shownMessages.add(msgId);
+  }
+
+  const existing = await self.registration.getNotifications({ tag: msgId });
+  if (existing.length === 0) {
+    await self.registration.showNotification(
+      notificationTitle,
+      notificationOptions
+    );
   }
 }
 
