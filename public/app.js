@@ -249,6 +249,7 @@ let isLoadingMore = false;
 let allMessagesLoaded = false;
 let lastVisibleMessage = null;
 let lastProcessedMessageId = null; // Variable para evitar duplicados
+let chatMessagesCache = state.messagesCache; // Persistir mensajes en memoria por chat
 
 // Enviar notificaciones push a los participantes de un chat
 // Esta función quedó obsoleta ya que las notificaciones se manejan
@@ -1872,7 +1873,7 @@ async function openChat(chatId) {
         // Limpiar mensajes anteriores
         if (messagesList) {
             messagesList.innerHTML = '';
-            
+
             // Añadir el loader al inicio de la lista
             const loaderDiv = document.createElement('div');
             loaderDiv.id = 'messages-loader';
@@ -1895,11 +1896,11 @@ async function openChat(chatId) {
             const style = document.createElement('style');
                 style.id = 'loader-styles';
             style.textContent = `
-                    .messages-loader {
-                        text-align: center;
-                    padding: 10px;
-                    }
-                    .loader-spinner {
+                      .messages-loader {
+                          text-align: center;
+                      padding: 10px;
+                      }
+                      .loader-spinner {
                         width: 20px;
                         height: 20px;
                         border: 2px solid #f3f3f3;
@@ -1914,6 +1915,22 @@ async function openChat(chatId) {
                 }
             `;
             document.head.appendChild(style);
+            }
+
+            // 👉 Mostrar mensajes desde caché si existen
+            const cached = chatMessagesCache[chatId];
+            if (cached && Array.isArray(cached.messages)) {
+                lastVisibleMessage = cached.lastVisibleMessage;
+                allMessagesLoaded = cached.allMessagesLoaded;
+                for (const messageData of cached.messages) {
+                    if (messageData.type === 'system') {
+                        await displaySystemMessage(messageData);
+                    } else {
+                        await displayMessage(messageData);
+                    }
+                }
+                messagesList.scrollTop = messagesList.scrollHeight;
+                initialLoadComplete = true;
             }
         }
         
@@ -2010,6 +2027,9 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
             if (messagesList) {
                 messagesList.scrollTop = messagesList.scrollHeight;
             }
+            const cache = chatMessagesCache[chatId] || { messages: [] };
+            cache.messages.push(messageData);
+            chatMessagesCache[chatId] = cache;
             markChatAsRead(chatId);
         }
     });
@@ -2049,7 +2069,7 @@ async function loadInitialMessages(chatId) {
         }));
 
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
-        
+
         // Si hay mensajes, guardar el ID del último para evitar duplicados
         if (messages.length > 0) {
             lastProcessedMessageId = messages[0].id; // Guardamos el ID del mensaje más reciente
@@ -2062,8 +2082,16 @@ async function loadInitialMessages(chatId) {
             return timeA - timeB;
         });
 
-        // Mostrar mensajes de forma secuencial para mantener el orden
-        for (const messageData of messages) {
+        const cache = chatMessagesCache[chatId] || { messages: [] };
+        const existingIds = new Set(cache.messages.map(m => m.id));
+        const newMessages = messages.filter(m => !existingIds.has(m.id));
+        cache.messages = [...cache.messages, ...newMessages];
+        cache.lastVisibleMessage = lastVisibleMessage;
+        cache.allMessagesLoaded = false;
+        chatMessagesCache[chatId] = cache;
+
+        // Mostrar solo los mensajes nuevos en orden
+        for (const messageData of newMessages) {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
             } else {
@@ -2072,7 +2100,7 @@ async function loadInitialMessages(chatId) {
         }
 
         messagesList.scrollTop = messagesList.scrollHeight;
-        
+
         // Marcar la carga inicial como completa después de mostrar los mensajes
         initialLoadComplete = true;
         console.log('✅ Carga inicial completada, último mensaje procesado:', lastProcessedMessageId);
@@ -2121,8 +2149,18 @@ async function loadMoreMessages(chatId) {
         const scrollHeight = messagesList.scrollHeight;
         const scrollTop = messagesList.scrollTop;
 
+        const cache = chatMessagesCache[chatId] || { messages: [] };
+        const existingIds = new Set(cache.messages.map(m => m.id));
+        const newMessages = [];
+        for (const m of messages) {
+            if (!existingIds.has(m.id)) newMessages.push(m);
+        }
+        cache.messages = [...newMessages.reverse(), ...cache.messages];
+        cache.lastVisibleMessage = lastVisibleMessage;
+        chatMessagesCache[chatId] = cache;
+
         // Mostrar mensajes en orden cronológico al inicio de la lista
-        for (const messageData of messages.reverse()) {
+        for (const messageData of newMessages.reverse()) {
             const messageElement = document.createElement('div');
             if (messageData.type === 'system') {
                 await displaySystemMessage(messageData, messageElement);
