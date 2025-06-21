@@ -251,6 +251,7 @@ let isLoadingMore = false;
 let allMessagesLoaded = false;
 let lastVisibleMessage = null;
 let lastProcessedMessageId = null; // Variable para evitar duplicados
+let lastTimestamp = null; // Marca temporal del último mensaje procesado
 let chatMessagesCache = state.messagesCache; // Persistir mensajes en memoria por chat
 
 function trimMessagesList() {
@@ -1802,6 +1803,8 @@ async function openChat(chatId) {
         unsubscribeTypingStatus = null;
     }
 
+    lastTimestamp = null;
+
 
 
     // Resetear variables de paginación
@@ -1943,92 +1946,8 @@ async function openChat(chatId) {
 
 
 
-        // Suscribirse a nuevos mensajes
-        const messagesRef = collection(db, 'chats', chatId, 'messages');
-const newMessagesQuery = query(
-    messagesRef,
-    orderBy('timestamp', 'desc'),
-    limit(1)
-);
-
-unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
-    if (unsubscribeTypingStatus) {
-        unsubscribeTypingStatus();
-    }
-
-    const typingCollection = collection(db, 'chats', chatId, 'typingStatus');
-    unsubscribeTypingStatus = onSnapshot(typingCollection, (typingSnap) => {
-        const now = Date.now();
-        const TTL = 5000; // Ignorar estados de escritura antiguos
-
-        const typingUsers = typingSnap.docs
-            .map(doc => {
-                const data = doc.data();
-                const ts = data.timestamp && typeof data.timestamp.toMillis === 'function'
-                    ? data.timestamp.toMillis()
-                    : 0;
-                return { ...data, _ts: ts };
-            })
-            .filter(t => t.userId !== currentUser.uid && (now - t._ts) < TTL);
-
-        const currentLang = document.getElementById('languageSelect')?.value ||
-                           document.getElementById('languageSelectMain')?.value ||
-                           getUserLanguage();
-
-        if (typingUsers.length > 0) {
-            const username = typingUsers[0].username || typingUsers[0].userId;
-            const typingMessage = getTypingMessage(username, currentLang);
-            showTypingIndicator(typingMessage);
-        } else {
-            hideTypingIndicator();
-        }
-    }, async (error) => {
-        console.warn('Error en la suscripción de typingStatus:', error);
-        try {
-            const chatExists = (await getDoc(doc(db, 'chats', chatId))).exists();
-            if (!chatExists) {
-                console.warn('El chat ya no existe, se ignora el listener de typingStatus');
-                return;
-            }
-        } catch (err) {
-            console.warn('Error comprobando existencia de chat:', err);
-        }
-    });
-
-    snapshot.docChanges().forEach(async change => {
-        if (change.type === 'added') {
-            const messageData = { ...change.doc.data(), id: change.doc.id };
-            
-            // Evitar duplicados
-            if (lastProcessedMessageId === messageData.id) {
-                return;
-            }
-            
-            // Actualizar el último mensaje procesado
-            lastProcessedMessageId = messageData.id;
-
-            const wasAtBottom = messagesList &&
-                (messagesList.scrollHeight - messagesList.scrollTop <= messagesList.clientHeight + 1);
-            if (messageData.type === 'system') {
-                displaySystemMessage(messageData);
-            } else {
-                const result = await displayMessage(messageData, context);
-                if (initialLoadComplete && messageData.senderId !== currentUser.uid) {
-                    speakText(result.text, result.lang);
-                }
-            }
-            if (messagesList && wasAtBottom) {
-                messagesList.scrollTop = messagesList.scrollHeight;
-            }
-            const cache = chatMessagesCache[chatId] || { messages: [] };
-            cache.messages.push(messageData);
-            chatMessagesCache[chatId] = cache;
-            markChatAsRead(chatId);
-        }
-    });
-}, (error) => {
-    console.error('Error en la suscripción de mensajes:', error);
-});
+        // Suscribirse a nuevos mensajes y estado de escritura
+        subscribeToChat(chatId, context);
 
 
     } catch (error) {
@@ -2063,9 +1982,10 @@ async function loadInitialMessages(chatId, context) {
 
         lastVisibleMessage = snapshot.docs[snapshot.docs.length - 1];
 
-        // Si hay mensajes, guardar el ID del último para evitar duplicados
+        // Si hay mensajes, guardar el ID y timestamp del último para evitar duplicados
         if (messages.length > 0) {
             lastProcessedMessageId = messages[0].id; // Guardamos el ID del mensaje más reciente
+            lastTimestamp = messages[0].timestamp || null;
         }
 
         // Ordenar por timestamp o usar 0 si no hay timestamp
@@ -2247,6 +2167,96 @@ function getChatReadTimes() {
         console.warn('LocalStorage unavailable, using in-memory times', e);
         return inMemoryReadTimes;
     }
+}
+
+// Suscribirse en tiempo real a mensajes nuevos y estado de escritura
+function subscribeToChat(chatId, context) {
+    const messagesRef = collection(db, 'chats', chatId, 'messages');
+
+    // Listener único del estado de escritura
+    const typingCollection = collection(db, 'chats', chatId, 'typingStatus');
+    if (unsubscribeTypingStatus) {
+        unsubscribeTypingStatus();
+    }
+    unsubscribeTypingStatus = onSnapshot(typingCollection, (typingSnap) => {
+        const now = Date.now();
+        const TTL = 5000; // Ignorar estados de escritura antiguos
+
+        const typingUsers = typingSnap.docs
+            .map(doc => {
+                const data = doc.data();
+                const ts = data.timestamp && typeof data.timestamp.toMillis === 'function'
+                    ? data.timestamp.toMillis()
+                    : 0;
+                return { ...data, _ts: ts };
+            })
+            .filter(t => t.userId !== getCurrentUser().uid && (now - t._ts) < TTL);
+
+        const currentLang = document.getElementById('languageSelect')?.value ||
+                           document.getElementById('languageSelectMain')?.value ||
+                           getUserLanguage();
+
+        if (typingUsers.length > 0) {
+            const username = typingUsers[0].username || typingUsers[0].userId;
+            const typingMessage = getTypingMessage(username, currentLang);
+            showTypingIndicator(typingMessage);
+        } else {
+            hideTypingIndicator();
+        }
+    }, async (error) => {
+        console.warn('Error en la suscripción de typingStatus:', error);
+        try {
+            const chatExists = (await getDoc(doc(db, 'chats', chatId))).exists();
+            if (!chatExists) {
+                console.warn('El chat ya no existe, se ignora el listener de typingStatus');
+                return;
+            }
+        } catch (err) {
+            console.warn('Error comprobando existencia de chat:', err);
+        }
+    });
+
+    const q = lastTimestamp
+        ? query(messagesRef, orderBy('timestamp'), startAfter(lastTimestamp))
+        : query(messagesRef, orderBy('timestamp', 'desc'), limit(1));
+
+    if (unsubscribeMessagesFn) {
+        unsubscribeMessagesFn();
+    }
+    unsubscribeMessagesFn = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach(async change => {
+            if (change.type === 'added') {
+                const messageData = { ...change.doc.data(), id: change.doc.id };
+
+                if (lastProcessedMessageId === messageData.id) {
+                    return;
+                }
+
+                lastProcessedMessageId = messageData.id;
+                lastTimestamp = messageData.timestamp;
+
+                const wasAtBottom = messagesList &&
+                    (messagesList.scrollHeight - messagesList.scrollTop <= messagesList.clientHeight + 1);
+                if (messageData.type === 'system') {
+                    displaySystemMessage(messageData);
+                } else {
+                    const result = await displayMessage(messageData, context);
+                    if (initialLoadComplete && messageData.senderId !== getCurrentUser().uid) {
+                        speakText(result.text, result.lang);
+                    }
+                }
+                if (messagesList && wasAtBottom) {
+                    messagesList.scrollTop = messagesList.scrollHeight;
+                }
+                const cache = chatMessagesCache[chatId] || { messages: [] };
+                cache.messages.push(messageData);
+                chatMessagesCache[chatId] = cache;
+                markChatAsRead(chatId);
+            }
+        });
+    }, (error) => {
+        console.error('Error en la suscripción de mensajes:', error);
+    });
 }
 
 // Funciones auxiliares para la interfaz
