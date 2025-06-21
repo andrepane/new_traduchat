@@ -88,12 +88,12 @@ exports.sendMessageNotification = functions.firestore
                             body: message.text,
                             chatId,
                             messageId: context.params.messageId,
-                            type: 'new_message',
+                            type: 'message',
                             chatType
                         },
                         webpush: {
                             fcmOptions: {
-                                link: chatType === 'group' ? '/?view=groups' : '/'
+                                link: `/?view=chats&chatId=${chatId}`
                             }
                         }
                     };
