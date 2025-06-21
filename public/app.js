@@ -1638,67 +1638,49 @@ function debounce(func, wait) {
 }
 
 // Función para mostrar mensajes
-async function displayMessage(messageData) {
-    // Control de duplicados
+async function displayMessage(messageData, {
+    currentUser,
+    currentLanguage,
+    chatData,
+    container
+} = {}) {
     if (!messageData.id) {
         console.warn('⚠️ Mensaje sin ID, posible duplicado evitado:', messageData);
         return;
     }
 
-    const currentUser = getCurrentUser();
-    
-    if (!currentUser) {
+    const user = currentUser || getCurrentUser();
+    if (!user) {
         console.error('❌ No hay usuario autenticado al mostrar mensaje');
         return;
     }
 
-    // Obtener el idioma actual del usuario desde la base de datos
-    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-    const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
-    
-    console.log('👤 Usuario actual:', currentUser.email, 'Idioma:', currentLanguage);
-
-    // Determinar qué texto mostrar basado en el idioma actual
-    let messageText = messageData.text;
-    const originalLanguage = messageData.language || 'en';
-    
-    // Solo traducir si:
-    // 1. El mensaje no es del usuario actual
-    // 2. El idioma original es diferente al idioma actual del usuario
-    if (messageData.senderId !== currentUser.uid && originalLanguage !== currentLanguage) {
-        console.log(`🔄 Traduciendo mensaje de ${originalLanguage} a ${currentLanguage}`);
-        
-        // Primero intentar usar una traducción existente
-        if (messageData.translations && messageData.translations[currentLanguage]) {
-            console.log('✅ Usando traducción existente para', currentLanguage);
-            messageText = messageData.translations[currentLanguage];
-        } else {
-            try {
-                console.log('🔄 Solicitando nueva traducción a', currentLanguage);
-                messageText = await translateText(messageData.text, currentLanguage, originalLanguage);
-                
-                // Guardar la traducción para uso futuro
-                if (messageText !== messageData.text) {
-                    const messagesRef = collection(db, 'chats', currentChat, 'messages');
-                    await updateDoc(doc(messagesRef, messageData.id), {
-                        [`translations.${currentLanguage}`]: messageText
-                    });
-                    console.log('✅ Nueva traducción guardada en la base de datos para', currentLanguage);
-                }
-            } catch (error) {
-                console.error('❌ Error al traducir mensaje:', error);
-                messageText = messageData.text + ' [Error de traducción]';
-            }
-        }
-    } else {
-        console.log('✅ Mostrando mensaje en idioma original:', originalLanguage);
-        // Si el mensaje es nuestro o está en nuestro idioma, mostrar el texto original
-        messageText = messageData.text;
+    let language = currentLanguage;
+    if (!language) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        language = userDoc.exists() ? userDoc.data().language : getUserLanguage();
     }
 
-    // Mostrar la bandera del idioma original del mensaje
+    const chatInfo = chatData || (await getDoc(doc(db, 'chats', currentChat))).data();
+    const isGroupChat = chatInfo && chatInfo.type === 'group';
+
+    let messageText = messageData.text;
+    const originalLanguage = messageData.language || 'en';
+    if (messageData.senderId !== user.uid && originalLanguage !== language) {
+        if (messageData.translations && messageData.translations[language]) {
+            messageText = messageData.translations[language];
+        } else {
+            messageText = await translateText(messageData.text, language, originalLanguage);
+            if (messageText !== messageData.text) {
+                const messagesRef = collection(db, 'chats', currentChat, 'messages');
+                await updateDoc(doc(messagesRef, messageData.id), {
+                    [`translations.${language}`]: messageText
+                });
+            }
+        }
+    }
+
     const flag = getFlagEmoji(originalLanguage);
-    
     let timeString = '';
     try {
         const timestamp = messageData.timestamp ?
@@ -1708,40 +1690,33 @@ async function displayMessage(messageData) {
             ) : new Date();
         timeString = timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     } catch (error) {
-        console.error('❌ Error al formatear timestamp:', error);
         timeString = '';
     }
 
-    // Obtener el tipo de chat actual
-    const chatDoc = await getDoc(doc(db, 'chats', currentChat));
-    const chatData = chatDoc.exists() ? chatDoc.data() : null;
-    const isGroupChat = chatData && chatData.type === 'group';
+    const element = container || document.createElement('div');
+    element.setAttribute('data-message-id', messageData.id);
+    const isSentByMe = messageData.senderId === user.uid;
+    element.className = `message ${isSentByMe ? 'sent' : 'received'}`;
 
-    // Obtener el nombre del remitente para chats grupales
     let senderName = '';
     if (isGroupChat) {
-        try {
-            if (messageData.senderId === currentUser.uid) {
-                senderName = getTranslation('youMessage', currentLanguage);
-            } else {
+        if (messageData.senderId === user.uid) {
+            senderName = getTranslation('youMessage', language);
+        } else {
+            try {
                 const senderDoc = await getDoc(doc(db, 'users', messageData.senderId));
                 if (senderDoc.exists()) {
                     const senderData = senderDoc.data();
                     senderName = senderData.username || senderData.email.split('@')[0];
                 }
+            } catch (err) {
+                console.error('❌ Error al obtener remitente:', err);
             }
-        } catch (error) {
-            console.error('❌ Error al obtener información del remitente:', error);
         }
     }
 
-    const messageElement = document.createElement('div');
-    messageElement.setAttribute('data-message-id', messageData.id);
-    const isSentByMe = messageData.senderId === currentUser.uid;
-    messageElement.className = `message ${isSentByMe ? 'sent' : 'received'}`;
-
     if (messageData.type === 'audio') {
-        messageElement.innerHTML = `
+        element.innerHTML = `
             ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="audio-message">
                 <button class="play-button" aria-label="Reproducir audio">
@@ -1753,10 +1728,8 @@ async function displayMessage(messageData) {
             </div>
             <span class="message-time">${timeString}</span>
         `;
-
-        const playButton = messageElement.querySelector('.play-button');
-        const audio = messageElement.querySelector('audio');
-
+        const playButton = element.querySelector('.play-button');
+        const audio = element.querySelector('audio');
         playButton.addEventListener('click', () => {
             if (audio.paused) {
                 audio.play();
@@ -1766,12 +1739,11 @@ async function displayMessage(messageData) {
                 playButton.querySelector('.material-icons').textContent = 'play_arrow';
             }
         });
-
         audio.addEventListener('ended', () => {
             playButton.querySelector('.material-icons').textContent = 'play_arrow';
         });
     } else {
-        messageElement.innerHTML = `
+        element.innerHTML = `
             ${isGroupChat ? `<div class="message-sender ${isSentByMe ? 'sent' : ''}">${senderName}</div>` : ''}
             <div class="message-content">
                 <span class="message-flag">${flag}</span>
@@ -1779,38 +1751,30 @@ async function displayMessage(messageData) {
                 <span class="message-time">${timeString}</span>
             </div>
         `;
-
-        const textSpan = messageElement.querySelector('.message-text');
+        const textSpan = element.querySelector('.message-text');
         textSpan.textContent = messageText;
-
-        const speakBtn = createSpeakButton(messageText, currentLanguage);
-        const contentDiv = messageElement.querySelector('.message-content');
+        const speakBtn = createSpeakButton(messageText, language);
+        const contentDiv = element.querySelector('.message-content');
         contentDiv.insertBefore(speakBtn, contentDiv.querySelector('.message-time'));
     }
 
-    if (messagesList) {
-        // Verificar si el mensaje anterior es del mismo remitente
+    if (!container && messagesList) {
         const previousMessage = messagesList.lastElementChild;
         if (
             previousMessage &&
             previousMessage.classList.contains('message') &&
             previousMessage.getAttribute('data-sender-id') === messageData.senderId
         ) {
-            messageElement.setAttribute('data-same-sender', 'true');
+            element.setAttribute('data-same-sender', 'true');
         }
 
-        // Guardar el ID del remitente para comparaciones futuras
-        messageElement.setAttribute('data-sender-id', messageData.senderId);
-
-        messagesList.appendChild(messageElement);
-        addSwipeActions(messageElement);
+        element.setAttribute('data-sender-id', messageData.senderId);
+        messagesList.appendChild(element);
+        addSwipeActions(element);
         trimMessagesList();
-        messagesList.scrollTop = messagesList.scrollHeight;
-    } else {
-        console.error('❌ Lista de mensajes no encontrada');
     }
 
-    return { text: messageText, lang: currentLanguage };
+    return { text: messageText, lang: language };
 }
 
 // Función para abrir un chat
@@ -1878,6 +1842,10 @@ async function openChat(chatId) {
             }
         }
 
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+        const currentLanguage = userDoc.exists() ? userDoc.data().language : getUserLanguage();
+        const context = { currentUser, currentLanguage, chatData };
+
 
 
         // Limpiar mensajes anteriores
@@ -1895,7 +1863,7 @@ async function openChat(chatId) {
             // Añadir observer para detectar cuando se llega arriba
             const observer = new IntersectionObserver(async (entries) => {
                 if (entries[0].isIntersecting && !isLoadingMore && !allMessagesLoaded) {
-                    await loadMoreMessages(chatId);
+                    await loadMoreMessages(chatId, context);
                 }
             }, { threshold: 0.1 });
 
@@ -1935,14 +1903,18 @@ async function openChat(chatId) {
                 const start = Math.max(0, cached.messages.length - MAX_DISPLAYED_MESSAGES);
                 const messagesToShow = cached.messages.slice(start);
                 cached.displayOffset = start;
-                for (const messageData of messagesToShow) {
-
+                const fragment = document.createDocumentFragment();
+                await Promise.all(messagesToShow.map(async messageData => {
+                    const el = document.createElement('div');
                     if (messageData.type === 'system') {
-                        await displaySystemMessage(messageData);
+                        displaySystemMessage(messageData, el);
                     } else {
-                        await displayMessage(messageData);
+                        await displayMessage(messageData, { ...context, container: el });
                     }
-                }
+                    fragment.appendChild(el);
+                }));
+                messagesList.appendChild(fragment);
+                trimMessagesList();
                 messagesList.scrollTop = messagesList.scrollHeight;
                 chatMessagesCache[chatId] = cached;
 
@@ -1963,7 +1935,7 @@ async function openChat(chatId) {
         }
 
         // Cargar mensajes iniciales
-        await loadInitialMessages(chatId);
+        await loadInitialMessages(chatId, context);
         markChatAsRead(chatId);
 
 
@@ -2032,15 +2004,17 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
             // Actualizar el último mensaje procesado
             lastProcessedMessageId = messageData.id;
 
+            const wasAtBottom = messagesList &&
+                (messagesList.scrollHeight - messagesList.scrollTop <= messagesList.clientHeight + 1);
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
             } else {
-                const result = await displayMessage(messageData);
+                const result = await displayMessage(messageData, context);
                 if (initialLoadComplete && messageData.senderId !== currentUser.uid) {
                     speakText(result.text, result.lang);
                 }
             }
-            if (messagesList) {
+            if (messagesList && wasAtBottom) {
                 messagesList.scrollTop = messagesList.scrollHeight;
             }
             const cache = chatMessagesCache[chatId] || { messages: [] };
@@ -2061,7 +2035,7 @@ unsubscribeMessagesFn = onSnapshot(newMessagesQuery, (snapshot) => {
 }
 
 // Función para cargar los mensajes iniciales
-async function loadInitialMessages(chatId) {
+async function loadInitialMessages(chatId, context) {
     initialLoadComplete = false; // Resetear el estado de carga inicial
     const messagesRef = collection(db, 'chats', chatId, 'messages');
 
@@ -2106,18 +2080,27 @@ async function loadInitialMessages(chatId) {
         cache.allMessagesLoaded = false;
         chatMessagesCache[chatId] = cache;
 
-        // Mostrar solo los mensajes nuevos en orden
-        for (const messageData of newMessages) {
+        const fragment = document.createDocumentFragment();
+        const wasAtBottom = messagesList.scrollHeight - messagesList.scrollTop <= messagesList.clientHeight + 1;
+
+        await Promise.all(newMessages.map(async messageData => {
             if (messageData.type === 'system') {
-                displaySystemMessage(messageData);
+                const el = document.createElement('div');
+                displaySystemMessage(messageData, el);
+                fragment.appendChild(el);
             } else {
-                await displayMessage(messageData);
+                const el = document.createElement('div');
+                await displayMessage(messageData, { ...context, container: el });
+                fragment.appendChild(el);
             }
+        }));
+
+        messagesList.appendChild(fragment);
+        trimMessagesList();
+        if (wasAtBottom) {
+            messagesList.scrollTop = messagesList.scrollHeight;
         }
 
-        messagesList.scrollTop = messagesList.scrollHeight;
-
-        // Marcar la carga inicial como completa después de mostrar los mensajes
         initialLoadComplete = true;
         console.log('✅ Carga inicial completada, último mensaje procesado:', lastProcessedMessageId);
     } catch (error) {
@@ -2129,7 +2112,7 @@ async function loadInitialMessages(chatId) {
 
 
 // Función para cargar más mensajes antiguos
-async function loadMoreMessages(chatId) {
+async function loadMoreMessages(chatId, context) {
     if (isLoadingMore || allMessagesLoaded) return;
 
     const cache = chatMessagesCache[chatId];
@@ -2151,9 +2134,9 @@ async function loadMoreMessages(chatId) {
         for (const messageData of cachedMessages.reverse()) {
             const messageElement = document.createElement('div');
             if (messageData.type === 'system') {
-                await displaySystemMessage(messageData, messageElement);
+                displaySystemMessage(messageData, messageElement);
             } else {
-                await displayMessage(messageData, messageElement);
+                await displayMessage(messageData, { ...context, container: messageElement });
             }
             messagesList.insertBefore(messageElement, messagesList.firstChild);
         }
@@ -2213,12 +2196,13 @@ async function loadMoreMessages(chatId) {
         for (const messageData of newMessages.reverse()) {
             const messageElement = document.createElement('div');
             if (messageData.type === 'system') {
-                await displaySystemMessage(messageData, messageElement);
+                displaySystemMessage(messageData, messageElement);
             } else {
-                await displayMessage(messageData, messageElement);
+                await displayMessage(messageData, { ...context, container: messageElement });
             }
             messagesList.insertBefore(messageElement, messagesList.firstChild);
         }
+        trimMessagesList();
 
         // Mantener la posición del scroll
         messagesList.scrollTop = messagesList.scrollHeight - scrollHeight + scrollTop;
@@ -2329,23 +2313,27 @@ async function setupIndividualChatInterface(chatData, currentUser) {
 }
 
 // Función para mostrar mensajes del sistema
-function displaySystemMessage(messageData) {
+function displaySystemMessage(messageData, container) {
     if (!messagesList) return;
 
-    const messageElement = document.createElement('div');
+    const messageElement = container || document.createElement('div');
     messageElement.className = 'message system-message';
     messageElement.innerHTML = `
         <span class="message-text">${messageData.text}</span>
         <span class="message-time">${
-            messageData.timestamp ? 
+            messageData.timestamp ?
             new Date(messageData.timestamp.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) :
             ''
         }</span>
     `;
 
-    messagesList.appendChild(messageElement);
-    trimMessagesList();
-    messagesList.scrollTop = messagesList.scrollHeight;
+    if (!container) {
+        messagesList.appendChild(messageElement);
+        trimMessagesList();
+        messagesList.scrollTop = messagesList.scrollHeight;
+    }
+
+    return messageElement;
 }
 
 // Función para enviar mensaje
