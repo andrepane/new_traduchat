@@ -21,10 +21,14 @@ console.log('✅ Firebase Messaging inicializado en Service Worker');
 const shownMessages = new Set();
 
 async function showNotification(payload) {
-  const notificationTitle =
-    payload.notification?.title || payload.data?.title || 'TraduChat';
+  if (payload.notification) {
+    // Si FCM ya maneja la notificación, no duplicar
+    return;
+  }
+
+  const notificationTitle = payload.data?.title || 'TraduChat';
   const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || '',
+    body: payload.data?.body || '',
     icon: '/images/icon-192.png',
     badge: '/images/icon-72x72.png',
     vibrate: [200, 100, 200],
