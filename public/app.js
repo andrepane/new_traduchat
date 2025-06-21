@@ -246,6 +246,7 @@ window.addEventListener('languageChanged', refreshSpeakButtons);
 // Variables para paginación
 const MESSAGES_PER_BATCH = 20; // Número de mensajes a cargar por lote
 const MAX_DISPLAYED_MESSAGES = 50; // Máximo de mensajes a renderizar al abrir un chat
+
 let isLoadingMore = false;
 let allMessagesLoaded = false;
 let lastVisibleMessage = null;
@@ -1927,6 +1928,7 @@ async function openChat(chatId) {
                 const messagesToShow = cached.messages.slice(start);
                 cached.displayOffset = start;
                 for (const messageData of messagesToShow) {
+
                     if (messageData.type === 'system') {
                         await displaySystemMessage(messageData);
                     } else {
@@ -1935,6 +1937,7 @@ async function openChat(chatId) {
                 }
                 messagesList.scrollTop = messagesList.scrollHeight;
                 chatMessagesCache[chatId] = cached;
+
                 initialLoadComplete = true;
             }
         }
@@ -2195,6 +2198,7 @@ async function loadMoreMessages(chatId) {
         cache.messages = [...newMessages.reverse(), ...cache.messages];
         cache.lastVisibleMessage = lastVisibleMessage;
         cache.displayOffset = (cache.displayOffset || 0) + newMessages.length;
+
         chatMessagesCache[chatId] = cache;
 
         // Mostrar mensajes en orden cronológico al inicio de la lista
