@@ -2062,14 +2062,14 @@ async function loadInitialMessages(chatId) {
             return timeA - timeB;
         });
 
-        // Mostrar mensajes
-        await Promise.all(messages.map(async (messageData) => {
+        // Mostrar mensajes de forma secuencial para mantener el orden
+        for (const messageData of messages) {
             if (messageData.type === 'system') {
                 displaySystemMessage(messageData);
             } else {
                 await displayMessage(messageData);
             }
-        }));
+        }
 
         messagesList.scrollTop = messagesList.scrollHeight;
         
@@ -2122,7 +2122,7 @@ async function loadMoreMessages(chatId) {
         const scrollTop = messagesList.scrollTop;
 
         // Mostrar mensajes en orden cronológico al inicio de la lista
-        messages.reverse().forEach(async messageData => {
+        for (const messageData of messages.reverse()) {
             const messageElement = document.createElement('div');
             if (messageData.type === 'system') {
                 await displaySystemMessage(messageData, messageElement);
@@ -2130,7 +2130,7 @@ async function loadMoreMessages(chatId) {
                 await displayMessage(messageData, messageElement);
             }
             messagesList.insertBefore(messageElement, messagesList.firstChild);
-        });
+        }
 
         // Mantener la posición del scroll
         messagesList.scrollTop = messagesList.scrollHeight - scrollHeight + scrollTop;
