@@ -62,6 +62,10 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                     body: JSON.stringify({
                         message: {
                             token,
+                            notification: {
+                                title,
+                                body
+                            },
                             data: {
                                 title,
                                 body,
@@ -88,6 +92,10 @@ app.post(['/api/send-notification', '/send-notification'], async (req, res) => {
                 },
                 body: JSON.stringify({
                     to: token,
+                    notification: {
+                        title,
+                        body
+                    },
                     data: {
                         title,
                         body,
