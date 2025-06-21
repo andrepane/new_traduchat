@@ -1904,15 +1904,18 @@ async function openChat(chatId) {
                 const messagesToShow = cached.messages.slice(start);
                 cached.displayOffset = start;
                 const fragment = document.createDocumentFragment();
-                await Promise.all(messagesToShow.map(async messageData => {
+                const elements = await Promise.all(messagesToShow.map(async messageData => {
                     const el = document.createElement('div');
                     if (messageData.type === 'system') {
                         displaySystemMessage(messageData, el);
                     } else {
                         await displayMessage(messageData, { ...context, container: el });
                     }
-                    fragment.appendChild(el);
+                    return el;
                 }));
+                for (const el of elements) {
+                    fragment.appendChild(el);
+                }
                 messagesList.appendChild(fragment);
                 trimMessagesList();
                 messagesList.scrollTop = messagesList.scrollHeight;
@@ -2083,17 +2086,18 @@ async function loadInitialMessages(chatId, context) {
         const fragment = document.createDocumentFragment();
         const wasAtBottom = messagesList.scrollHeight - messagesList.scrollTop <= messagesList.clientHeight + 1;
 
-        await Promise.all(newMessages.map(async messageData => {
+        const elements = await Promise.all(newMessages.map(async messageData => {
+            const el = document.createElement('div');
             if (messageData.type === 'system') {
-                const el = document.createElement('div');
                 displaySystemMessage(messageData, el);
-                fragment.appendChild(el);
             } else {
-                const el = document.createElement('div');
                 await displayMessage(messageData, { ...context, container: el });
-                fragment.appendChild(el);
             }
+            return el;
         }));
+        for (const el of elements) {
+            fragment.appendChild(el);
+        }
 
         messagesList.appendChild(fragment);
         trimMessagesList();
