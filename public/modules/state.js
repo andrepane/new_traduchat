@@ -18,6 +18,7 @@ export const state = {
     isLoadingMore: false,
     allMessagesLoaded: false,
     lastVisibleMessage: null,
+    messagesCache: {},
 };
 
 let currentUser = null;
