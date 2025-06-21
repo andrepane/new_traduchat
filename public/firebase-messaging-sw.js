@@ -20,10 +20,7 @@ console.log('✅ Firebase Messaging inicializado en Service Worker');
 
 const shownMessages = new Set();
 
-// Manejar mensajes en segundo plano
-messaging.onBackgroundMessage(async (payload) => {
-  console.log('📬 Recibido mensaje en background:', payload);
-
+async function showNotification(payload) {
   const notificationTitle =
     payload.notification?.title || payload.data?.title || 'TraduChat';
   const notificationOptions = {
@@ -32,22 +29,34 @@ messaging.onBackgroundMessage(async (payload) => {
     badge: '/images/icon-72x72.png',
     vibrate: [200, 100, 200],
     tag: payload.data?.messageId || 'new-message',
-    data: payload.data
+    data: payload.data || {},
   };
 
   const msgId = notificationOptions.tag;
-
-  console.log('🔔 Mostrando notificación:', {
-    title: notificationTitle,
-    options: notificationOptions
-  });
 
   if (!shownMessages.has(msgId)) {
     shownMessages.add(msgId);
     const existing = await self.registration.getNotifications({ tag: msgId });
     if (existing.length === 0) {
-      self.registration.showNotification(notificationTitle, notificationOptions);
+      await self.registration.showNotification(
+        notificationTitle,
+        notificationOptions
+      );
     }
+  }
+}
+
+// Manejar mensajes en segundo plano
+messaging.onBackgroundMessage(async (payload) => {
+  console.log('📬 Recibido mensaje en background:', payload);
+  await showNotification(payload);
+});
+
+// Fallback por si llega un push directo con solo data
+self.addEventListener('push', (event) => {
+  console.log('📥 Evento push recibido:', event);
+  if (event.data) {
+    event.waitUntil(showNotification(event.data.json()));
   }
 });
 
