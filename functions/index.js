@@ -170,6 +170,10 @@ exports.sendGroupCreationNotification = functions.firestore
 
             const multicastMessage = {
                 tokens,
+                notification: {
+                    title: name,
+                    body: `${creatorName} ha creado este grupo`
+                },
                 data: {
                     title: name,
                     body: `${creatorName} ha creado este grupo`,
