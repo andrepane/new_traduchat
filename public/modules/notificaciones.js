@@ -140,12 +140,13 @@ export async function initializeNotifications() {
                 // Configurar listener para mensajes en primer plano
                 onMessage(messaging, (payload) => {
                     console.log('🔔 Mensaje recibido en primer plano:', payload);
-                    
+
                     if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
                         navigator.serviceWorker.ready.then(registration => {
-                            const notificationTitle = payload.notification.title;
+                            const notificationData = payload.notification ?? payload.data ?? {};
+                            const notificationTitle = notificationData.title || 'Nueva notificación';
                             const notificationOptions = {
-                                body: payload.notification.body,
+                                body: notificationData.body || '',
                                 icon: '/images/icon-192.png',
                                 badge: '/images/icon-72x72.png',
                                 vibrate: [200, 100, 200],
@@ -155,7 +156,7 @@ export async function initializeNotifications() {
                             };
 
                             registration.showNotification(notificationTitle, notificationOptions);
-                            showForegroundToast(notificationTitle, payload.notification.body);
+                            showForegroundToast(notificationTitle, notificationOptions.body);
                         });
                     }
                 });
