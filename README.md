@@ -88,6 +88,10 @@ pantalla de inicio para poder solicitar el permiso y recibirlas correctamente.
 
 Las contribuciones son bienvenidas. Por favor, abre un issue primero para discutir los cambios que te gustaría hacer.
 
+## Rendimiento
+
+La aplicación carga los mensajes de cada chat en lotes de 20 y mantiene un máximo de 50 elementos en pantalla para evitar sobrecargar el DOM. Se recomienda habilitar la **persistencia offline** de Firestore para que los mensajes ya descargados se lean desde el caché local cuando sea posible. Si la app muestra advertencias de índices al consultar mensajes, crea los índices definidos en `firestore.indexes.json` desde la consola de Firebase.
+
 ### Cambios recientes
 
 - Se eliminó la duplicación de notificaciones push y se mejoró el manejo del estado de escritura para evitar parpadeos en la lista de chats.
