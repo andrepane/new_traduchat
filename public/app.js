@@ -854,6 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (languageSelectMain) languageSelectMain.value = lang;
 
                 showMainScreen();
+                initializeNotifications();
                 if (pendingChatId && !chatFromUrlHandled && auth.currentUser) {
                     openChat(pendingChatId);
                     chatFromUrlHandled = true;
