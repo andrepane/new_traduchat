@@ -58,13 +58,6 @@ messaging.onBackgroundMessage(async (payload) => {
   await showNotification(payload);
 });
 
-// Fallback por si llega un push directo con solo data
-self.addEventListener('push', (event) => {
-  console.log('📥 Evento push recibido:', event);
-  if (event.data) {
-    event.waitUntil(showNotification(event.data.json()));
-  }
-});
 
 // Manejar clic en la notificación
 self.addEventListener('notificationclick', (event) => {
