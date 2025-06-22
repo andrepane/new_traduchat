@@ -180,7 +180,9 @@ pendingChatId = initialParams.get('chatId');
 // Se vuelve a habilitar para asegurar envíos desde el cliente cuando
 // las Cloud Functions no estén disponibles. Las notificaciones se
 // deduplican por `messageId` en el Service Worker.
-const manualPushNotifications = true;
+// Desactiva el envío de notificaciones desde el cliente para evitar
+// duplicados cuando las Cloud Functions estén activas
+const manualPushNotifications = false;
 
 
 // Variables para grabación de audio
