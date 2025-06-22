@@ -79,6 +79,10 @@ exports.sendMessageNotification = functions.firestore
                 try {
                     const notificationMessage = {
                         token,
+                        notification: {
+                            title: senderName,
+                            body: message.text
+                        },
                         data: {
                             title: senderName,
                             body: message.text,
@@ -166,6 +170,10 @@ exports.sendGroupCreationNotification = functions.firestore
 
             const multicastMessage = {
                 tokens,
+                notification: {
+                    title: name,
+                    body: `${creatorName} ha creado este grupo`
+                },
                 data: {
                     title: name,
                     body: `${creatorName} ha creado este grupo`,
