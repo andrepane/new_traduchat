@@ -78,7 +78,7 @@ startAuthListener(async (userData) => {
         handleViewFromUrl();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
-        initializeNotifications(); // Mover antes de abrir el chat
+        await initializeNotifications(); // Mover antes de abrir el chat
         if (pendingChatId && !chatFromUrlHandled) {
             openChat(pendingChatId);
             chatFromUrlHandled = true;
@@ -854,7 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (languageSelectMain) languageSelectMain.value = lang;
 
                 showMainScreen();
-                initializeNotifications();
+                await initializeNotifications();
                 if (pendingChatId && !chatFromUrlHandled && auth.currentUser) {
                     openChat(pendingChatId);
                     chatFromUrlHandled = true;
