@@ -78,12 +78,12 @@ startAuthListener(async (userData) => {
         handleViewFromUrl();
         updateUserInfo(userData);
         setupRealtimeChats(chatList, 'individual');
+        initializeNotifications(); // Mover antes de abrir el chat
         if (pendingChatId && !chatFromUrlHandled) {
             openChat(pendingChatId);
             chatFromUrlHandled = true;
             pendingChatId = null;
         }
-        initializeNotifications(); // Aquí está bien colocada
     } else {
         console.log('No hay usuario autenticado');
         currentUser = null;
