@@ -182,7 +182,8 @@ pendingChatId = initialParams.get('chatId');
 // deduplican por `messageId` en el Service Worker.
 // Desactiva el envío de notificaciones desde el cliente para evitar
 // duplicados cuando las Cloud Functions estén activas
-const manualPushNotifications = false;
+const manualPushNotifications = true;
+
 
 
 // Variables para grabación de audio
