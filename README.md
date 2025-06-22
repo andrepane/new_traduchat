@@ -96,3 +96,4 @@ La aplicación carga los mensajes de cada chat en lotes de 20 y mantiene un máx
 
 - Se eliminó la duplicación de notificaciones push y se mejoró el manejo del estado de escritura para evitar parpadeos en la lista de chats.
 - Se ajustó el *service worker* para mostrar correctamente las notificaciones cuando la aplicación está en segundo plano.
+- Se desactivó el envío manual de notificaciones desde el cliente para evitar duplicados cuando funcionan las Cloud Functions.
